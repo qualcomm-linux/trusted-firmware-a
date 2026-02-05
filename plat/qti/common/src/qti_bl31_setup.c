@@ -110,7 +110,9 @@ void bl31_plat_arch_setup(void)
 			      BL_CODE_BASE,
 			      BL_CODE_END,
 			      BL_RO_DATA_BASE,
-			      BL_RO_DATA_END
+			      BL_RO_DATA_END,
+			      0U,
+			      0U
 			     );
 	enable_mmu_el3(0);
 }

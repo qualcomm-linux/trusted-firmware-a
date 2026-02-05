@@ -11,7 +11,6 @@
 #include <stdint.h>
 
 #include <common/debug.h>
-#include <lib/mmio.h>
 #include <lib/smccc.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
 #include <services/arm_arch_svc.h>
@@ -28,7 +27,16 @@
 
 const mmap_region_t plat_qti_mmap[] = {
 	MAP_REGION_FLAT(QTI_DEVICE_BASE, QTI_DEVICE_SIZE,
-			MT_DEVICE | MT_RW | MT_SECURE),
+			MT_DEVICE | MT_RW | EL3_PAS),
+#ifdef QTI_TME_FUSE_CONTROLLER_BASE
+	MAP_REGION_FLAT(QTI_TME_FUSE_CONTROLLER_BASE,
+			QTI_TME_FUSE_CONTROLLER_LENGTH,
+			MT_DEVICE | MT_RO | EL3_PAS),
+#endif
+#if defined(QTI_SEC_PRNG_BASE) && defined(QTI_PRNG_LENGTH)
+	MAP_REGION_FLAT(QTI_SEC_PRNG_BASE, QTI_PRNG_LENGTH,
+			MT_DEVICE | MT_RO | EL3_PAS),
+#endif
 #ifdef QTI_AOP_CMD_DB_BASE
 	MAP_REGION_FLAT(QTI_AOP_CMD_DB_BASE, QTI_AOP_CMD_DB_SIZE,
 			MT_NS | MT_RO | MT_EXECUTE_NEVER),
@@ -36,6 +44,10 @@ const mmap_region_t plat_qti_mmap[] = {
 #ifdef QTI_SMEM_BASE
 	MAP_REGION_FLAT(QTI_SMEM_BASE, QTI_SMEM_SIZE,
 			MT_NON_CACHEABLE | MT_RW | MT_EXECUTE_NEVER),
+#endif
+#ifdef TFA_SHARED_MEMORY_BASE
+	MAP_REGION_FLAT(TFA_SHARED_MEMORY_BASE, TFA_SHARED_MEMORY_SIZE,
+			MT_MEMORY | MT_SECURE | MT_RW | MT_EXECUTE_NEVER),
 #endif
 	{0}
 };
@@ -107,14 +119,11 @@ unsigned int plat_qti_my_cluster_pos(void)
  * - Read-only data section;
  * - Coherent memory region, if applicable.
  */
-void qti_setup_page_tables(
-			   uintptr_t total_base,
-			   size_t total_size,
-			   uintptr_t code_start,
-			   uintptr_t code_limit,
-			   uintptr_t rodata_start,
-			   uintptr_t rodata_limit
-			  )
+void qti_setup_page_tables(uintptr_t total_base, size_t total_size,
+			   uintptr_t code_start, uintptr_t code_limit,
+			   uintptr_t rodata_start, uintptr_t rodata_limit,
+			   uintptr_t coherent_ram_start,
+			   uintptr_t coherent_ram_limit)
 {
 	/*
 	 * Map the Trusted SRAM with appropriate memory attributes.
@@ -123,19 +132,25 @@ void qti_setup_page_tables(
 	VERBOSE("Trusted SRAM seen by this BL image: %p - %p\n",
 		(void *)total_base, (void *)(total_base + total_size));
 	mmap_add_region(total_base, total_base,
-			total_size, MT_MEMORY | MT_RW | MT_SECURE);
+			total_size, MT_MEMORY | MT_RW | EL3_PAS);
 
 	/* Re-map the code section */
 	VERBOSE("Code region: %p - %p\n",
 		(void *)code_start, (void *)code_limit);
 	mmap_add_region(code_start, code_start,
-			code_limit - code_start, MT_CODE | MT_SECURE);
+			code_limit - code_start, MT_CODE | EL3_PAS);
 
 	/* Re-map the read-only data section */
 	VERBOSE("Read-only data region: %p - %p\n",
 		(void *)rodata_start, (void *)rodata_limit);
 	mmap_add_region(rodata_start, rodata_start,
-			rodata_limit - rodata_start, MT_RO_DATA | MT_SECURE);
+			rodata_limit - rodata_start, MT_RO_DATA | EL3_PAS);
+
+	if ((coherent_ram_start != 0U) && (coherent_ram_limit != 0U)) {
+		mmap_add_region(coherent_ram_start, coherent_ram_start,
+				coherent_ram_limit - coherent_ram_start,
+				MT_DEVICE | MT_RW | EL3_PAS);
+	}
 
 	/* Now (re-)map the platform-specific memory regions */
 	mmap_add(plat_qti_mmap);
@@ -184,7 +199,8 @@ int qti_mmap_remove_dynamic_region(uintptr_t base_va, size_t size)
  */
 int32_t plat_get_soc_version(void)
 {
-	uint32_t soc_version = (chipinfo_get_chip_id() & QTI_SOC_VERSION_MASK);
+	uint32_t soc_version =
+		(chipinfo_get_chip_id() & SOC_ID_IMPL_DEF_MASK);
 	uint32_t jep106az_code = (JEDEC_QTI_BKID << QTI_SOC_CONTINUATION_SHIFT)
 			 | (JEDEC_QTI_MFID << QTI_SOC_IDENTIFICATION_SHIFT);
 
@@ -198,7 +214,11 @@ int32_t plat_get_soc_version(void)
  */
 int32_t plat_get_soc_revision(void)
 {
-	return mmio_read_32(QTI_SOC_REVISION_REG) & QTI_SOC_REVISION_MASK;
+	uint32_t revision = chipinfo_get_chip_version();
+	uint32_t major = (revision >> 16) & U(0xFF);
+	uint32_t minor = revision & U(0xFF);
+
+	return (int32_t)((major << 8) | minor);
 }
 
 /*****************************************************************************
@@ -213,7 +233,11 @@ int32_t plat_is_smccc_feature_available(u_register_t fid)
 {
 	switch (fid) {
 	case SMCCC_ARCH_SOC_ID:
+#if !defined(QTI_NO_SMCC_ARCH_SOC_ID)
 		return SMC_ARCH_CALL_SUCCESS;
+#else
+		__fallthrough;
+#endif
 	default:
 		return SMC_ARCH_CALL_NOT_SUPPORTED;
 	}
