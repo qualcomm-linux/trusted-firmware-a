@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * Copyright (c) 2025-2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -7,6 +7,8 @@
 #define PLATFORM_DEF_H
 
 #include <kodiak_def.h>
+
+#define MAX_XLAT_TABLES			12
 
 #define MAX_IO_HANDLES			2
 #define MAX_IO_DEVICES			2

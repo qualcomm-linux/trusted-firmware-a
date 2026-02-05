@@ -8,6 +8,8 @@
 
 #include <lemans_def.h>
 
+#define MAX_XLAT_TABLES			12
+
 #define MAX_IO_HANDLES			U(2)
 #define MAX_IO_DEVICES			U(2)
 #define MAX_IO_BLOCK_DEVICES		U(1)

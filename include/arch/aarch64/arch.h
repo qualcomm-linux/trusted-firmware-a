@@ -130,6 +130,9 @@
 #define ICC_SRE_DFB_BIT		BIT_32(1)
 #define ICC_SRE_SRE_BIT		BIT_32(0)
 
+/* ICC_CTLR_EL3 bit definitions */
+#define ICC_CTLR_EL3_PMHE_BIT	BIT_32(6)
+
 /*******************************************************************************
  * Definitions for EL2 system registers for save/restore routine
  ******************************************************************************/

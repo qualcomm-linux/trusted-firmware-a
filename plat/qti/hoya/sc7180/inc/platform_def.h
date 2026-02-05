@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
  * Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -9,6 +10,8 @@
 #define PLATFORM_DEF_H
 
 #include <hoya_def.h>
+
+#define MAX_XLAT_TABLES			12
 
 /*----------------------------------------------------------------------------*/
 /* UART related constants. */

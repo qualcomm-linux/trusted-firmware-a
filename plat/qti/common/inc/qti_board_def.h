@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2015-2018, ARM Limited and Contributors. All rights reserved.
  * Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -24,15 +25,10 @@
 #define PLATFORM_STACK_SIZE	0x1000
 
 /*
- * PLAT_QTI_MMAP_ENTRIES depends on the number of entries in the
- * plat_qti_mmap array defined for each BL stage.
+ * Maximum mmap region capacity required by the supported QTI platforms.
+ * Individual platforms may use fewer entries.
  */
-#define PLAT_QTI_MMAP_ENTRIES	12
-
-/*
- * Platform specific page table and MMU setup constants
- */
-#define MAX_XLAT_TABLES		12
+#define PLAT_QTI_MMAP_ENTRIES	19
 
 /*
  * Common platform specific system counter frequency
