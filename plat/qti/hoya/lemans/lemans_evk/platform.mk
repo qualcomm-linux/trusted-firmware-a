@@ -88,6 +88,7 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				${GICV3_SOURCES}					\
 				plat/common/plat_psci_common.c				\
 				$(PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S		\
+				$(PLAT_PATH)/common/src/$(ARCH)/qti_ringbuf_console.S	\
 				$(PLAT_PATH)/common/src/pm_ps_hold.c			\
 				$(PLAT_PATH)/common/src/qti_bl31_setup.c		\
 				$(PLAT_PATH)/common/src/qti_gic_v3.c			\
