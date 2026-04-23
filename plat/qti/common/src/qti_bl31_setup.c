@@ -100,9 +100,7 @@ void bl31_platform_setup(void)
 
 	plat_qti_gic_driver_init();
 	plat_qti_gic_init();
-#if ENABLE_QTI_SMMU
 	qti_smmu_init();
-#endif
 	qti_interrupt_svc_init(bl32_image_ep_info.pc != 0);
 	qti_sec_core_init();
 	qti_qtimer_init();

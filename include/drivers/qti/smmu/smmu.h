@@ -10,14 +10,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef QTI_SMMU_ENABLED
 struct smmu_cfg_s {
 	uintptr_t addr;
 	uint32_t value;
 };
 
 void qti_smmu_init(void);
-
 extern struct smmu_cfg_s qti_smmu_cfg[];
 extern const size_t qti_smmu_cfg_count;
+#else
+static inline void qti_smmu_init(void) {}
+#endif
 
 #endif

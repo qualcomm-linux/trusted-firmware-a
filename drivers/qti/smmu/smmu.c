@@ -12,16 +12,9 @@
 #include <lib/mmio.h>
 #include <lib/utils_def.h>
 
-#ifndef QTISECLIB_PATH
 void qti_smmu_init(void)
 {
 	for (int i = 0; i < qti_smmu_cfg_count; i++) {
 		mmio_write_32(qti_smmu_cfg[i].addr, qti_smmu_cfg[i].value);
 	}
 }
-#else
-void qti_smmu_init(void)
-{
-}
-#endif
-

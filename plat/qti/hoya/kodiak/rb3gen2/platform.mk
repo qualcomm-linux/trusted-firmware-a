@@ -73,16 +73,9 @@ BL2_SOURCES		+=	drivers/io/io_fip.c					\
 				$(PLAT_PATH)/common/src/qti_image_desc.c		\
 				$(PLAT_PATH)/common/src/qti_io_storage.c
 
-# Switch on QTI SMMU driver support
-# This stops Lemans and other QTI platforms that don't support the SMMU driver from failing to build
-ENABLE_QTI_SMMU := 1
-$(eval $(call add_define,ENABLE_QTI_SMMU))
-
 include drivers/arm/gic/v3/gicv3.mk
 BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				drivers/delay_timer/delay_timer.c			\
-				drivers/qti/smmu/$(CHIPSET)/smmu_cfg.c			\
-				drivers/qti/smmu/smmu.c					\
 				plat/common/plat_gicv3.c				\
 				${GICV3_SOURCES}					\
 				plat/common/plat_psci_common.c				\
@@ -107,14 +100,15 @@ $(warning QTISECLIB_PATH is not provided while building, using stub implementati
 		THIS FIRMWARE WILL NOT BOOT!)
 
 include drivers/qti/accesscontrol/access_control.mk
+include drivers/qti/smmu/smmu.mk
 
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/sec_core/${CHIPSET} \
 			-Iinclude/drivers/qti/qtimer/${CHIPSET} \
 			-Iinclude/drivers/qti/watchdog/${CHIPSET}
 
-BL31_SOURCES	+=	plat/qti/hoya/qtiseclib/src/qtiseclib_interface_stub.c \
-			drivers/qti/sec_core/sec_core.c \
-			drivers/qti/qtimer/qtimer.c \
+BL31_SOURCES	+=	plat/qti/hoya/qtiseclib/src/qtiseclib_interface_stub.c	\
+			drivers/qti/sec_core/sec_core.c				\
+			drivers/qti/qtimer/qtimer.c				\
 			drivers/qti/watchdog/watchdog.c
 else
 $(eval $(call add_define,QTISECLIB_PATH))
