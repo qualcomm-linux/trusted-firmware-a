@@ -13,14 +13,16 @@
 #include <lib/per_cpu/per_cpu_macros.S>
 #include <platform_def.h>
 
-#if CTX_INCLUDE_FPREGS
+#if CTX_INCLUDE_FPREGS || CTX_INCLUDE_SVE_REGS
 	.global	fpregs_context_save
 	.global	fpregs_context_restore
-#endif /* CTX_INCLUDE_FPREGS */
+#endif /* CTX_INCLUDE_FPREGS || CTX_INCLUDE_SVE_REGS */
 
 #if CTX_INCLUDE_SVE_REGS
-	.global sve_context_save
-	.global sve_context_restore
+	.global sve_vectors_context_save
+	.global sve_vectors_context_restore
+	.global save_ffr
+	.global restore_ffr
 #endif /* CTX_INCLUDE_SVE_REGS */
 
 #if ERRATA_SPECULATIVE_AT
@@ -75,7 +77,7 @@
  * TODO: Revisit when VFP is used in secure world
  * ------------------------------------------------------------------
  */
-#if CTX_INCLUDE_FPREGS
+#if CTX_INCLUDE_FPREGS || CTX_INCLUDE_SVE_REGS
 func fpregs_context_save
 .arch_extension fp
 	/* Temporarily enable floating point */
@@ -149,7 +151,7 @@ func fpregs_context_restore
 .arch_extension nofp
 	ret
 endfunc fpregs_context_restore
-#endif /* CTX_INCLUDE_FPREGS */
+#endif /* CTX_INCLUDE_FPREGS || CTX_INCLUDE_SVE_REGS */
 
 #if CTX_INCLUDE_SVE_REGS
 /*
@@ -212,23 +214,17 @@ endfunc fpregs_context_restore
 /* ------------------------------------------------------------------
  * The following function follows the aapcs_64 strictly to use x9-x17
  * (temporary caller-saved registers according to AArch64 PCS) to
- * restore SVE register context. It assumes that 'x0' is
+ * save SVE vector and predicate registers. It assumes that 'x0' is
  * pointing to a 'sve_regs_t' structure to which the register context
  * will be saved.
  * ------------------------------------------------------------------
  */
-func sve_context_save
+func sve_vectors_context_save
 .arch_extension sve
 	/* Predicate registers */
 	mov x13, #CTX_SIMD_PREDICATES
 	add	x9, x0, x13
 	sve_predicate_op str, x9
-
-	/* Save FFR after predicates */
-	mov x13, #CTX_SIMD_FFR
-	add	x9, x0, x13
-	rdffr   p0.b
-	str	p0, [x9]
 
 	/* Save vector registers */
 	mov x13, #CTX_SIMD_VECTORS
@@ -240,24 +236,18 @@ func sve_context_save
 	fpregs_state_save x0, x9
 
 	ret
-endfunc sve_context_save
+endfunc sve_vectors_context_save
 
 /* ------------------------------------------------------------------
  * The following function follows the aapcs_64 strictly to use x9-x17
  * (temporary caller-saved registers according to AArch64 PCS) to
- * restore SVE register context. It assumes that 'x0' is pointing to
- * a 'sve_regs_t' structure from where the register context will be
- * restored.
+ * restore SVE vector and predicate registers. It assumes that 'x0' is
+ * pointing to a 'sve_regs_t' structure from where the register context
+ * will be restored.
  * ------------------------------------------------------------------
  */
-func sve_context_restore
+func sve_vectors_context_restore
 .arch_extension sve
-	/* Restore FFR register before predicates */
-	mov x13, #CTX_SIMD_FFR
-	add	x9, x0, x13
-	ldr	p0, [x9]
-	wrffr	p0.b
-
 	/* Restore predicate registers */
 	mov x13, #CTX_SIMD_PREDICATES
 	add	x9, x0, x13
@@ -272,7 +262,45 @@ func sve_context_restore
 	/* Restore FPSR, FPCR and FPEXC32 */
 	fpregs_state_restore x0, x9
 	ret
-endfunc sve_context_restore
+endfunc sve_vectors_context_restore
+
+/* ------------------------------------------------------------------
+ * The following function follows the aapcs_64 strictly to use x9-x17
+ * (temporary caller-saved registers according to AArch64 PCS) to
+ * save the FFR register. It assumes that 'x0' is
+ * pointing to a 'sve_regs_t' structure to which the register context
+ * will be saved.
+ * ------------------------------------------------------------------
+ */
+func save_ffr
+.arch_extension sve
+	/* Save FFR */
+	mov	x13, #CTX_SIMD_FFR
+	add	x9, x0, x13
+	rdffr	p0.b
+	str	p0, [x9]
+	ret
+.arch_extension nosve
+endfunc save_ffr
+
+/* ------------------------------------------------------------------
+ * The following function follows the aapcs_64 strictly to use x9-x17
+ * (temporary caller-saved registers according to AArch64 PCS) to
+ * restore the FFR register. It assumes that 'x0' is pointing to
+ * a 'sve_regs_t' structure from where the register context will be
+ * restored.
+ * ------------------------------------------------------------------
+ */
+func restore_ffr
+.arch_extension sve
+	/* Restore FFR */
+	mov	x13, #CTX_SIMD_FFR
+	add	x9, x0, x13
+	ldr	p0, [x9]
+	wrffr	p0.b
+	ret
+.arch_extension nosve
+endfunc restore_ffr
 #endif /* CTX_INCLUDE_SVE_REGS */
 
 	/*

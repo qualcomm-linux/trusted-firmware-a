@@ -936,6 +936,10 @@
 				~(CPTR_EZ_BIT | ESM_BIT | TCPAC_BIT))
 #endif
 
+/* SVCR definitions */
+#define SVCR_SM_BIT		(U(1) << 0)
+#define SVCR_ZA_BIT		(U(1) << 1)
+
 /* CPTR_EL2 definitions */
 #define CPTR_EL2_RES1		((U(1) << 13) | (U(1) << 12) | (U(0x3ff)))
 #define CPTR_EL2_TCPAC_BIT	(U(1) << 31)
@@ -1315,8 +1319,19 @@
 #define ZCR_EL3			S3_6_C1_C2_0
 #define ZCR_EL2			S3_4_C1_C2_0
 
+#define ID_AA64ZFR0_EL1		S3_0_C0_C4_4
+
+/* ID_AA64ZFR0_EL1 definitions */
+#define ID_AA64ZFR0_EL1_SVE_VER_SHIFT	U(0)
+#define ID_AA64ZFR0_EL1_SVE_VER_MASK	ULL(0xf)
+#define SVE_INST_IMPLEMENTED		ULL(0x0)
+#define SVE2_INST_IMPLEMENTED		ULL(0x1)
+
 /* ZCR_EL3 definitions */
-#define ZCR_EL3_LEN_MASK	UL(0xf)
+#define ZCR_EL3_LEN_MASK	U(0xf)
+
+/* ZCR_EL2 definitions */
+#define ZCR_EL2_LEN_MASK	U(0xf)
 
 /*******************************************************************************
  * Definitions for system register interface to SME as needed in EL3
@@ -1328,6 +1343,7 @@
 /* ID_AA64SMFR0_EL1 definitions */
 #define ID_AA64SMFR0_EL1_SME_FA64_SHIFT		U(63)
 #define ID_AA64SMFR0_EL1_SME_FA64_MASK		U(0x1)
+#define ID_AA64SMFR0_EL1_SME_FA64_BIT		(ULL(1) << ID_AA64SMFR0_EL1_SME_FA64_SHIFT)
 #define SME_FA64_IMPLEMENTED			U(0x1)
 #define ID_AA64SMFR0_EL1_SME_VER_SHIFT		U(55)
 #define ID_AA64SMFR0_EL1_SME_VER_MASK		ULL(0xf)

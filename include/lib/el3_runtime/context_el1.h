@@ -128,6 +128,10 @@ typedef struct el1_step2_regs {
 	uint64_t mdstepop_el1;
 } el1_step2_regs_t;
 
+typedef struct el1_sme_regs {
+	uint64_t svcr;
+} el1_sme_regs_t;
+
 typedef struct el1_sysregs {
 
 	el1_common_regs_t common;
@@ -189,6 +193,9 @@ typedef struct el1_sysregs {
 	el1_step2_regs_t step2;
 #endif
 
+#if (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS
+	el1_sme_regs_t sme;
+#endif
 } el1_sysregs_t;
 
 
@@ -334,6 +341,16 @@ typedef struct el1_sysregs {
 #define read_el1_ctx_ls64(ctx, reg)		ULL(0)
 #define write_el1_ctx_ls64(ctx, reg, val)
 #endif /* ENABLE_FEAT_LS64_ACCDATA */
+
+#if (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS
+#define read_el1_ctx_sme(ctx, reg)		(((ctx)->sme).reg)
+#define write_el1_ctx_sme(ctx, reg, val)	((((ctx)->sme).reg)	\
+							= (uint64_t) (val))
+#else
+#define read_el1_ctx_sme(ctx, reg)		ULL(0)
+#define write_el1_ctx_sme(ctx, reg, val)
+#endif /* (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS */
+
 /******************************************************************************/
 #endif /* __ASSEMBLER__ */
 

@@ -410,7 +410,7 @@ CASSERT(CTX_PAUTH_REGS_OFFSET == __builtin_offsetof(cpu_context_t, pauth_ctx),
 /*******************************************************************************
  * Function prototypes
  ******************************************************************************/
-#if CTX_INCLUDE_FPREGS
+#if CTX_INCLUDE_FPREGS || CTX_INCLUDE_SVE_REGS
 void fpregs_context_save(simd_regs_t *regs);
 void fpregs_context_restore(simd_regs_t *regs);
 #endif

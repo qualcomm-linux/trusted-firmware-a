@@ -42,6 +42,7 @@
 #include <lib/extensions/trbe.h>
 #include <lib/extensions/trf.h>
 #include <lib/utils.h>
+#include <plat/common/platform.h>
 
 #if ENABLE_FEAT_TWED
 /* Make sure delay value fits within the range(0-15) */
@@ -1796,6 +1797,48 @@ void cm_prepare_el3_exit_ns(void)
 }
 
 #if ((IMAGE_BL1) || (IMAGE_BL31 && (!CTX_INCLUDE_EL2_REGS)))
+
+#if (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS
+
+/* Track if NS world is using ZA to prevent 1->0 transitions. We assume that
+secure world does not use ZA. */
+static bool g_ns_za_enabled[PLATFORM_CORE_COUNT] = { false };
+
+static void el1_sysregs_context_save_sme(el1_sysregs_t *ctx)
+{
+	uint64_t cptr_el3 = read_cptr_el3();
+
+	// Disable traps of SME instructions
+	write_cptr_el3(cptr_el3 | ESM_BIT);
+	isb();
+	write_el1_ctx_sme(ctx, svcr, read_svcr());
+	// Restore original value
+	write_cptr_el3(cptr_el3);
+	isb();
+}
+
+static void el1_sysregs_context_restore_sme(el1_sysregs_t *ctx)
+{
+	uint64_t cptr_el3 = read_cptr_el3();
+
+	// Disable traps of SME instructions
+	write_cptr_el3(cptr_el3 | ESM_BIT);
+	isb();
+	if (g_ns_za_enabled[plat_my_core_pos()])
+	{
+		write_svcr(read_el1_ctx_sme(ctx, svcr) | SVCR_ZA_BIT);
+	}
+	else
+	{
+		write_svcr(read_el1_ctx_sme(ctx, svcr));
+	}
+
+	// Restore original value
+	write_cptr_el3(cptr_el3);
+	isb();
+}
+#endif /* (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS */
+
 /*******************************************************************************
  * The next set of six functions are used by runtime services to save and restore
  * EL1 context on the 'cpu_context' structure for the specified security state.
@@ -1912,6 +1955,12 @@ static void el1_sysregs_context_save(el1_sysregs_t *ctx)
 	if (is_feat_step2_supported()) {
 		write_el1_ctx_step2(ctx, mdstepop_el1, read_mdstepop_el1());
 	}
+
+#if (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS
+	if (is_feat_sme_supported()) {
+		el1_sysregs_context_save_sme(ctx);
+	}
+#endif /* (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS */
 }
 
 static void el1_sysregs_context_restore(el1_sysregs_t *ctx)
@@ -2025,6 +2074,12 @@ static void el1_sysregs_context_restore(el1_sysregs_t *ctx)
 	if (is_feat_step2_supported()) {
 		write_mdstepop_el1(read_el1_ctx_step2(ctx, mdstepop_el1));
 	}
+
+#if (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS
+	if (is_feat_sme_supported()) {
+		el1_sysregs_context_restore_sme(ctx);
+	}
+#endif /* (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS */
 }
 
 /*******************************************************************************
@@ -2039,6 +2094,23 @@ void cm_el1_sysregs_context_save(uint32_t security_state)
 	assert(ctx != NULL);
 
 	el1_sysregs_context_save(get_el1_sysregs_ctx(ctx));
+
+#if (ENABLE_SME_FOR_NS || ENABLE_SME_FOR_SWD) && CTX_INCLUDE_SVE_REGS
+	/* We don't save/restore ZA registers due to memory constraints. Instead we
+	 track NS ZA usage to force ZA bit in SECURE context, thus preventing the ZA
+	 storage from being reset during context switch. This is only done when NS
+	 uses ZA. We assume that secure world does not use ZA */
+	if (is_feat_sme_supported()) {
+		el1_sysregs_t *el1_ctx = get_el1_sysregs_ctx(ctx);
+		uint64_t saved_svcr = read_el1_ctx_sme(el1_ctx, svcr);
+		bool za_enabled = (saved_svcr & SVCR_ZA_BIT) != 0U;
+
+		if (security_state == NON_SECURE) {
+			/* Track if NS is using ZA */
+			g_ns_za_enabled[plat_my_core_pos()] = za_enabled;
+		}
+	}
+#endif
 
 #if IMAGE_BL31
 	if (is_feat_amu_supported()) {
