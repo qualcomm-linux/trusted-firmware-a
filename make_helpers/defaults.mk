@@ -827,3 +827,7 @@ ENABLE_FEAT_HACDBS			?=	0
 
 # Flag to enable trapping of ID registers to EL3
 ENABLE_FEAT_IDTE3                       ?=      0
+
+# Enable runtime configuration of debug settings for secure/non-secure worlds.
+# When enabled, platforms can specify debug permissions at runtime.
+PLAT_RUNTIME_DEBUG_CFG		:= 0

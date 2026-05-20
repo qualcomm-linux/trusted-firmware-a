@@ -13,7 +13,10 @@
 
 #if __aarch64__
 void trf_enable(cpu_context_t *ctx);
+void trf_disable(cpu_context_t *ctx);
 void trf_init_el2_unused(void);
+void secure_trace_enable(cpu_context_t *ctx);
+void secure_trace_disable(cpu_context_t *ctx);
 #else /* !__aarch64 */
 void trf_init_el3(void);
 #endif /* __aarch64__ */
@@ -24,7 +27,16 @@ void trf_init_el3(void);
 static inline void trf_enable(cpu_context_t *ctx)
 {
 }
+static inline void trf_disable(cpu_context_t *ctx)
+{
+}
 static inline void trf_init_el2_unused(void)
+{
+}
+static inline void secure_trace_enable(cpu_context_t *ctx)
+{
+}
+static inline void secure_trace_disable(cpu_context_t *ctx)
 {
 }
 #else /* !__aarch64 */

@@ -653,6 +653,7 @@ $(eval $(call assert_booleans,\
 	LFA_SUPPORT \
 	SUPPORT_SP_LIVE_ACTIVATION \
 	TEST_IO_SHORT_READ_FI \
+	PLAT_RUNTIME_DEBUG_CFG \
 )))
 
 # Numeric_Flags
@@ -930,6 +931,7 @@ $(eval $(call add_defines,\
 	SUPPORT_SP_LIVE_ACTIVATION \
 	TEST_IO_SHORT_READ_FI \
 	TEST_IO_SHORT_READ_FI_IMAGE_ID \
+	PLAT_RUNTIME_DEBUG_CFG \
 )))
 
 ifeq (${PLATFORM_REPORT_CTX_MEM_USE}, 1)

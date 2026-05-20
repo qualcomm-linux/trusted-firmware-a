@@ -2701,6 +2701,65 @@ frequency for the CPU's generic timer. This value will be programmed into the
 of the system counter, which is retrieved from the first entry in the frequency
 modes table.
 
+Function : plat_trace_enabled() [mandatory when PLAT_RUNTIME_DEBUG_CFG == 1]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    Argument : int security_state
+    Return   : bool
+
+This function allows the platform to specify whether trace is enabled for a
+given security state. The ``security_state`` argument is either ``SECURE`` or
+``NON_SECURE``. The function returns ``true`` if tracing is permitted for that
+security state, ``false`` otherwise.
+
+This function is invoked during context setup to configure trace controls.
+When ``PLAT_RUNTIME_DEBUG_CFG`` is 0, the default implementation
+returns ``false`` for ``SECURE`` and ``true`` for ``NON_SECURE``.
+
+This function must be implemented when ``PLAT_RUNTIME_DEBUG_CFG`` is set to 1.
+
+Function : plat_external_debug_access_enabled() [mandatory when PLAT_RUNTIME_DEBUG_CFG == 1]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    Argument : void
+    Return   : bool
+
+This function allows the platform to specify whether external (invasive) debug
+access is enabled for the Non-secure world. It controls whether an external
+debugger can halt or step through code. The function returns ``true`` if
+external debug access is permitted, ``false`` otherwise.
+
+This function is invoked during context setup to configure external debug
+access controls. When ``PLAT_RUNTIME_DEBUG_CFG`` is 0, the default
+implementation returns ``true``.
+
+This function must be implemented when ``PLAT_RUNTIME_DEBUG_CFG`` is set to 1.
+
+Function : plat_perfmon_enabled() [mandatory when PLAT_RUNTIME_DEBUG_CFG == 1]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    Argument : int security_state
+    Return   : bool
+
+This function allows the platform to specify whether performance monitor
+access is enabled for a given security state. The ``security_state`` argument
+is either ``SECURE`` or ``NON_SECURE``. The function returns ``true`` if
+performance monitor access is permitted for that security state, ``false``
+otherwise.
+
+This function controls ``MDCR_EL3`` bits (``SPME``, ``SCCD``, ``MCCD``,
+``EnPM2``) for the Secure world, and ``PMUSERENR_EL0`` for the Non-secure
+world. When ``PLAT_RUNTIME_DEBUG_CFG`` is 0, the default implementation
+returns ``false`` for ``SECURE`` and ``true`` for ``NON_SECURE``.
+
+This function must be implemented when ``PLAT_RUNTIME_DEBUG_CFG`` is set to 1.
+
 #define : PLAT_PERCPU_BAKERY_LOCK_SIZE [optional]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

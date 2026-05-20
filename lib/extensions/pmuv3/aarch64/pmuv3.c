@@ -8,6 +8,7 @@
 #include <arch_features.h>
 #include <arch_helpers.h>
 #include <lib/extensions/pmuv3.h>
+#include <lib/extensions/debug_cfg.h>
 
 static u_register_t init_mdcr_el2_hpmn(u_register_t mdcr_el2)
 {
@@ -85,8 +86,18 @@ void pmuv3_enable(cpu_context_t *ctx)
 	 * MDCR_EL3.PMEE set to 0b01 to delegate PMU IRQ and Profiling exception
 	 * control to MDCR_EL2, to allow lower ELs own this policy.
 	 */
-	mdcr_el3_val |= MDCR_SCCD_BIT | MDCR_MCCD_BIT | MDCR_EnPM2_BIT;
-	mdcr_el3_val &=	~(MDCR_MPMX_BIT | MDCR_SPME_BIT | MDCR_TPM_BIT);
+	mdcr_el3_val &= ~(MDCR_MPMX_BIT | MDCR_TPM_BIT);
+
+	if (plat_perfmon_enabled(SECURE)) {
+		/* Set SPME and clear SCCD, MCCD when debug is enabled */
+		mdcr_el3_val |= MDCR_SPME_BIT;
+		mdcr_el3_val &= ~(MDCR_SCCD_BIT | MDCR_MCCD_BIT | MDCR_EnPM2_BIT);
+	}
+	else {
+		mdcr_el3_val &= ~MDCR_SPME_BIT;
+		mdcr_el3_val |= (MDCR_SCCD_BIT | MDCR_MCCD_BIT | MDCR_EnPM2_BIT);
+	}
+
 	mdcr_el3_val = mtpmu_disable_el3(mdcr_el3_val);
 
 	if (is_feat_ebep_supported()) {
@@ -119,7 +130,26 @@ void pmuv3_init_el3(void)
 	 */
 	write_pmcr_el0((read_pmcr_el0() | PMCR_EL0_DP_BIT | PMCR_EL0_C_BIT |
 			PMCR_EL0_P_BIT) & ~(PMCR_EL0_X_BIT | PMCR_EL0_E_BIT));
+
+
+	/*
+	 * The PMUSERENR_EL0:
+	 *	Enables or disables EL0 access to the Performance Monitors.
+	 * EN, bit [0]
+	 *	Enables EL0 read/write access to PMU registers, other than the instruction counter.
+	 *	0b0 : EL0 accesses to the specified PMU System registers are trapped,
+	 *	      unless enabled by PMUSERENR_EL0.{UEN,ER,CR,SW}.
+	 *	0b1 : EL0 accesses to the specified PMU System registers are enabled,
+	 *	      unless trapped by another control.
+	 */
+	if (plat_perfmon_enabled(NON_SECURE)) {
+		write_pmuserenr_el0(1);
+	}
+	else {
+		write_pmuserenr_el0(0);
+	}
 }
+
 
 static u_register_t mtpmu_disable_el2(u_register_t mdcr_el2)
 {

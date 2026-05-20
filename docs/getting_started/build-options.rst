@@ -882,6 +882,15 @@ Common build options
   ERR and ERX registers from lower ELs. When set, all accesses will be trapped
   to EL3 and emulated as RAZ/WI. Default value is ``0``.
 
+- ``PLAT_RUNTIME_DEBUG_CFG``: This flag enables runtime configuration of debug
+  settings for secure and non-secure worlds. When enabled (1), platforms can
+  specify debug permissions at runtime through platform-specific functions.
+  This allows dynamic control over trace, external debug access, and
+  performance monitor access for both Secure and Non-secure worlds.
+  The default value is 0 (disabled). When enabled, platforms must implement
+  the following functions: ``plat_trace_enabled()``,
+  ``plat_external_debug_access_enabled()``, and ``plat_perfmon_enabled()``.
+
 - ``OPENSSL_DIR``: This option is used to provide the path to a directory on the
   host machine where a custom installation of OpenSSL is located, which is used
   to build the certificate generation, firmware encryption and FIP tools. If

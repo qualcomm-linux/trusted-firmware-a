@@ -24,6 +24,8 @@
 #include <lib/el3_runtime/context_mgmt.h>
 #include <lib/el3_runtime/cpu_data.h>
 #include <lib/el3_runtime/pubsub_events.h>
+#include <lib/extensions/debug_cfg.h>
+#include <lib/extensions/external_debug.h>
 #include <lib/extensions/amu.h>
 #include <lib/extensions/brbe.h>
 #include <lib/extensions/cpa2.h>
@@ -648,9 +650,26 @@ static void setup_context_common(cpu_context_t *ctx, const entry_point_info_t *e
 	write_ctx_reg(state, CTX_MDCR_EL3, mdcr_el3);
 
 #if IMAGE_BL31
-	/* Enable FEAT_TRF for Non-Secure and prohibit for Secure state. */
 	if (is_feat_trf_supported()) {
-		trf_enable(ctx);
+		/* Enable FEAT_TRF for Non-Secure and prohibit for Secure state.
+		* Controlled by platform debug configuration.
+		*/
+		if (plat_trace_enabled(NON_SECURE)) {
+			trf_enable(ctx);
+		} else {
+			trf_disable(ctx);
+		}
+
+		/*
+		* Enable tracing in secure state as controlled by the platform
+		* debug configuration.
+		*/
+		if (plat_trace_enabled(SECURE)) {
+			secure_trace_enable(ctx);
+		}
+		else {
+			secure_trace_disable(ctx);
+		}
 	}
 
 	if (is_feat_tcr2_supported()) {
@@ -661,6 +680,13 @@ static void setup_context_common(cpu_context_t *ctx, const entry_point_info_t *e
 
 	if (is_feat_idte3_supported()) {
 		idte3_enable(ctx);
+	}
+
+	if (plat_external_debug_access_enabled()) {
+		enable_external_debug_access(ctx);
+	}
+	else {
+		disable_external_debug_access(ctx);
 	}
 #endif /* IMAGE_BL31 */
 
