@@ -107,6 +107,7 @@ $(warning QTISECLIB_PATH is not provided while building, using stub implementati
 
 include drivers/qti/smmu/smmu.mk
 include drivers/qti/pdc/pdc.mk
+include drivers/qti/pwr_utils/pwr_utils.mk
 
 PLAT_INCLUDES   +=      -Iinclude/drivers/qti/qtimer/${CHIPSET} \
 			-Iinclude/drivers/qti/watchdog/${CHIPSET}
