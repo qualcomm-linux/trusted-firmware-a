@@ -11,6 +11,12 @@ ICBUARB_BASE		:=	drivers/qti/icb/uarb
 
 ICBUARB_SOURCES		:=	${ICBUARB_BASE}/icbuarb.c
 
+# Platform back-end: drivers/qti/icb/<CHIPSET>/icbuarb_target.c must define
+# icbuarb_target_get_info() and icbuarb_target_init().
+ifneq ($(CHIPSET),)
+ICBUARB_SOURCES		+=	drivers/qti/icb/$(CHIPSET)/icbuarb_target.c
+endif
+
 PLAT_INCLUDES		+=	-I${ICBUARB_BASE}
 
 BL31_SOURCES		+=	${ICBUARB_SOURCES}
