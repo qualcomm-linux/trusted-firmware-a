@@ -96,6 +96,13 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 BL31_SOURCES	+=		drivers/qti/sec_core/sec_core_stub.c \
 				drivers/qti/accesscontrol/access_control_stub.c
 
+# Build the NoC error logger driver. CHIPSET selects drivers/qti/icb/lemans
+# for the platform back-end. ICB_NOC_BCM_VOTE=1 pulls in the ICB
+# micro-arbiter so the NoC bus rails are voted ON before the error
+# registers are programmed.
+ICB_NOC_BCM_VOTE	:=	0
+include drivers/qti/icb/common/icb.mk
+
 # Override this on the command line to point to the qtiseclib library
 QTISECLIB_PATH ?=
 
