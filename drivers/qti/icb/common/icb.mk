@@ -37,6 +37,23 @@ BL31_SOURCES	+=	$(ICB_BASE)/common/noc_error_target_stub.c
 endif
 
 #
+# Optional: ICB address-translator configuration query data.
+#
+# Setting ICB_CFG_QUERY := 1 pulls in the platform icbcfg_query_data.c
+# which defines icbcfg_info (DDR topology, LLCC segment offsets and
+# one-time NOC register writes).  The common icbcfg_query.h header
+# (struct definitions) is always added to the include path so that
+# consumers can reference the types without enabling the full data set.
+# Note: -I$(ICB_BASE)/common is already set above.
+#
+ifeq ($(ICB_CFG_QUERY),1)
+$(eval $(call add_define,ICB_CFG_QUERY))
+ifneq ($(CHIPSET),)
+BL31_SOURCES	+=	$(ICB_BASE)/$(CHIPSET)/icbcfg_query_data.c
+endif
+endif
+
+#
 # Optional: NoC bus-rail BCM voting dependency (ICB micro-arbiter).
 #
 # Some targets must vote the NoC bus rails (BCM resources) ON before the

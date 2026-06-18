@@ -99,8 +99,10 @@ BL31_SOURCES	+=		drivers/qti/sec_core/sec_core_stub.c \
 # Build the NoC error logger driver. CHIPSET selects drivers/qti/icb/lemans
 # for the platform back-end. ICB_NOC_BCM_VOTE=1 pulls in the ICB
 # micro-arbiter so the NoC bus rails are voted ON before the error
-# registers are programmed.
+# registers are programmed. ICB_CFG_QUERY=1 pulls in the ICB address-
+# translator configuration query data (icbcfg_query_data.c).
 ICB_NOC_BCM_VOTE	:=	1
+ICB_CFG_QUERY		:=	1
 include drivers/qti/icb/common/icb.mk
 
 # Override this on the command line to point to the qtiseclib library
