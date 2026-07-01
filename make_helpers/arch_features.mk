@@ -8,13 +8,14 @@
 # and enables them based on the configured architecture version.
 
 # This file follows the following format:
-#   - Enable mandatory feature if not updated, as applicable to an Arch Version.
-#   - By default disable any mandatory features if they have not been defined yet.
-#   - Disable or enable any optional feature this would be enabled/disabled if needed by platform.
+#   - Force all mandatory features to FEAT_STATE_ALWAYS (1) based on the configured
+#     architecture version, overriding any platform settings.
+#   - By default disable any optional features if they have not been defined yet.
+#   - Optional features can be enabled/disabled as needed by platform.
 
 #
 ################################################################################
-# Enable Mandatory features if not updated yet, based on Arch versions.
+# Force mandatory features based on configured architecture version.
 ################################################################################
 #
 
@@ -144,6 +145,9 @@ armv9-6-a-feats         += ${armv9-5-a-feats}
 FEAT_LIST               := ${armv9-6-a-feats}
 endif
 
-# Set all FEAT_* in FEAT_LIST to '1' if they are not yet defined or set
-# from build commandline options or platform makefile.
+# Force all FEAT_* in FEAT_LIST to FEAT_STATE_ALWAYS (1), overriding any
+# previous settings from build commandline options or platform makefiles.
+# This ensures architecturally mandatory features are always enabled when
+# ARM_ARCH_{MAJOR,MINOR} is set, as these settings propagate to the compiler
+# and implicitly enable code paths that cannot be runtime-checked.
 $(eval $(call set_ones, ${sort ${FEAT_LIST}}))
