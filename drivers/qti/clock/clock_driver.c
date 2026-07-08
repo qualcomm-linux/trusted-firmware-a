@@ -175,7 +175,11 @@ static int clock_enable_clock_group_internal(struct clock_group *group)
 			if (icb->icb == NULL) {
 				icb->icb = icbuarb_create_client(
 					icb->master, icb->slave);
-				assert(icb->icb != NULL);
+				if (icb->icb == NULL) {
+					WARN("clock: no ICB client %u->%u, skipping vote\n",
+						(unsigned int)icb->master, (unsigned int)icb->slave);
+					continue;
+				}
 			}
 
 			/*
