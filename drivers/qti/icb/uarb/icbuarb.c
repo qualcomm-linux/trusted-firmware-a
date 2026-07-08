@@ -338,16 +338,19 @@ static bool icbuarb_hw_init(void)
 
 bool icbuarb_init(void)
 {
-	bool ret = false;
+	/* Idempotent: the first caller inits; later callers are a no-op. */
+	if (info != NULL) {
+		return true;
+	}
 
 	(void)memset(client_pool, 0, sizeof(client_pool));
 
 	info = icbuarb_target_get_info();
-	if (info != NULL) {
-		ret = icbuarb_hw_init() && icbuarb_target_init(info);
+	if (info == NULL) {
+		return false;
 	}
 
-	return ret;
+	return icbuarb_hw_init() && icbuarb_target_init(info);
 }
 
 icb_client_handle icbuarb_create_client(enum icbid_master master,
@@ -356,7 +359,8 @@ icb_client_handle icbuarb_create_client(enum icbid_master master,
 	struct icb_client *handle;
 	uint32_t i;
 
-	if (info == NULL) {
+	/* No platform-wide init hook exists; the first caller initialises. */
+	if (!icbuarb_init()) {
 		return NULL;
 	}
 
