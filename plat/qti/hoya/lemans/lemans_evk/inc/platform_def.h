@@ -20,6 +20,10 @@
 #define BL31_SIZE			0x00100000
 #define BL31_LIMIT			(BL31_BASE + BL31_SIZE)
 
+/* SPMC core manifest DTB loaded by BL2, address passed to BL31 as arg0 */
+#define TOS_FW_CONFIG_BASE		0x1c1fe000
+#define TOS_FW_CONFIG_SIZE		0x00002000  /* 8 KB — ample for the DTB */
+
 #define BL32_BASE			0x1c300000
 #define BL32_SIZE			0x00200000
 #define BL32_LIMIT			(BL32_BASE + BL32_SIZE)

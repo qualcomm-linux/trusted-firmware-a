@@ -101,6 +101,26 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
 
+# FF-A / SPMD: wire in the SPMC core manifest so BL31 can initialize the SPMC.
+ifeq (${SPD},spmd)
+BL31_SOURCES		+=	$(PLAT_PATH)/common/src/qti_spmd.c
+
+ARM_SPMC_MANIFEST_DTS ?= plat/qti/hoya/lemans/lemans_evk/fdts/lemans_evk_spmc_manifest.dts
+FDT_SOURCES           += ${ARM_SPMC_MANIFEST_DTS}
+LEMANS_TOS_FW_CONFIG  := ${BUILD_PLAT}/fdts/$(notdir $(basename ${ARM_SPMC_MANIFEST_DTS})).dtb
+$(eval $(call TOOL_ADD_PAYLOAD,${LEMANS_TOS_FW_CONFIG},--tos-fw-config,${LEMANS_TOS_FW_CONFIG}))
+
+# Common manifest parser + FDT helpers required by SPMD
+include lib/libfdt/libfdt.mk
+include common/fdt_wrappers.mk
+BL31_SOURCES += plat/common/plat_spmd_manifest.c \
+                common/uuid.c                     \
+                ${LIBFDT_SRCS}                    \
+                ${FDT_WRAPPERS_SOURCES}
+else
+BL31_SOURCES		+=	$(PLAT_PATH)/common/src/qti_interrupt_svc_el3.c
+endif
+
 # Override this on the command line to point to the qtiseclib library
 QTISECLIB_PATH ?=
 
