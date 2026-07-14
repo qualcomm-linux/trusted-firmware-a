@@ -92,6 +92,7 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				$(PLAT_PATH)/common/src/qti_pm.c			\
 				$(PLAT_PATH)/common/src/qti_ringbuf_console_helper.c	\
 				$(PLAT_PATH)/common/src/qti_syscall.c			\
+				$(PLAT_PATH)/common/src/qti_sip_platform.c		\
 				$(PLAT_PATH)/common/src/qti_topology.c			\
 				$(PLAT_PATH)/common/src/spmi_arb.c			\
 				$(PLAT_PATH)/hoya/common/$(ARCH)/hoya_helpers.S		\
