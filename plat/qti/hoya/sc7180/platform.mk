@@ -64,6 +64,7 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_kryo4_silver.S	\
 				$(QTI_PLAT_PATH)/common/src/qti_interrupt_svc.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_interrupt_svc_el3.c	\
 				$(QTI_PLAT_PATH)/common/src/qti_syscall.c		\
+				$(QTI_PLAT_PATH)/common/src/qti_sip_platform.c	\
 				$(QTI_PLAT_PATH)/common/src/qti_topology.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_pm.c			\
 				$(QTI_PLAT_PATH)/common/src/spmi_arb.c			\
