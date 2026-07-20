@@ -107,7 +107,8 @@ QTI_EXTERNAL_INCLUDES :=					\
 	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 	-I${QTI_PLAT_PATH}/common/inc				\
 	-I${QTI_PLAT_PATH}/common/inc/$(ARCH)			\
-	-I${QTI_PLAT_PATH}/bl31qtilib/inc
+	-I${QTI_PLAT_PATH}/bl31qtilib/inc			\
+	-Iinclude/drivers/qti/timer/${CHIPSET}
 
 QTI_BL31_SOURCES :=						\
 	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
@@ -169,7 +170,10 @@ GIC_SOURCES :=					\
 #Timer sources
 TIMER_SOURCES :=					\
 	drivers/delay_timer/generic_delay_timer.c	\
-	drivers/delay_timer/delay_timer.c
+	drivers/delay_timer/delay_timer.c		\
+	drivers/qti/timer/timer.c			\
+	drivers/qti/timer/ncc/timer_ncc.c		\
+	drivers/qti/timer/qti_delay_timer.c
 
 QTI_NCC_CPU := 1
 

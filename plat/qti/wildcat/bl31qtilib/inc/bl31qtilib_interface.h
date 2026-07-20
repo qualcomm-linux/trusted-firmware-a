@@ -25,16 +25,6 @@
 extern const char bl31qtilib_build_variant[];
 
 /*
- * bl31qtilib_delay_timer_init
- *
- * Initializes the delay timer for the BL31 QTI library.
- *
- * @return
- * None.
- */
-void bl31qtilib_delay_timer_init(void);
-
-/*
  * bl31qtilib_is_cold_boot_done
  *
  * Checks whether the cold boot sequence has been completed.

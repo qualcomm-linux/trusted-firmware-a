@@ -56,10 +56,6 @@ bool bl31qtilib_is_quick_boot(void)
 	return false;
 }
 
-void bl31qtilib_delay_timer_init(void)
-{
-}
-
 void bl31qtilib_bl31_platform_early_setup(void)
 {
 	ERROR("Please use bl31qtilib_PATH while building TF-A\n");

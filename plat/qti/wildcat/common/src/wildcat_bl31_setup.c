@@ -18,6 +18,7 @@
 #include <drivers/arm/dcc.h>
 #include <drivers/console.h>
 #include <drivers/generic_delay_timer.h>
+#include <drivers/qti/timer/qti_timer.h>
 #include <export/plat/qti/common/plat_params_exp.h>
 #include <lib/bakery_lock.h>
 #include <lib/bl_aux_params/bl_aux_params.h>
@@ -493,6 +494,10 @@ void bl31_platform_setup(void)
 	/* Clean and Invalidate boot imem to ensure no dirty lines remain */
 	flush_dcache_range(BOOT_IMEM_BASE, BOOT_IMEM_SIZE);
 #endif
+
+	/* Initialize QTI secure QTimer and generic delay timer */
+	qti_timer_init();
+	qti_delay_timer_init();
 
 	/* Initialize the GIC driver, CPU and distributor interfaces */
 	plat_qti_gic_driver_init();
