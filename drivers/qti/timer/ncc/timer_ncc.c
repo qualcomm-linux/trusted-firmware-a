@@ -8,11 +8,12 @@
 #include <common/debug.h>
 #include <lib/spinlock.h>
 #include <plat/common/platform.h>
-#include <bl31qtilib_cb_interface.h>
 
 #include <drivers/qti/timer/timer_ncc.h>
 #include <drivers/qti/timer/tzbsp_timer.h>
 #include <drivers/qti/timer/timer_defs.h>
+
+extern const timer_plat_ops_t *g_timer_plat_ops;
 
 typedef enum {
 	TIMER_STATE_FR3 = 0,
@@ -130,7 +131,10 @@ int tzbsp_cpu_cl_sleep_timer_start(timer_sec_id_t tid, uint64_t timeout,
 			break;
 		}
 
-		bl31qtilib_cb_set_int_targets(int_id, target_cpu);
+		if (g_timer_plat_ops != NULL &&
+		    g_timer_plat_ops->set_int_targets != NULL) {
+			g_timer_plat_ops->set_int_targets(int_id, target_cpu);
+		}
 
 		ret = timer_enable_int(tid);
 		if (ret != 0) {
@@ -267,12 +271,13 @@ int tzbsp_cpu_cl_sleep_timer_init(void)
 int tzbsp_cpu_core_sleep_timer_init(void)
 {
 	uint32_t cur_cpu = plat_my_core_pos();
+	int err;
 
 	if (core_timer_handle.core_timer_init_done[cur_cpu]) {
 		return 0;
 	}
 
-	int err = timer_install_isr(TIMER_SEC_CP15, tzbsp_sleep_timer_isr, NULL);
+	err = timer_install_isr(TIMER_SEC_CP15, tzbsp_sleep_timer_isr, NULL);
 	if (err != 0) {
 		ERROR("CP15 timer ISR install failed, cpu: %u, err: %d\n",
 		      cur_cpu, err);

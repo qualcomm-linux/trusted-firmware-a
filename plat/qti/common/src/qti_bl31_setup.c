@@ -11,12 +11,11 @@
 #include <common/debug.h>
 #include <common/desc_image_load.h>
 #include <drivers/console.h>
-#include <drivers/generic_delay_timer.h>
 #include <drivers/qti/accesscontrol/accesscontrol.h>
 #include <drivers/qti/accesscontrol/xpu.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
 #include <drivers/qti/pdc/pdc.h>
-#include <drivers/qti/qtimer/qtimer.h>
+#include <drivers/qti/timer/qti_timer.h>
 #include <drivers/qti/sec_core/sec_core.h>
 #include <drivers/qti/smmu/smmu.h>
 #include <drivers/qti/watchdog/watchdog.h>
@@ -98,7 +97,6 @@ void bl31_plat_arch_setup(void)
 void bl31_platform_setup(void)
 {
 	qti_msm_xpu_bypass();
-	generic_delay_timer_init();
 
 	plat_qti_gic_driver_init();
 	plat_qti_gic_init();
@@ -109,7 +107,15 @@ void bl31_platform_setup(void)
 	qti_smmu_init();
 	qti_interrupt_svc_init(bl32_image_ep_info.pc != 0);
 	qti_sec_core_init();
-	qti_qtimer_init();
+	/*
+	 * Hoya platforms use timer_ncc_stubs so timer_install_isr is never
+	 * called; interrupt callbacks are not needed and are left NULL.
+	 */
+	static const timer_plat_ops_t hoya_timer_ops = { 0 };
+	qti_timer_plat_register(&hoya_timer_ops,
+				(g_qti_bl31_cold_booted == 0U));
+	qti_timer_init();
+	qti_delay_timer_init();
 	if (qti_watchdog_init())
 		ERROR("Watchdog initialization error\n");
 	qti_accesscontrol_init();

@@ -28,7 +28,7 @@ int tzbsp_cpu_cl_sleep_timer_cancel(timer_sec_id_t tid)
 }
 
 int tzbsp_cpu_cl_sleep_timer_start(timer_sec_id_t tid, uint64_t timeout,
-                                   uint32_t target_cpu)
+				   uint32_t target_cpu)
 {
 	return 0;
 }

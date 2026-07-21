@@ -6,10 +6,23 @@
 #ifndef QTI_TIMER_H
 #define QTI_TIMER_H
 
+#include <stdbool.h>
+#include <drivers/qti/timer/tzbsp_timer.h>
+
+/*
+ * Register platform interrupt callbacks and cold-boot state before calling
+ * qti_timer_init(). Must be called once per boot from EL3 plat code.
+ *
+ * plat_ops:           Platform interrupt operation callbacks.
+ * needs_frame_config: true on cold boot or quick boot (frame security
+ *                     registers must be (re-)programmed); false on warm boot.
+ */
+void qti_timer_plat_register(const timer_plat_ops_t *plat_ops,
+			      bool needs_frame_config);
+
 /*
  * Initialize the QTI secure QTimer hardware.
- * Configures frame security access, CNTFRQ, and NCC sleep timers.
- * Must be called on every boot (cold and warm) from EL3.
+ * Must be called after qti_timer_plat_register().
  */
 void qti_timer_init(void);
 

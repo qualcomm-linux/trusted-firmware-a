@@ -3,17 +3,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <errno.h>
 #include <arch_helpers.h>
 #include <common/debug.h>
 #include <lib/mmio.h>
 #include <plat/common/platform.h>
-#include <bl31qtilib_cb_interface.h>
-#include <bl31qtilib_defs.h>
-#include <bl31qtilib_interface.h>
 
 #include <drivers/qti/timer/tzbsp_timer.h>
 #include <drivers/qti/timer/timer_defs.h>
@@ -29,6 +26,13 @@
 #define MS32(xx)		((uint32_t)((xx) >> 32))
 
 #define INVALID_INT_ID		0U
+
+static const timer_plat_ops_t *g_timer_plat_ops;
+
+void timer_register_plat_ops(const timer_plat_ops_t *ops)
+{
+	g_timer_plat_ops = ops;
+}
 
 static uint32_t read_qtimer_lo_wrapper(timer_sec_id_t tid)
 {
@@ -178,7 +182,7 @@ static uint32_t tzbsp_get_sec_qtmr_frames_common(uint8_t qtimer_idx)
 	return sec_frame_bitmask;
 }
 
-void tzbsp_timer_init(void)
+void tzbsp_timer_init(bool needs_frame_config)
 {
 	int ret = 0;
 	uint8_t i, j;
@@ -186,7 +190,7 @@ void tzbsp_timer_init(void)
 					       APSS_SECONDARY_QTMR_BASE };
 
 	do {
-		if (!bl31qtilib_is_cold_boot_done() || bl31qtilib_is_quick_boot()) {
+		if (needs_frame_config) {
 			for (i = 0; i < NO_OF_QTIMERS_ONCHIP; i++) {
 				uint32_t sec_frame_bitmask =
 					tzbsp_get_sec_qtmr_frames_common(i);
@@ -229,7 +233,7 @@ void tzbsp_timer_init(void)
 
 		write_cntfrq_el0(cntfrq);
 
-		if (!bl31qtilib_is_cold_boot_done() &&
+		if (needs_frame_config &&
 		    (tzbsp_cpu_cl_sleep_timer_init() != 0)) {
 			ret = -1;
 			break;
@@ -317,6 +321,11 @@ uint64_t timer_get_count_in_us(timer_sec_id_t tid)
 	}
 }
 
+uint64_t timer_get_uptime_count_raw(void)
+{
+	return read_cntpct_el0();
+}
+
 int timer_install_isr(timer_sec_id_t tid, void *(*fn)(void *), void *ctx)
 {
 	int err = -1;
@@ -326,31 +335,47 @@ int timer_install_isr(timer_sec_id_t tid, void *(*fn)(void *), void *ctx)
 		return -1;
 	}
 
+	if ((g_timer_plat_ops == NULL) ||
+	    (g_timer_plat_ops->register_isr == NULL)) {
+		ERROR("Timer plat ops not registered\n");
+		return -1;
+	}
+
 	switch (tid) {
 	case TIMER_SEC_CP15:
-		err = bl31qtilib_cb_int_register_isr(
+		err = g_timer_plat_ops->register_isr(
 			(uint32_t)TIMER_SEC_CP15_INT_ID, "CP15Tmr Sec", fn, ctx,
-			BL31QTILIB_INTR_ROUTING_MODE_SELF, true);
+			TIMER_INTF_TRIGGER_LEVEL | TIMER_INT_TARGET_SELF |
+				TIMER_INTF_NON_FATAL_INT,
+			true);
 		break;
 	case TIMER_SEC_QTIMER:
-		err = bl31qtilib_cb_int_register_isr(
+		err = g_timer_plat_ops->register_isr(
 			(uint32_t)TIMER_SEC_QTMR_INT_ID, "QTIMER Sec", fn, ctx,
-			BL31QTILIB_INTR_ROUTING_MODE_ALL, true);
+			TIMER_INTF_TRIGGER_LEVEL | TIMER_INTF_ALL_CPUS |
+				TIMER_INTF_NON_FATAL_INT,
+			true);
 		break;
 	case TIMER_SEC_QTIMER_FR3:
-		err = bl31qtilib_cb_int_register_isr(
+		err = g_timer_plat_ops->register_isr(
 			(uint32_t)TIMER_SEC_QTMR_FR3_INT_ID, "QTIMER FR3", fn, ctx,
-			BL31QTILIB_INTR_ROUTING_MODE_ALL, true);
+			TIMER_INTF_TRIGGER_LEVEL | TIMER_INTF_ALL_CPUS |
+				TIMER_INTF_NON_FATAL_INT,
+			true);
 		break;
 	case TIMER_SEC_QTIMER_FR4:
-		err = bl31qtilib_cb_int_register_isr(
+		err = g_timer_plat_ops->register_isr(
 			(uint32_t)TIMER_SEC_QTMR_FR4_INT_ID, "QTIMER FR4", fn, ctx,
-			BL31QTILIB_INTR_ROUTING_MODE_ALL, true);
+			TIMER_INTF_TRIGGER_LEVEL | TIMER_INTF_ALL_CPUS |
+				TIMER_INTF_NON_FATAL_INT,
+			true);
 		break;
 	case TIMER_SEC_QTIMER_FR5:
-		err = bl31qtilib_cb_int_register_isr(
+		err = g_timer_plat_ops->register_isr(
 			(uint32_t)TIMER_SEC_QTMR_FR5_INT_ID, "QTIMER FR5", fn, ctx,
-			BL31QTILIB_INTR_ROUTING_MODE_ALL, true);
+			TIMER_INTF_TRIGGER_LEVEL | TIMER_INTF_ALL_CPUS |
+				TIMER_INTF_NON_FATAL_INT,
+			true);
 		break;
 	default:
 		return -1;
@@ -361,24 +386,24 @@ int timer_install_isr(timer_sec_id_t tid, void *(*fn)(void *), void *ctx)
 
 int timer_enable_int(timer_sec_id_t tid)
 {
-	int retval = -1;
 	uint32_t int_id = timer_get_timer_secure_int_id(tid);
 
-	if (int_id != INVALID_INT_ID) {
-		retval = bl31qtilib_cb_int_enable(int_id);
+	if ((int_id == INVALID_INT_ID) || (g_timer_plat_ops == NULL) ||
+	    (g_timer_plat_ops->enable_int == NULL)) {
+		return -1;
 	}
-	return retval;
+	return g_timer_plat_ops->enable_int(int_id);
 }
 
 int timer_disable_int(timer_sec_id_t tid)
 {
-	int retval = -1;
 	uint32_t int_id = timer_get_timer_secure_int_id(tid);
 
-	if (int_id != INVALID_INT_ID) {
-		retval = bl31qtilib_cb_int_disable(int_id);
+	if ((int_id == INVALID_INT_ID) || (g_timer_plat_ops == NULL) ||
+	    (g_timer_plat_ops->disable_int == NULL)) {
+		return -1;
 	}
-	return retval;
+	return g_timer_plat_ops->disable_int(int_id);
 }
 
 uint32_t timer_get_timer_secure_int_id(timer_sec_id_t tid)

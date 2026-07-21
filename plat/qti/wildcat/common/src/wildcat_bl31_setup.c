@@ -27,6 +27,7 @@
 #include <lib/spinlock.h>
 #include <plat/common/platform.h>
 
+#include <bl31qtilib_cb_interface.h>
 #include <bl31qtilib_interface.h>
 #include <bl31qtilib_spd_agnostic.h>
 #include <platform.h>
@@ -496,6 +497,15 @@ void bl31_platform_setup(void)
 #endif
 
 	/* Initialize QTI secure QTimer and generic delay timer */
+	static const timer_plat_ops_t wildcat_timer_ops = {
+		.register_isr    = bl31qtilib_cb_int_register_isr,
+		.enable_int      = bl31qtilib_cb_int_enable,
+		.disable_int     = bl31qtilib_cb_int_disable,
+		.set_int_targets = bl31qtilib_cb_set_int_targets,
+	};
+	qti_timer_plat_register(&wildcat_timer_ops,
+				 !bl31qtilib_is_cold_boot_done() ||
+				 bl31qtilib_is_quick_boot());
 	qti_timer_init();
 	qti_delay_timer_init();
 

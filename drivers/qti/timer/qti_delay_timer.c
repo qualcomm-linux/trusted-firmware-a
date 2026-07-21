@@ -59,9 +59,24 @@ static void qti_delay_timer_init_args(uint32_t mult, uint32_t div)
 	timer_init(&ops);
 }
 
+/*
+ * Platform-provided ops and cold-boot state are injected via
+ * qti_timer_plat_register(), called by the platform before qti_timer_init().
+ */
+static const timer_plat_ops_t *g_qti_plat_ops;
+static bool g_qti_needs_frame_config;
+
+void qti_timer_plat_register(const timer_plat_ops_t *plat_ops,
+			      bool needs_frame_config)
+{
+	g_qti_plat_ops = plat_ops;
+	g_qti_needs_frame_config = needs_frame_config;
+}
+
 void qti_timer_init(void)
 {
-	tzbsp_timer_init();
+	timer_register_plat_ops(g_qti_plat_ops);
+	tzbsp_timer_init(g_qti_needs_frame_config);
 }
 
 void qti_delay_timer_init(void)

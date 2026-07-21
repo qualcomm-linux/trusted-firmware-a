@@ -78,8 +78,7 @@ BL2_SOURCES		+=	drivers/io/io_fip.c					\
 				$(PLAT_PATH)/common/src/qti_io_storage.c
 
 include drivers/arm/gic/v3/gicv3.mk
-BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
-				drivers/delay_timer/delay_timer.c			\
+BL31_SOURCES		+=	drivers/delay_timer/delay_timer.c		\
 				plat/common/plat_gicv3.c				\
 				${GICV3_SOURCES}					\
 				plat/common/plat_psci_common.c				\
@@ -112,18 +111,19 @@ $(warning QTISECLIB_PATH is not provided while building, using stub implementati
 include drivers/qti/smmu/smmu.mk
 include drivers/qti/pdc/pdc.mk
 
-PLAT_INCLUDES   +=      -Iinclude/drivers/qti/qtimer/${CHIPSET} \
+PLAT_INCLUDES   +=      -Iinclude/drivers/qti/timer/${CHIPSET} \
 			-Iinclude/drivers/qti/watchdog/${CHIPSET}
 
 BL31_SOURCES	+=	plat/qti/hoya/qtiseclib/src/qtiseclib_interface_stub.c \
-			drivers/qti/qtimer/qtimer.c \
+			drivers/qti/timer/timer.c			\
+			drivers/qti/timer/ncc/timer_ncc_stubs.c		\
+			drivers/qti/timer/qti_delay_timer.c		\
 			drivers/qti/watchdog/watchdog.c
 
 else
 $(eval $(call add_define,QTISECLIB_PATH))
 # use library provided by QTISECLIB_PATH
-BL31_SOURCES	+=	drivers/qti/qtimer/qtimer_stub.c \
-			drivers/qti/watchdog/watchdog_stub.c
+BL31_SOURCES	+=	drivers/qti/watchdog/watchdog_stub.c
 
 LDFLAGS += -L $(dir $(QTISECLIB_PATH))
 LDLIBS += -l$(patsubst lib%.a,%,$(notdir $(QTISECLIB_PATH)))

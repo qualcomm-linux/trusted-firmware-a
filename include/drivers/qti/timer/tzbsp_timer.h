@@ -18,10 +18,43 @@ typedef enum {
 	TIMER_SEC_MAX_TID,		/* This needs to be last entry */
 } timer_sec_id_t;
 
-void tzbsp_timer_init(void);
+/*
+ * Interrupt flags for timer_plat_ops_t.register_isr.
+ */
+#define TIMER_INTF_TRIGGER_LEVEL	0x00000000U
+#define TIMER_INTF_NON_FATAL_INT	0x00002000U
+#define TIMER_INT_TARGET_SELF		0x02000000U
+#define TIMER_INTF_ALL_CPUS		0x40000000U
+
+/*
+ * Platform callbacks for timer interrupt operations.
+ * Must be registered via timer_register_plat_ops() before tzbsp_timer_init().
+ *
+ * register_isr signature matches bl31qtilib_cb_int_register_isr so it can be
+ * assigned directly on Wildcat without a wrapper.
+ */
+typedef struct {
+	int (*register_isr)(uint32_t int_id, const char *int_desc,
+			    void *(*fn)(void *), void *ctx,
+			    uint32_t flags, bool enable);
+	int (*enable_int)(uint32_t int_id);
+	int (*disable_int)(uint32_t int_id);
+	int (*set_int_targets)(uint32_t int_id, uint32_t target_cpu);
+} timer_plat_ops_t;
+
+void timer_register_plat_ops(const timer_plat_ops_t *ops);
+
+/*
+ * Initialize QTimer hardware.
+ * needs_frame_config: true on cold boot or quick boot (frame security
+ * registers must be (re-)programmed); false on warm boot.
+ */
+void tzbsp_timer_init(bool needs_frame_config);
+
 int timer_one_shot_start(timer_sec_id_t tid, uint64_t timeout);
 int timer_stop(timer_sec_id_t tid);
 uint64_t timer_get_count_in_us(timer_sec_id_t tid);
+uint64_t timer_get_uptime_count_raw(void);
 int timer_install_isr(timer_sec_id_t tid, void *(*fn)(void *), void *ctx);
 int timer_enable_int(timer_sec_id_t tid);
 int timer_disable_int(timer_sec_id_t tid);

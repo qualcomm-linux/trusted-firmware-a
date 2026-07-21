@@ -10,7 +10,7 @@
 #include <arch_helpers.h>
 #include <common/debug.h>
 #include <drivers/arm/gicv3.h>
-#include <drivers/qti/qtimer/qtimer.h>
+#include <drivers/qti/timer/tzbsp_timer.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <lib/mmio.h>
 #include <lib/spinlock.h>
@@ -70,7 +70,7 @@ void qti_watchdog_stop(void)
 
 void qti_watchdog_pet(void)
 {
-	qti_watchdog_pet_ticks = qti_qtimer_get_raw();
+	qti_watchdog_pet_ticks = timer_get_uptime_count_raw();
 	mmio_write_32(WDOG_RESET_ADDR, RESET);
 	dsb();
 }
