@@ -540,11 +540,12 @@ subsections:
             deprecated:
               - qemu_sbsa
 
-      - title: QTI
-        scope: qti
+      - title: Qualcomm
+        scope: qcom
 
         deprecated:
           - plat/qti
+          - qti
 
         subsections:
           - title: SC1780
