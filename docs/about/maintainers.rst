@@ -854,28 +854,28 @@ QEMU platform port
 :|F|: docs/plat/qemu.rst
 :|F|: plat/qemu/
 
-QTI platform port and SoC drivers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Qualcomm platform port and SoC drivers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 :|M|: Sumit Garg <sumit.garg@oss.qualcomm.com>
 :|G|: `b49020`_
 :|M|: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
 :|G|: `ldts`_
 :|M|: Sreevyshanavi Kare <skare@qti.qualcomm.com>
 :|G|: `skare-git`_
-:|F|: docs/plat/qti/
-:|F|: plat/qti/
-:|F|: drivers/qti/
-:|F|: include/drivers/qti/
-:|F|: tools/qti/
+:|F|: docs/plat/qcom/
+:|F|: plat/qcom/
+:|F|: drivers/qcom/
+:|F|: include/drivers/qcom/
+:|F|: tools/qcom/
 
-QTI MSM8916 platform port
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Qualcomm MSM8916 platform port
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 :|M|: Stephan Gerhold <stephan@gerhold.net>
 :|G|: `stephan-gh`_
 :|M|: Nikita Travkin <nikita@trvn.ru>
 :|G|: `TravMurav`_
-:|F|: docs/plat/qti/msm8916.rst
-:|F|: plat/qti/bear/
+:|F|: docs/plat/qcom/msm8916.rst
+:|F|: plat/qcom/bear/
 
 Raspberry Pi 3 platform port
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

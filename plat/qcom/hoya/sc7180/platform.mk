@@ -1,0 +1,141 @@
+#
+# Copyright (c) 2017-2025, Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+
+# Make for SC7180 Qualcomm platform.
+
+QCOM_PLAT_PATH		:=	plat/qcom
+CHIPSET			:=	${PLAT}
+
+# Turn On Separate code & data.
+SEPARATE_CODE_AND_RODATA	:=	1
+USE_COHERENT_MEM		:=	0
+WARMBOOT_ENABLE_DCACHE_EARLY	:=	1
+HW_ASSISTED_COHERENCY		:=	1
+
+# Disable the PSCI platform compatibility layer
+ENABLE_PLAT_COMPAT		:=	0
+
+#Enable errata for cortex_a55 and cortex_a76
+ERRATA_A55_1530923 		:= 	1
+ERRATA_A76_1165522 		:= 	1
+WORKAROUND_CVE_2025_10263	:=	1
+
+# Enable PSCI v1.0 extended state ID format
+PSCI_EXTENDED_STATE_ID	:=  1
+ARM_RECOM_STATE_ID_ENC  :=  1
+
+COLD_BOOT_SINGLE_CPU		:=	1
+PROGRAMMABLE_RESET_ADDRESS	:=	1
+
+RESET_TO_BL31			:=	0
+
+# Enable the dynamic translation tables library
+PLAT_XLAT_TABLES_DYNAMIC	:=	1
+$(eval $(call add_define,PLAT_XLAT_TABLES_DYNAMIC))
+
+QTI_SDI_BUILD := 0
+$(eval $(call assert_boolean,QTI_SDI_BUILD))
+$(eval $(call add_define,QTI_SDI_BUILD))
+
+#disable CTX_INCLUDE_AARCH32_REGS to support sc7180 gold cores
+override CTX_INCLUDE_AARCH32_REGS	:=	0
+WORKAROUND_CVE_2017_5715		:=      0
+DYNAMIC_WORKAROUND_CVE_2018_3639	:=      1
+# Enable stack protector.
+ENABLE_STACK_PROTECTOR := strong
+
+
+QCOM_EXTERNAL_INCLUDES	:=	-I${QCOM_PLAT_PATH}/hoya/${CHIPSET}/inc			\
+				-I${QCOM_PLAT_PATH}/common/inc				\
+				-I${QCOM_PLAT_PATH}/common/inc/$(ARCH)			\
+				-I${QCOM_PLAT_PATH}/hoya/qtiseclib/inc			\
+				-I${QCOM_PLAT_PATH}/hoya/qtiseclib/inc/${CHIPSET}
+
+QCOM_BL31_SOURCES	:=	$(QCOM_PLAT_PATH)/common/src/$(ARCH)/qcom_kryo4_silver.S	\
+				$(QCOM_PLAT_PATH)/common/src/$(ARCH)/qcom_kryo4_gold.S	\
+				$(QCOM_PLAT_PATH)/common/src/$(ARCH)/qcom_uart_console.S	\
+				$(QCOM_PLAT_PATH)/common/src/pm_ps_hold.c		\
+				$(QCOM_PLAT_PATH)/common/src/qcom_stack_protector.c	\
+				$(QCOM_PLAT_PATH)/common/src/qcom_common.c		\
+				$(QCOM_PLAT_PATH)/common/src/qcom_bl31_setup.c		\
+				$(QCOM_PLAT_PATH)/common/src/qcom_gic_v3.c		\
+				$(QCOM_PLAT_PATH)/common/src/qcom_interrupt_svc.c		\
+				$(QCOM_PLAT_PATH)/common/src/qcom_syscall.c		\
+				$(QCOM_PLAT_PATH)/common/src/qcom_topology.c		\
+				$(QCOM_PLAT_PATH)/common/src/qcom_pm.c			\
+				$(QCOM_PLAT_PATH)/common/src/spmi_arb.c			\
+				$(QCOM_PLAT_PATH)/hoya/common/$(ARCH)/hoya_helpers.S	\
+				$(QCOM_PLAT_PATH)/hoya/common/hoya_bl31_setup.c		\
+				$(QCOM_PLAT_PATH)/hoya/common/hoya_gicv3.c		\
+				$(QCOM_PLAT_PATH)/hoya/common/qtiseclib_pm.c		\
+				$(QCOM_PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_cb_interface.c	\
+				drivers/qcom/crypto/rng.c
+
+
+PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
+
+PLAT_INCLUDES		+=	${QCOM_EXTERNAL_INCLUDES}
+
+include lib/xlat_tables_v2/xlat_tables.mk
+include drivers/qcom/chipinfo/chipinfo.mk
+include drivers/qcom/smem/smem.mk
+PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
+				plat/common/aarch64/crash_console_helpers.S    \
+				common/desc_image_load.c			\
+				lib/bl_aux_params/bl_aux_params.c		\
+
+include lib/coreboot/coreboot.mk
+
+#PSCI Sources.
+PSCI_SOURCES		:=	plat/common/plat_psci_common.c				\
+
+# GIC-600 configuration
+GICV3_SUPPORT_GIC600	:=	1
+# Include GICv3 driver files
+include drivers/arm/gic/v3/gicv3.mk
+
+#Timer sources
+TIMER_SOURCES		:=	drivers/delay_timer/generic_delay_timer.c	\
+				drivers/delay_timer/delay_timer.c		\
+
+#GIC sources.
+GIC_SOURCES		:=	plat/common/plat_gicv3.c			\
+				${GICV3_SOURCES}				\
+
+CPU_SOURCES		:=	lib/cpus/aarch64/cortex_a76.S			\
+				lib/cpus/aarch64/cortex_a55.S			\
+
+BL31_SOURCES		+=	${QCOM_BL31_SOURCES}				\
+				${PSCI_SOURCES}					\
+				${GIC_SOURCES}					\
+				${TIMER_SOURCES}				\
+				${CPU_SOURCES}					\
+
+LIB_QCOM_PATH	:=	${QCOM_PLAT_PATH}/hoya/qtiseclib/lib/${CHIPSET}
+
+
+# Override this on the command line to point to the qtiseclib library which
+# will be available in coreboot.org
+QTISECLIB_PATH ?=
+
+# QTISECLIB drivers
+BL31_SOURCES	+=		drivers/qcom/accesscontrol/access_control_qtiseclib.c \
+				drivers/qcom/sec_core/sec_core_stub.c \
+				drivers/qcom/qtimer/qtimer_stub.c \
+				drivers/qcom/watchdog/watchdog_stub.c
+
+ifeq ($(QTISECLIB_PATH),)
+# if No lib then use stub implementation for qtiseclib interface
+$(warning QTISECLIB_PATH is not provided while building, using stub implementation. \
+		Please refer docs/plat/qti.rst for more details \
+		THIS FIRMWARE WILL NOT BOOT!)
+BL31_SOURCES	+=	plat/qcom/hoya/qtiseclib/src/qtiseclib_interface_stub.c
+else
+# use library provided by QTISECLIB_PATH
+LDLIBS += $(QTISECLIB_PATH)
+endif
+

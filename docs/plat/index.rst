@@ -38,7 +38,7 @@ Platform Ports
    poplar
    qemu
    qemu-sbsa
-   qti/index
+   qcom/index
    rpi3
    rpi4
    rpi5
