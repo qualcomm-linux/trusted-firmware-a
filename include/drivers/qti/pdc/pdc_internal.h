@@ -14,6 +14,9 @@
 /* Sentinel: GPIO not yet assigned to a MUX slot */
 #define PDC_GPIO_INVALID	((uint16_t)-1)
 
+/* Sentinel: PDC mux slot is not backed by a GPIO */
+#define PDC_MUX_OPEN		((uint16_t)-1)
+
 /* PDC pin type */
 enum pdc_pin_type {
 	PDC_IRQ  = 0,

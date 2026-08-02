@@ -7,6 +7,7 @@
 #include <common/debug.h>
 
 #include <drivers/qti/pdc/pdc_seq.h>
+#include "pdc_config.h"
 #include "pdc_regs.h"
 
 #include <platform_def.h>
@@ -19,6 +20,7 @@ static enum pdc_seq_result pdc_seq_internal_cfg(struct pdc_seq *seq)
 	uint32_t i;
 	const struct pdc_seq_cfg *cfg = seq->cfg;
 
+#if !PDC_HAS_COMMON_SEQ
 	for (i = 0U; i < cfg->br_count; i++) {
 		PDC_SEQ_BR_ADDR_WRITE(seq->addr, i, cfg->br_addr[i]);
 	}
@@ -26,6 +28,10 @@ static enum pdc_seq_result pdc_seq_internal_cfg(struct pdc_seq *seq)
 	for (i = 0U; i < cfg->delay_count; i++) {
 		PDC_SEQ_DELAY_WRITE(seq->addr, i, cfg->delay[i]);
 	}
+#else
+	(void)i;
+	(void)cfg;
+#endif
 
 	if (PDC_PARAM_PROFILING_UNIT(seq->addr) != PDC_TS_COUNT) {
 		return PDC_SEQ_INVALID_PARAM;
@@ -131,6 +137,9 @@ static enum pdc_seq_result pdc_seq_copy_cmd_seq(struct pdc_seq *seq)
 static enum pdc_seq_result pdc_seq_init(struct pdc_seq *seq)
 {
 	enum pdc_seq_result result;
+#if PDC_HAS_COMMON_SEQ
+	size_t i;
+#endif
 
 	if ((seq == NULL) || (seq->cfg == NULL) ||
 	    (seq->modes == NULL) || (seq->offset == 0U)) {
@@ -145,7 +154,22 @@ static enum pdc_seq_result pdc_seq_init(struct pdc_seq *seq)
 		return result;
 	}
 
+#if PDC_HAS_COMMON_SEQ
+	for (i = 0U; i < seq->mode_count; i++) {
+		if (seq->modes[i].length != 0U) {
+			return PDC_SEQ_INVALID_PARAM;
+		}
+	}
+
+	if (seq->mode_count > 0U) {
+		PDC_SEQ_BRANCH_MASK_WRITE(seq->rsc_addr,
+					  seq->modes[0].branch_mask);
+	}
+
+	return PDC_SEQ_SUCCESS;
+#else
 	return pdc_seq_copy_cmd_seq(seq);
+#endif
 }
 
 void pdc_seq_sys_init(void)

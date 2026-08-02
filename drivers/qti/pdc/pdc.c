@@ -13,6 +13,7 @@
 #include <drivers/qti/pdc/pdc_tcs.h>
 #include <drivers/qti/pdc/pdc_types.h>
 
+#include "pdc_config.h"
 #include "pdc_regs.h"
 
 extern struct pdc_interrupt_mapping	g_pdc_interrupt_mapping[];
@@ -28,6 +29,10 @@ static void pdc_set_owner(uint32_t pdc_bit_num, uint32_t num_int,
 			  enum pdc_pin_type pin_type, enum pdc_drv_type owner)
 {
 	uint32_t bit_num = pdc_bit_num;
+
+	if (owner == PDC_DRV_INVALID) {
+		return;
+	}
 
 	if (pin_type == PDC_GPIO) {
 		bit_num += num_int;
@@ -61,6 +66,8 @@ static void pdc_target_init(void)
 void qti_pdc_init(void)
 {
 	pdc_seq_sys_init();
+#if PDC_HAS_TCS
 	pdc_tcs_initialize();
+#endif
 	pdc_target_init();
 }
