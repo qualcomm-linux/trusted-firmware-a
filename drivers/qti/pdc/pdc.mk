@@ -23,8 +23,7 @@ BL31_SOURCES += \
 	$(PDC_DRV_PATH)/pdc_seq.c				\
 	$(PDC_DRV_PATH)/$(CHIPSET)/pdc_seq_cfg.c		\
 	$(PDC_DRV_PATH)/$(CHIPSET)/interrupt_table.c		\
-	$(PDC_DRV_PATH)/$(CHIPSET)/gpio_table.c			\
-	$(PDC_DRV_PATH)/$(CHIPSET)/mux_table.c
+	$(PDC_DRV_PATH)/$(CHIPSET)/gpio_table.c
 
 ifeq ($(PDC_ENABLE_TCS),1)
 BL31_SOURCES += \
