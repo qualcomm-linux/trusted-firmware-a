@@ -17,6 +17,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <drivers/qti/rpmh/rpmh.h>
+
 #include <rpmh_target.h>
 
 /* The "set" a request belongs to. */
@@ -50,21 +52,6 @@ struct rpmh_command_set {
 
 /* Opaque per-client handle. */
 struct rpmh_client;
-
-/*
- * rpmh_client_init - one time initialisation of the RPMh driver.
- *
- * Must be called once before any other RPMh API is used.
- */
-void rpmh_client_init(void);
-
-/*
- * rpmh_client_deinit - deinitialise the RPMh driver after boot-time users are
- * done.
- *
- * No RPMh API other than rpmh_client_init() may be used after this returns.
- */
-void rpmh_client_deinit(void);
 
 /*
  * rpmh_create_handle - create a client handle for the given RSC+DRV mapping.

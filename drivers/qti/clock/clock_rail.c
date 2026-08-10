@@ -38,8 +38,6 @@ void clock_rail_init(void)
 	uint32_t req_id;
 	int cx_hlvl;
 
-	/* No other init caller in the boot path; rpmh_client_init() is idempotent. */
-	rpmh_client_init();
 	clock_rpmh = rpmh_create_handle(RSC_DRV_TZ, "clock");
 	xo_addr = cmd_db_query_addr("xo.lvl");
 	clock_cx_addr = cmd_db_query_addr("cx.lvl");
