@@ -185,7 +185,7 @@ void plat_qti_cpu_boot_setup(void)
 	memset(cluster_sysini_lock, 0, sizeof(cluster_sysini_lock));
 
 	/* CPUSS sysini - execute only once */
-	if (!cpuss_sysini_done) {
+	if (cpuss_sysini_done != 1) {
 		cpuss_aarch64_por_sysini(1, (uintptr_t)NULL);
 		cpuss_sysini_done = 1;
 	}

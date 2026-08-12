@@ -238,6 +238,7 @@ int bl31qtilib_get_subsystem_debug_options(uint32_t subsys_id, smc_rsp_t *rsp)
 /*
  * Assembly-level stubs for hardware initialization functions
  */
+#ifndef QTI_USE_SYSINI_LIB
 void phoenix_gen1_aarch64_sysini(unsigned long flags, uintptr_t aux_data)
 {
 	(void)flags;
@@ -255,6 +256,7 @@ void cluster_aarch64_sysini(unsigned long flags, uintptr_t aux_data)
 	(void)flags;
 	(void)aux_data;
 }
+#endif
 
 void sphinx_aarch64_sysini(void)
 {

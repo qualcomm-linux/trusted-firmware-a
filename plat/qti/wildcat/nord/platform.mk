@@ -235,6 +235,16 @@ LDLIBS += -l$(patsubst lib%.a,%,$(notdir $(BL31QTILIB_PATH)))
 
 endif
 
+# Override this on the command line to point to the SysINI library.
+SYSINIQTILIB_PATH ?= $(QTI_PLAT_PATH)/sysini/lib/$(CHIPSET)/libsysini.a
+ifeq ($(SYSINIQTILIB_PATH),)
+$(error Please provide path to libsysini.a in SYSINIQTILIB_PATH)
+else
+$(eval $(call add_define,QTI_USE_SYSINI_LIB))
+LDFLAGS += -L $(dir $(SYSINIQTILIB_PATH))
+LDLIBS += -l$(patsubst lib%.a,%,$(notdir $(SYSINIQTILIB_PATH)))
+endif
+
 # Always use the SPD-agnostic adapter for NORD. These stubs do not forward
 # BL31 QTI calls to the selected SPD.
 BL31_SOURCES +=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_stub.c \

@@ -9,6 +9,10 @@
 #include <stdint.h>
 #include <arch_features.h>
 
+#ifdef QTI_USE_SEC_PRNG
+#include <drivers/qti/crypto/rng.h>
+#endif
+
 #if TRNG_SUPPORT
 
 #include <lib/smccc.h>
@@ -34,6 +38,13 @@ void plat_entropy_setup(void)
  */
 bool plat_get_entropy(uint64_t *out)
 {
+#ifdef QTI_USE_SEC_PRNG
+	if (out == NULL) {
+		return false;
+	}
+
+	return qti_rng_get_data((uint8_t *)out, sizeof(*out)) == 0;
+#else
 	bool ok = false;
 	uint64_t value = 0;
 
@@ -61,4 +72,5 @@ bool plat_get_entropy(uint64_t *out)
 
 	*out = value;
 	return true;
+#endif
 }
