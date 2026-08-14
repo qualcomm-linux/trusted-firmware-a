@@ -1,0 +1,136 @@
+/*
+ * Copyright (c) 2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+/*
+ * Sample only -- not built. Shows how a chipset wires a legacy IPCC config
+ * alongside the router one; copy the relevant pieces into a real
+ * <chipset>/ipcc_config.c. Requires QTI_IPCC_LEGACY=1.
+ *
+ * Mechanism selection: when a protocol sets both legacy_supported and
+ * ipcc_mode_supported, qti_ipcc_trigger() takes the legacy path for a target
+ * whose entry sets use_legacy_by_default, and the router otherwise.
+ *
+ * Indexing rules:
+ *
+ *   1. The legacy clients[] array is indexed by client ID, so it must be sized
+ *      to the highest legacy client ID plus one. Unused slots stay zeroed
+ *      (num_signals == 0) and are rejected.
+ *   2. Each client's signals[] is indexed by signal number, guarded by
+ *      signal_high < num_signals. A signal with no legacy encoding stays zeroed
+ *      (out_mask == 0) and is rejected.
+ *   3. The router-side protocol->clients[] is searched by client ID, never
+ *      indexed by it, so it holds no holes: a client absent from it is rejected.
+ *      Its physical index is the client ID unless hw_mem_opt says the part packs
+ *      its pages, in which case it is the entry's row. Legacy parts do not pack,
+ *      so their physical index equals the client ID -- matching rule 1.
+ */
+
+#include <stdint.h>
+
+#include <drivers/qti/ipcc/ipcc.h>
+#include <lib/utils_def.h>
+
+#include "ipcc_priv.h"
+
+/*
+ * Hypothetical SoC register map, illustrative values only. On a real chipset
+ * these live in drivers/qti/ipcc/<chipset>/ipcc_hwio.h.
+ */
+#define SAMPLE_IPCC_BASE		UL(0x00400000)
+#define SAMPLE_MPROC_NUM_SIGS		U(8)
+
+/* Per-client outgoing-trigger registers for the legacy block */
+#define SAMPLE_LEGACY_MPSS_TRIG_REG	UL(0x00410000)
+#define SAMPLE_LEGACY_LPASS_TRIG_REG	UL(0x00411000)
+
+/* Masks written to the trigger register to raise each signal */
+#define SAMPLE_LEGACY_MPSS_SIG0_MASK	BIT_32(0)
+#define SAMPLE_LEGACY_MPSS_SIG1_MASK	BIT_32(1)
+#define SAMPLE_LEGACY_LPASS_SIG0_MASK	BIT_32(0)
+
+/* Per-client, per-signal masks; signals[] is indexed by signal number. */
+static const struct ipcc_legacy_signal sample_mpss_signals[] = {
+	[0] = { .out_mask = SAMPLE_LEGACY_MPSS_SIG0_MASK },
+	[1] = { .out_mask = SAMPLE_LEGACY_MPSS_SIG1_MASK },
+};
+
+static const struct ipcc_legacy_signal sample_lpass_signals[] = {
+	[0] = { .out_mask = SAMPLE_LEGACY_LPASS_SIG0_MASK },
+};
+
+/*
+ * Legacy client array, indexed by client ID. Only MPSS (2) and LPASS (3) are
+ * legacy-capable here; AOP (0) and TZ (1) stay zeroed, so a legacy trigger
+ * towards them is rejected. Size covers the highest legacy client ID (3 -> 4).
+ */
+static const struct ipcc_legacy_client sample_legacy_clients[] = {
+	[IPCC_CLIENT_MPSS] = {
+		.num_signals = ARRAY_SIZE(sample_mpss_signals),
+		.signals = sample_mpss_signals,
+		.reg_base = SAMPLE_LEGACY_MPSS_TRIG_REG,
+	},
+	[IPCC_CLIENT_LPASS] = {
+		.num_signals = ARRAY_SIZE(sample_lpass_signals),
+		.signals = sample_lpass_signals,
+		.reg_base = SAMPLE_LEGACY_LPASS_TRIG_REG,
+	},
+};
+
+static const struct ipcc_legacy_bsp sample_legacy_bsp = {
+	.num_clients = ARRAY_SIZE(sample_legacy_clients),
+	.clients = sample_legacy_clients,
+};
+
+/* NULL here means "no legacy path on this chipset". */
+const struct ipcc_legacy_bsp *const ipcc_chipset_legacy_config =
+	&sample_legacy_bsp;
+
+/*
+ * Router config with the legacy coexistence flags set: the protocol is dual-mode
+ * and use_legacy_by_default is set for exactly the clients that appear in the
+ * legacy tables above, so every other client stays on the router.
+ *
+ * This SoC does not pack its client pages, so hw_mem_opt stays false and the
+ * order below carries no meaning -- the list only enumerates the clients wired on
+ * MPROC, and anything left out is rejected.
+ */
+static struct ipcc_client_bsp sample_mproc_clients[] = {
+	{ .client = IPCC_CLIENT_AOP },
+	{ .client = IPCC_CLIENT_TZ },
+	{
+		.client = IPCC_CLIENT_MPSS,
+		.use_legacy_by_default = true,
+	},
+	{
+		.client = IPCC_CLIENT_LPASS,
+		.use_legacy_by_default = true,
+	},
+	{ .client = IPCC_CLIENT_APSS_NS0 },
+};
+
+static struct ipcc_protocol_cfg sample_protocols[] = {
+	[IPCC_PROTO_MPROC] = {
+		.protocol_id = IPCC_PROTO_MPROC,
+		.num_sigs = SAMPLE_MPROC_NUM_SIGS,
+		.num_clients = ARRAY_SIZE(sample_mproc_clients),
+		.phys_base = SAMPLE_IPCC_BASE,
+		.clients = sample_mproc_clients,
+		.legacy_supported = true,
+		.ipcc_mode_supported = true,
+	},
+};
+
+static const struct ipcc_bsp_data sample_bsp_data = {
+	.protocols = sample_protocols,
+	.num_protocols = ARRAY_SIZE(sample_protocols),
+	.client = IPCC_CLIENT_TZ,
+#if QTI_IPCC_NO_TME
+	/* Value for IPC_CONFIG.TOP_MODE.MODE; true = router. */
+	.ipcc_mode = true,
+#endif
+};
+
+const struct ipcc_bsp_data *const ipcc_chipset_config = &sample_bsp_data;

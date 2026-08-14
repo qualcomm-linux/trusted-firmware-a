@@ -16,6 +16,7 @@
 #include <drivers/qti/accesscontrol/xpu.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
 #include <drivers/qti/clock/clock.h>
+#include <drivers/qti/ipcc/ipcc.h>
 #include <drivers/qti/pdc/pdc.h>
 #include <drivers/qti/pwr_utils/pwr_utils.h>
 #include <drivers/qti/qtimer/qtimer.h>
@@ -107,6 +108,7 @@ void bl31_platform_setup(void)
 	qti_interrupt_svc_init(bl32_image_ep_info.pc != 0);
 	qti_sec_core_init();
 	qti_qtimer_init();
+	qti_ipcc_init();
 	if (qti_watchdog_init()) {
 		ERROR("Watchdog initialization error\n");
 	}
