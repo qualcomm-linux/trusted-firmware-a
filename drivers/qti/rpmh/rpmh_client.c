@@ -53,20 +53,35 @@ enum rpmh_state {
 
 static enum rpmh_state rpmh_drv_state;
 
-static bool rpmh_tcs_is_idle(uint32_t tcs);
-
-static void rpmh_validate_handle(const struct rpmh_client *handle)
+static void rpmh_validate_handle_locked(const struct rpmh_client *handle)
 {
 	if (rpmh_drv_state != RPMH_STATE_INIT || handle == NULL ||
 	    !handle->in_use) {
 		ERROR("RPMh: invalid handle or use after deinit\n");
+		spin_unlock(&rpmh_lock);
 		panic();
 	}
 }
 
+static void rpmh_validate_handle(const struct rpmh_client *handle)
+{
+	spin_lock(&rpmh_lock);
+	rpmh_validate_handle_locked(handle);
+	spin_unlock(&rpmh_lock);
+}
+
 void rpmh_client_init(void)
 {
+	spin_lock(&rpmh_lock);
 	rpmh_drv_state = RPMH_STATE_INIT;
+	spin_unlock(&rpmh_lock);
+}
+
+static bool rpmh_tcs_is_idle(uint32_t tcs)
+{
+	uint32_t status = mmio_read_32(RSC_TCS_REG(tcs, RSC_TCS_STATUS_OFF));
+
+	return (status & RSC_TCS_STATUS_CONTROLLER_IDLE) != 0U;
 }
 
 void rpmh_client_deinit(void)
@@ -75,11 +90,12 @@ void rpmh_client_deinit(void)
 	struct rpmh_client *client;
 	uint32_t poll;
 
+	spin_lock(&rpmh_lock);
+
 	if (rpmh_drv_state != RPMH_STATE_INIT) {
+		spin_unlock(&rpmh_lock);
 		return;
 	}
-
-	spin_lock(&rpmh_lock);
 
 	for (poll = 0U; poll < RPMH_AMC_POLL_COUNT; poll++) {
 		if (rpmh_tcs_is_idle(tcs)) {
@@ -88,6 +104,7 @@ void rpmh_client_deinit(void)
 	}
 	if (poll == RPMH_AMC_POLL_COUNT) {
 		ERROR("RPMh: TCS %u not idle during deinit\n", tcs);
+		spin_unlock(&rpmh_lock);
 		panic();
 	}
 
@@ -116,14 +133,17 @@ struct rpmh_client *rpmh_create_handle(uint32_t drv_id,
 {
 	struct rpmh_client *client;
 
-	if (rpmh_drv_state != RPMH_STATE_INIT) {
-		ERROR("RPMh: create handle before init or after deinit\n");
-		panic();
-	}
-
 	/* Only the TZ DRV is driven from TF-A. */
 	if (drv_id != RSC_DRV_TZ) {
 		return NULL;
+	}
+
+	spin_lock(&rpmh_lock);
+
+	if (rpmh_drv_state != RPMH_STATE_INIT) {
+		ERROR("RPMh: create handle before init or after deinit\n");
+		spin_unlock(&rpmh_lock);
+		panic();
 	}
 
 	client = &rpmh_clients[drv_id];
@@ -132,14 +152,9 @@ struct rpmh_client *rpmh_create_handle(uint32_t drv_id,
 	client->next_req_id = 1U;
 	client->in_use = true;
 
+	spin_unlock(&rpmh_lock);
+
 	return client;
-}
-
-static bool rpmh_tcs_is_idle(uint32_t tcs)
-{
-	uint32_t status = mmio_read_32(RSC_TCS_REG(tcs, RSC_TCS_STATUS_OFF));
-
-	return (status & RSC_TCS_STATUS_CONTROLLER_IDLE) != 0U;
 }
 
 static void rpmh_setup_cmd(uint32_t tcs, uint32_t cmd,
@@ -178,7 +193,6 @@ static uint32_t rpmh_send_amc(struct rpmh_client *client,
 	uint32_t poll;
 	uint32_t i;
 
-	rpmh_validate_handle(client);
 	assert(cmd_set->num_commands > 0U);
 	assert(cmd_set->num_commands <= TCS_SIZE);
 
@@ -186,6 +200,8 @@ static uint32_t rpmh_send_amc(struct rpmh_client *client,
 	assert(cmd_set->set == RPMH_SET_ACTIVE);
 
 	spin_lock(&rpmh_lock);
+
+	rpmh_validate_handle_locked(client);
 
 	/* The TCS must be idle before reprogramming it. */
 	for (poll = 0U; poll < RPMH_AMC_POLL_COUNT; poll++) {
@@ -195,6 +211,7 @@ static uint32_t rpmh_send_amc(struct rpmh_client *client,
 	}
 	if (poll == RPMH_AMC_POLL_COUNT) {
 		ERROR("RPMh: TCS %u not idle\n", tcs);
+		spin_unlock(&rpmh_lock);
 		panic();
 	}
 
@@ -232,6 +249,7 @@ static uint32_t rpmh_send_amc(struct rpmh_client *client,
 	}
 	if (poll == RPMH_AMC_POLL_COUNT) {
 		ERROR("RPMh: AMC on TCS %u did not complete\n", tcs);
+		spin_unlock(&rpmh_lock);
 		panic();
 	}
 
