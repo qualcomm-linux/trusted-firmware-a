@@ -10,6 +10,7 @@
 #include <arch_helpers.h>
 #include <common/bl_common.h>
 #include <lib/el3_runtime/context_mgmt.h>
+#include <lib/el3_runtime/simd_ctx.h>
 #include <lib/utils.h>
 
 #include "opteed_private.h"
@@ -76,17 +77,21 @@ uint64_t opteed_synchronous_sp_entry(optee_context_t *optee_ctx)
 	uint64_t rc;
 
 	assert(optee_ctx != NULL);
-	assert(optee_ctx->c_rt_ctx == 0);
+	if (optee_ctx->c_rt_ctx != 0) {
+		ERROR("opteed: synchronous entry attempted while active context exists\n");
+		panic();
+	}
 
 	/* Apply the Secure EL1 system register context and switch to it */
 	assert(cm_get_context(SECURE) == &optee_ctx->cpu_ctx);
 	cm_el1_sysregs_context_restore(SECURE);
+#if CTX_INCLUDE_FPREGS || CTX_INCLUDE_SVE_REGS
+	simd_ctx_restore(SECURE);
+#endif
 	cm_set_next_eret_context(SECURE);
 
 	rc = opteed_enter_sp(&optee_ctx->c_rt_ctx);
-#if ENABLE_ASSERTIONS
 	optee_ctx->c_rt_ctx = 0;
-#endif
 
 	return rc;
 }
@@ -105,9 +110,16 @@ void opteed_synchronous_sp_exit(optee_context_t *optee_ctx, uint64_t ret)
 	assert(optee_ctx != NULL);
 	/* Save the Secure EL1 system register context */
 	assert(cm_get_context(SECURE) == &optee_ctx->cpu_ctx);
+#if CTX_INCLUDE_FPREGS || CTX_INCLUDE_SVE_REGS
+	simd_ctx_save(SECURE, false);
+#endif
 	cm_el1_sysregs_context_save(SECURE);
 
-	assert(optee_ctx->c_rt_ctx != 0);
+	if (optee_ctx->c_rt_ctx == 0) {
+		ERROR("opteed: synchronous exit attempted without prior entry\n");
+		panic();
+	}
+
 	opteed_exit_sp(optee_ctx->c_rt_ctx, ret);
 
 	/* Should never reach here */

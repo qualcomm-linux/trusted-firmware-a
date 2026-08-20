@@ -383,6 +383,28 @@ static uintptr_t eemi_psci_debugfs_handler(uint32_t api_id, const uint32_t *pm_a
 }
 
 /**
+ * tfa_clear_pm_state() - Reset TF-A-specific PM state.
+ *
+ * Reset TF-A-specific state that may have been modified, such as during a
+ * kexec-based kernel reload. Reset the SGI number, the latched power down
+ * request and the shutdown scope to its default value.
+ *
+ * Return: Returns status, either success or error+reason.
+ */
+static enum pm_ret_status tfa_clear_pm_state(void)
+{
+	/* Reset SGI number to default value (INVALID_SGI). */
+	sgi = (uint32_t)INVALID_SGI;
+
+	/* Reset power down request to default value (false). */
+	pwrdwn_req_received = false;
+
+	/* Reset the shutdown scope to its default value (system). */
+	return pm_system_shutdown(XPM_SHUTDOWN_TYPE_SETSCOPE_ONLY,
+				  XPM_SHUTDOWN_SUBTYPE_RST_SYSTEM, 0U);
+}
+
+/**
  * TF_A_specific_handler() - SMC handler for TF-A specific functionality.
  * @api_id: identifier for the API being called.
  * @pm_arg: pointer to the argument data for the API call.
@@ -440,6 +462,15 @@ static uintptr_t TF_A_specific_handler(uint32_t api_id, const uint32_t *pm_arg,
 	case PM_GET_TRUSTZONE_VERSION:
 		SMC_RET1(handle, ((uint64_t)PM_RET_SUCCESS) |
 			 (((uint64_t)TZ_VERSION) << 32U));
+
+	case TF_A_CLEAR_PM_STATE:
+	{
+		enum pm_ret_status ret;
+
+		ret = tfa_clear_pm_state();
+
+		SMC_RET1(handle, (uint64_t)ret);
+	}
 
 	default:
 		return (uintptr_t)0U;
@@ -513,7 +544,7 @@ uint64_t pm_smc_handler(uint32_t smc_fid, uint64_t x1, uint64_t x2, uint64_t x3,
 	uint32_t pm_arg[PAYLOAD_ARG_CNT] = {0};
 	uint32_t security_flag = (uint32_t)NON_SECURE;
 	uint32_t api_id;
-	bool status = false, status_tmp = false;
+	volatile bool status = false, status_tmp = false;
 	const uint64_t x[4] = {x1, x2, x3, x4};
 
 	/*
