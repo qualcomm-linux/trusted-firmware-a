@@ -201,13 +201,12 @@ endif
 
 # Errata build flags
 ifneq ($(call bool,$(ERRATA_A53_843419)),)
-        ldflags-errata-a53-843419 := $(call toolchain-ld-driver-option,$(ARCH),-mfix-cortex-a53-843419)
-        ldflags-errata-a53-843419 += $(call toolchain-ld-option,$(ARCH),--fix-cortex-a53-843419)
+ldflags-aarch64		+= $(call ld_option,--fix-cortex-a53-843419)
 else
-        ldflags-errata-a53-843419 := $(call toolchain-ld-driver-option,$(ARCH),-mno-fix-cortex-a53-843419)
+# GCC automatically adds fix-cortex-a53-843419 flag when used to link
+# which breaks some builds, so disable if errata fix is not explicitly enabled
+ldflags-aarch64		+= $(call ld_option,--no-fix-cortex-a53-843419)
 endif
-
-ldflags-common += $(ldflags-errata-a53-843419)
 
 ifneq ($(call bool,$(ERRATA_A53_835769)),)
 cflags-aarch64		+= -mfix-cortex-a53-835769
@@ -283,3 +282,4 @@ endif
 
 DTC_FLAGS		+=	-I dts -O dtb
 DTC_CPPFLAGS		+=	-Ifdts -undef
+

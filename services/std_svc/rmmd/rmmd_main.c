@@ -10,10 +10,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "rmmd_private.h"
-
-#include <arch_features.h>
 #include <arch_helpers.h>
+#include <arch_features.h>
 #include <bl31/bl31.h>
 #include <common/debug.h>
 #include <common/runtime_svc.h>
@@ -23,24 +21,24 @@
 #include <lib/el3_runtime/pubsub.h>
 #include <lib/extensions/mpam.h>
 #include <lib/extensions/pmuv3.h>
-#include <lib/extensions/sme.h>
-#include <lib/extensions/spe.h>
-#include <lib/extensions/sve.h>
 #include <lib/extensions/sys_reg_trace.h>
-#include <lib/extensions/trbe.h>
 #include <lib/gpt_rme/gpt_rme.h>
 #include <lib/per_cpu/per_cpu.h>
+
 #include <lib/spinlock.h>
 #include <lib/utils.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
 #include <plat/common/common_def.h>
 #include <plat/common/platform.h>
-#include <services/firme/firme_mecid.h>
-#include <services/firme_svc.h>
-#include <services/rmmd_svc.h>
-#include <smccc_helpers.h>
-
 #include <platform_def.h>
+#include <services/rmmd_svc.h>
+#include <services/firme_svc.h>
+#include <smccc_helpers.h>
+#include <lib/extensions/sme.h>
+#include <lib/extensions/sve.h>
+#include <lib/extensions/spe.h>
+#include <lib/extensions/trbe.h>
+#include "rmmd_private.h"
 
 #define MECID_SHIFT			U(32)
 #define MECID_MASK			0xFFFFU
@@ -170,7 +168,8 @@ int rmmd_setup(void)
 	struct rmm_manifest *manifest;
 	int rc;
 
-	if (!is_feat_rme_supported()) {
+	/* Make sure RME is supported. */
+	if (is_feat_rme_present() == 0U) {
 		/* Mark the RMM boot as failed for all the CPUs */
 		rmm_boot_failed = true;
 		return -ENOTSUP;

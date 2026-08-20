@@ -14,95 +14,124 @@
 #include <services/firme_svc.h>
 #include <smccc_helpers.h>
 
-#include "firme_private.h"
+/* Feature reg 0 indicates which ABIs are supported for base service. */
+#define FEAT_REG_0_DEFAULT (FIRME_BASE_VERSION_BIT | FIRME_BASE_FEATURES_BIT)
 
-/*
- * Feature reg 0 indicates which ABIs are supported for base service.
- * Feature reg 1 shows available services and base functionalities.
- */
-static uint64_t registers[FIRME_BASE_FEATURE_REG_COUNT] = {
-	FIRME_BASE_VERSION_BIT | FIRME_BASE_FEATURES_BIT,
-	(((0x0 & FIRME_BASE_MAX_SH_BUF_PG_CNT_MASK))
-		 << FIRME_BASE_MAX_SH_BUF_PG_CNT_SHIFT |
-	 ((0x0 & FIRME_BASE_MIN_SH_BUF_SZ_MASK)
-	  << FIRME_BASE_MIN_SH_BUF_SZ_SHIFT))
+/* Feature reg 1 shows available services and base functionalities. */
+#define FEAT_REG_1_DEFAULT					\
+	((0x0 & FIRME_BASE_MAX_SH_BUF_PG_CNT_MASK))		\
+			<< FIRME_BASE_MAX_SH_BUF_PG_CNT_SHIFT |	\
+		((0x0 & FIRME_BASE_MIN_SH_BUF_SZ_MASK)		\
+		 << FIRME_BASE_MIN_SH_BUF_SZ_SHIFT)
+
+/* Structure describing base service. */
+firme_service_info_t base_info = {
+	.version = FIRME_VERSION(FIRME_BASE_VERSION_MAJOR,
+				 FIRME_BASE_VERSION_MINOR),
+	.instance_support =
+		(BIT(FIRME_SECURE) | BIT(FIRME_NONSECURE) | BIT(FIRME_REALM)),
+	.num_feature_regs = 2,
+	.feature_reg = { FEAT_REG_0_DEFAULT, FEAT_REG_1_DEFAULT },
 };
 
-#define BASE_INSTANCE_SUPPORT \
-	(BIT(FIRME_SECURE) | BIT(FIRME_NONSECURE) | BIT(FIRME_REALM))
-
-static int32_t firme_base_service_version(firme_instance_e instance __unused)
+static uint64_t firme_base_get_feat_reg_1(firme_instance_e instance)
 {
-	return FIRME_VERSION(FIRME_BASE_VERSION_MAJOR,
-			     FIRME_BASE_VERSION_MINOR);
-}
+	firme_service_info_t *info __unused;
+	uint64_t reg = base_info.feature_reg[1];
 
-static bool firme_base_service_is_supported(firme_instance_e instance)
-{
-	return (BASE_INSTANCE_SUPPORT & BIT(instance)) != 0U;
-}
-
-static int32_t firme_base_service_get_feature_reg(firme_instance_e instance,
-						  uint8_t reg_index,
-						  uint64_t *reg)
-{
-	if (reg == NULL) {
-		return FIRME_INVALID_PARAMETERS;
+	info = firme_granule_mgmt_service_get_info();
+	if ((info != NULL) &&
+	    ((info->instance_support & BIT(instance)) != 0U)) {
+		reg |= FIRME_BASE_SERVICE_GRANULE_MGMT_BIT;
 	}
 
-	if (reg_index >= FIRME_BASE_FEATURE_REG_COUNT) {
-		return FIRME_NOT_SUPPORTED;
+	info = firme_mecid_service_get_info();
+	if ((info != NULL) &&
+	    ((info->instance_support & BIT(instance)) != 0U)) {
+		reg |= FIRME_BASE_SERVICE_MECID_BIT;
 	}
 
-	*reg = registers[reg_index];
-
-	if (reg_index == 1) {
-		if (firme_service_is_supported(FIRME_GRANULE_MGMT_ID,
-					       instance)) {
-			*reg |= FIRME_BASE_SERVICE_GRANULE_MGMT_BIT;
-		}
-
-		if (firme_service_is_supported(FIRME_MECID_MGMT_ID, instance)) {
-			*reg |= FIRME_BASE_SERVICE_MECID_BIT;
-		}
-
-		if (firme_service_is_supported(FIRME_IDE_KEY_MGMT_ID,
-					       instance)) {
-			*reg |= FIRME_BASE_SERVICE_IDE_KM_BIT;
-		}
+	info = firme_ide_km_service_get_info();
+	if ((info != NULL) &&
+	    ((info->instance_support & BIT(instance)) != 0U)) {
+		reg |= FIRME_BASE_SERVICE_IDE_KM_BIT;
 	}
 
-	return FIRME_SUCCESS;
+	return reg;
 }
 
 static int32_t get_firme_service_version(firme_instance_e instance,
 					 firme_service_id_e service_id)
 {
-	if (service_id == FIRME_BASE_ID) {
-		return firme_base_service_version(instance);
-	}
-
-	return firme_service_get_version(service_id, instance);
-}
-
-static int32_t get_firme_feature_reg(uint64_t *reg, firme_instance_e instance,
-				     uint8_t service_id, uint8_t reg_index)
-{
-	if (reg == NULL) {
-		return FIRME_INVALID_PARAMETERS;
-	}
+	firme_service_info_t *info = NULL;
 
 	if (service_id >= FIRME_SERVICE_ID_MAX) {
 		return FIRME_NOT_SUPPORTED;
 	}
 
-	if (service_id == FIRME_BASE_ID) {
-		return firme_base_service_get_feature_reg(instance, reg_index,
-							  reg);
+	switch (service_id) {
+	case FIRME_BASE_ID:
+		info = &base_info;
+		break;
+	case FIRME_GRANULE_MGMT_ID:
+		info = firme_granule_mgmt_service_get_info();
+		break;
+	case FIRME_MECID_MGMT_ID:
+		info = firme_mecid_service_get_info();
+		break;
+	case FIRME_IDE_KEY_MGMT_ID:
+		info = firme_ide_km_service_get_info();
+		break;
+	default:
+		return FIRME_NOT_SUPPORTED;
 	}
 
-	return firme_service_get_feature_reg(service_id, instance, reg_index,
-					     reg);
+	if ((info != NULL) && (info->instance_support & BIT(instance))) {
+		return info->version;
+	}
+
+	/* Return zero to indicate not supported. */
+	return FIRME_NOT_SUPPORTED;
+}
+
+static int32_t get_firme_feature_reg(uint64_t *reg, firme_instance_e instance,
+				     uint8_t service_id, uint8_t reg_index)
+{
+	firme_service_info_t *info = NULL;
+
+	if (service_id >= FIRME_SERVICE_ID_MAX) {
+		return FIRME_NOT_SUPPORTED;
+	}
+
+	switch (service_id) {
+	case FIRME_BASE_ID:
+		if (reg_index < base_info.num_feature_regs) {
+			if (reg_index == 1) {
+				*reg = firme_base_get_feat_reg_1(instance);
+			} else {
+				*reg = base_info.feature_reg[reg_index];
+			}
+			return FIRME_SUCCESS;
+		}
+		break;
+	case FIRME_GRANULE_MGMT_ID:
+		info = firme_granule_mgmt_service_get_info();
+		break;
+	case FIRME_MECID_MGMT_ID:
+		info = firme_mecid_service_get_info();
+		break;
+	case FIRME_IDE_KEY_MGMT_ID:
+		info = firme_ide_km_service_get_info();
+		break;
+	}
+
+	if ((info != NULL) && (reg_index < info->num_feature_regs) &&
+	    (info->instance_support & BIT(instance))) {
+		*reg = info->feature_reg[reg_index];
+		return FIRME_SUCCESS;
+	}
+
+	return FIRME_NOT_SUPPORTED;
 }
 
 u_register_t firme_base_service_handler(firme_instance_e instance,
@@ -131,12 +160,3 @@ u_register_t firme_base_service_handler(firme_instance_e instance,
 		SMC_RET1(handle, FIRME_NOT_SUPPORTED);
 	}
 }
-
-const struct firme_service firme_base_service = {
-	.id = FIRME_BASE_ID,
-	.init = NULL,
-	.version = firme_base_service_version,
-	.is_supported = firme_base_service_is_supported,
-	.get_feature_reg = firme_base_service_get_feature_reg,
-	.call = firme_base_service_handler,
-};

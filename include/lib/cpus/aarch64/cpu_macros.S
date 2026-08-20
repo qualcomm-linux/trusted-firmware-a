@@ -164,12 +164,6 @@
 	bne	\_label
 	.endm
 
-	.macro get_midr_pn _cpu_midr
-	mrs	x0, midr_el1
-	ubfx	x0, x0, MIDR_PN_SHIFT, #12
-	cmp	w0, #((\_cpu_midr >> MIDR_PN_SHIFT) & MIDR_PN_MASK)
-	.endm
-
 	/*
 	 * Helper macro that reads the part number of the current
 	 * CPU and jumps to the given label if it matches the CPU
@@ -178,14 +172,12 @@
 	 * Clobbers x0.
 	 */
 	.macro  jump_if_cpu_midr _cpu_midr, _label
-	get_midr_pn	\_cpu_midr
+	mrs	x0, midr_el1
+	ubfx	x0, x0, MIDR_PN_SHIFT, #12
+	cmp	w0, #((\_cpu_midr >> MIDR_PN_SHIFT) & MIDR_PN_MASK)
 	b.eq	\_label
 	.endm
 
-	.macro  jump_if_not_cpu_midr _cpu_midr, _label
-	get_midr_pn	\_cpu_midr
-	b.ne	\_label
-	.endm
 
 /*
  * Workaround wrappers for errata that apply at reset or runtime. Reset errata

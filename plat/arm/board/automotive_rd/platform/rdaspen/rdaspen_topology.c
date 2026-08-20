@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025-2026, Arm Limited. All rights reserved.
+ * Copyright (c) 2025, Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -25,75 +25,53 @@ static const unsigned char cluster_id_core_count_map[] = {
 
 const uint32_t plat_css_core_pos_to_scmi_dmn_id_map[] = {
 	/* Primary core. */
-	0x0,
-
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x0)),
 #if PLATFORM_CORE_COUNT > 1
-	0x1,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x1)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 2
-	0x2,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x2)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 3
-	0x3,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x3)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 4
-	0x4,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x4)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 5
-	0x5,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x5)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 6
-	0x6,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x6)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 7
-	0x7,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x7)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 8
-	0x8,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x8)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 9
-	0x9,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0x9)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 10
-	0xA,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xA)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 11
-	0xB,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xB)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 12
-	0xC,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xC)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 13
-	0xD,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xD)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 14
-	0xE,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xE)),
 #endif
-
 #if PLATFORM_CORE_COUNT > 15
-	0xF,
+	(SET_SCMI_CHANNEL_ID(0x0) | SET_SCMI_DOMAIN_ID(0xF))
 #endif
 };
-
-unsigned int
-plat_css_core_pos_to_scmi_channel_id(unsigned int core_pos __unused,
-				     uint32_t protocol_id __unused)
-{
-	return 0U;
-}
 
 /*******************************************************************************
  * This function returns the topology tree information.
