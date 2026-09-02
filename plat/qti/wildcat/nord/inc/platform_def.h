@@ -97,7 +97,7 @@
 /*----------------------------------------------------------------------------*/
 /* BL31 specific defines. */
 /*----------------------------------------------------------------------------*/
-#define TFA_SHARED_MEMORY_BASE	0xBC180000
+#define TFA_SHARED_MEMORY_BASE	0xBC300000
 #define TFA_SHARED_MEMORY_SIZE	0x0
 #define BL31_BASE (TFA_SHARED_MEMORY_BASE + TFA_SHARED_MEMORY_SIZE)
 #define BL31_SIZE 0x000A6000	/* 664 KB */
