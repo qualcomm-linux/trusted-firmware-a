@@ -31,6 +31,7 @@ struct pdc_seq_mode {
 	uint16_t	length;
 	uint16_t	mode_id;
 	int16_t		start_addr;	/* filled in at init */
+	uint16_t	branch_mask;
 };
 
 /* Per-instance PDC sequencer descriptor */
