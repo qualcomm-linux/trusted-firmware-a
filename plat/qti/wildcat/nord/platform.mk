@@ -250,4 +250,12 @@ endif
 BL31_SOURCES +=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_stub.c \
 			${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_panic_stub.S
 
+# Mailbox
+QTI_MBOX		:=	1
+QTI_MBOX_QMP		:=	1
+
+include drivers/qti/mbox/mbox.mk
+
+BL31_SOURCES	+=	$(QTI_PLAT_PATH)/common/src/qti_mbox_plat.c
+
 include $(QTI_PLAT_PATH)/common/common.mk

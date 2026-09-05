@@ -173,4 +173,16 @@
 /* Number of boot image entries supported for the platform */
 #define BOOT_IMAGES_NUM_ENTRIES 25
 
+/*----------------------------------------------------------------------------*/
+/* TME shared mailbox RAM                                                     */
+/*----------------------------------------------------------------------------*/
+#define QTI_TME_MBOX_RAM_HIGH		0x3623e800
+#define QTI_TME_MBOX_RAM_HIGH_SIZE	0x00001000
+
+/*----------------------------------------------------------------------------*/
+/* TFA MBOX interrupt-set register used to signal the TME                     */
+/*----------------------------------------------------------------------------*/
+#define QTI_TFA_TME_MBOX_INTERRUPT	0x17824010
+#define QTI_TFA_TME_MBOX_INTERRUPT_MSK	0x1
+
 #endif /* PLATFORM_DEF_H */

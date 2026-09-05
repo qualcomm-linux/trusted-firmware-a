@@ -41,6 +41,10 @@
 #include <arch_helpers.h>
 #include <tfa_bl31_shared_imem.h>
 
+#ifdef QTI_MBOX
+#include <drivers/qti/mbox/qti_mbox.h>
+#endif /* QTI_MBOX */
+
 /* Ringbuf definition */
 /* For platform with TZ imem */
 #ifdef TFA_IMEM_BASE
@@ -375,6 +379,13 @@ void bl31_platform_setup(void)
 	 * registers EL3 common interrupt handler
 	 */
 	qti_interrupt_svc_init(bl32_image_ep_info.pc != 0UL);
+
+#ifdef QTI_MBOX
+	ret = qti_mbox_init();
+	if (ret != 0) {
+		WARN("Mailbox init failed: %d\n", ret);
+	}
+#endif /* QTI_MBOX */
 
 	ret = qti_qtimer_init();
 	if (ret != 0) {
