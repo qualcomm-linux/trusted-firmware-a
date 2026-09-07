@@ -137,7 +137,8 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 
 # Ensure Widevine is not being used
 ifeq ($(CROS_WIDEVINE_SMC), 0)
-QTI_BL31_SOURCES		+=	$(QTI_PLAT_PATH)/common/src/qti_oem_svc.c
+QTI_BL31_SOURCES		+=	$(QTI_PLAT_PATH)/common/src/qti_oem_svc.c	\
+					$(QTI_PLAT_PATH)/common/src/qti_fuseprov_platform.c
 endif
 
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
@@ -259,5 +260,8 @@ QTI_TMECOM	:=	1
 $(eval $(call add_define,QTI_USE_TMECOM))
 $(eval $(call add_define,QTI_TMECOM_TEST))
 include drivers/qti/tme/tme.mk
+
+# Fuseprov driver: parses SEC.DAT and blows fuses via the TME transport.
+include drivers/qti/fuseprov/fuseprov.mk
 
 include $(QTI_PLAT_PATH)/common/common.mk
