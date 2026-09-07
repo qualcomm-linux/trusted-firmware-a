@@ -19,6 +19,7 @@ typedef enum {
 void qti_watchdog_set_target(qti_watchdog_cpu_state_t state);
 
 void qti_watchdog_start(uint32_t bark, uint32_t bite);
+void qti_watchdog_force_bite(uint32_t bite_ms);
 void qti_watchdog_stop(void);
 void qti_watchdog_pet(void);
 int qti_watchdog_init(void);
