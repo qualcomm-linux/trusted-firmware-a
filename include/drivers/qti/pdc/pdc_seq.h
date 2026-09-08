@@ -31,6 +31,7 @@ struct pdc_seq_mode {
 	uint16_t	length;
 	uint16_t	mode_id;
 	int16_t		start_addr;	/* filled in at init */
+	uint16_t	branch_mask;
 };
 
 /* Per-instance PDC sequencer descriptor */
@@ -55,6 +56,7 @@ enum pdc_seq_result {
 	PDC_SEQ_NO_MEM         = -3,
 };
 
+enum pdc_seq_result pdc_seq_target_init(struct pdc_seq *seq);
 void pdc_seq_sys_init(void);
 
 #endif /* PDC_SEQ_H */

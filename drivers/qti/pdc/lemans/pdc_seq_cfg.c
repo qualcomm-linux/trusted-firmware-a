@@ -65,8 +65,8 @@ static struct pdc_seq_cfg apps_pdc_cfg = {
 };
 
 static struct pdc_seq_mode apps_pdc_modes[] = {
-	{ PDC_SEQ_ARRAY(apps_cx_ret),      1, 0 }, /* mode_id 1: CXret */
-	{ PDC_SEQ_ARRAY(apps_cx_ret_aoss), 3, 0 }, /* mode_id 3: CXret + AOSS */
+	{ PDC_SEQ_ARRAY(apps_cx_ret),      1, 0, 0 }, /* mode_id 1: CXret */
+	{ PDC_SEQ_ARRAY(apps_cx_ret_aoss), 3, 0, 0 }, /* mode_id 3: CXret + AOSS */
 };
 
 static struct pdc_seq pdc_seq_instance = {

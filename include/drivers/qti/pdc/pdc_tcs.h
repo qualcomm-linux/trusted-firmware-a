@@ -9,6 +9,8 @@
 
 #include <stdint.h>
 
+#include "pdc_config.h"
+
 /* TCS command option flags */
 #define TCS_CFG_OPT_NONE		0x0000U
 #define TCS_CFG_OPT_CMD_WAIT		0x0001U	/* Wait for this and all prior cmds */
@@ -39,6 +41,12 @@ struct pdc_tcs_config {
 	struct pdc_tcs_resource_data	data;
 };
 
+#if PDC_HAS_TCS
 void pdc_tcs_initialize(void);
+#else
+static inline void pdc_tcs_initialize(void)
+{
+}
+#endif
 
 #endif /* PDC_TCS_H */

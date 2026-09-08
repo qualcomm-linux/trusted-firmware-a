@@ -89,6 +89,9 @@ void plat_qti_invoke_unhandled_isr(uint32_t id, void *handle);
  */
 const unsigned int *plat_qti_pm_idle_states(void);
 
+/* Per-target APSS Interrupt Unit (INTU) bring-up (see nord_intu.c). */
+void plat_intu_init(void);
+
 typedef struct chip_id_info {
 	uint16_t jtag_id;
 	uint16_t chipinfo_id;

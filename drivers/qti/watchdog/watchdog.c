@@ -11,6 +11,7 @@
 #include <common/debug.h>
 #include <drivers/arm/gicv3.h>
 #include <drivers/qti/qtimer/qtimer.h>
+#include <drivers/qti/watchdog/qcom_wdt_layout.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <lib/mmio.h>
 #include <lib/spinlock.h>
@@ -23,7 +24,6 @@
 
 #define WDOG_BITE_TIME_MS	22000U
 #define WDOG_BARK_TIME_MS	6000U
-#define WDOG_FREQ_IN_HZ		32768ULL
 #define MPIDR_INVALID		0xDEAD
 
 uint64_t qti_watchdog_pet_ticks __section("tzfw_coherent_mem");
@@ -32,10 +32,71 @@ static u_register_t mpidr[PLATFORM_CORE_COUNT] = {
 	[0 ... PLATFORM_CORE_COUNT - 1] = MPIDR_INVALID
 };
 
+/*
+ * Per-target register-offset table (indexed by enum wdt_reg), supplied by the
+ * target's watchdog_defs.h as WDOG_REG_OFFSETS. Modelled on the upstream Linux
+ * qcom-wdt.c reg_offset_data_* tables.
+ */
+static const uint32_t qcom_wdt_reg_offset[WDT_REG_COUNT] = WDOG_REG_OFFSETS;
+
+static uintptr_t wdt_addr(enum wdt_reg reg)
+{
+	return WDOG_REG_BASE + qcom_wdt_reg_offset[reg];
+}
+
 static uint32_t ms_to_wdt_ticks(uint32_t ms)
 {
 	return (uint32_t)((WDOG_FREQ_IN_HZ * (uint64_t)ms) / 1000ULL);
 }
+
+#if WDOG_HAS_SYNC
+/*
+ * Classic AOSS windowed watchdog. The enable bit lives in a control
+ * register (WDT_EN) alongside a clock-enable bit; the bark/bite time
+ * registers latch asynchronously and raise a sync bit (bit 31) once the
+ * write has taken effect. Keep the original program-and-poll sequence.
+ */
+static void wdog_program_start(uint32_t bark, uint32_t bite)
+{
+	mmio_clrbits_32(wdt_addr(WDT_EN), QCOM_WDT_ENABLE);
+	mmio_clrsetbits_32(wdt_addr(WDT_BARK_TIME), WDOG_TIME_MASK, bark);
+	while ((mmio_read_32(wdt_addr(WDT_BARK_TIME)) & WDOG_SYNC_BIT) == 0U) {
+	}
+
+	mmio_clrsetbits_32(wdt_addr(WDT_BITE_TIME), WDOG_TIME_MASK, bite);
+	while ((mmio_read_32(wdt_addr(WDT_BITE_TIME)) & WDOG_SYNC_BIT) == 0U) {
+	}
+
+	mmio_setbits_32(wdt_addr(WDT_EN), QCOM_WDT_ENABLE);
+	mmio_setbits_32(wdt_addr(WDT_EN), WDOG_CLK_ENABLE_BIT);
+	mmio_write_32(wdt_addr(WDT_RST), 1U);
+}
+
+static void wdog_disable(void)
+{
+	mmio_clrbits_32(wdt_addr(WDT_EN), QCOM_WDT_ENABLE);
+}
+#else
+/*
+ * Simple enable/pet/timeout block (e.g. Nord APSS_WDT_SEC_WWDOG). Sequence
+ * mirrors Linux qcom_wdt_start(): disable, pet, program the bark/bite
+ * timeouts, then enable. The time registers are plain counters (no async
+ * sync bit), and there is no separate clock-enable.
+ */
+static void wdog_program_start(uint32_t bark, uint32_t bite)
+{
+	mmio_write_32(wdt_addr(WDT_EN), 0U);
+	mmio_write_32(wdt_addr(WDT_RST), 1U);
+	mmio_write_32(wdt_addr(WDT_BARK_TIME), bark);
+	mmio_write_32(wdt_addr(WDT_BITE_TIME), bite);
+	mmio_write_32(wdt_addr(WDT_EN), QCOM_WDT_ENABLE);
+}
+
+static void wdog_disable(void)
+{
+	mmio_write_32(wdt_addr(WDT_EN), 0U);
+}
+#endif
 
 void qti_watchdog_start(uint32_t bark_ms, uint32_t bite_ms)
 {
@@ -43,35 +104,24 @@ void qti_watchdog_start(uint32_t bark_ms, uint32_t bite_ms)
 
 	bark = ms_to_wdt_ticks(MAX(bark_ms, 0x1U));
 	bite = ms_to_wdt_ticks(MAX(bite_ms, 0x1U));
-	bark = MIN(bark, 0xFFFFFU);
-	bite = MIN(bite, 0xFFFFFU);
+	bark = MIN(bark, (uint32_t)WDOG_MAX_TICK_COUNT);
+	bite = MIN(bite, (uint32_t)WDOG_MAX_TICK_COUNT);
 
-	mmio_clrbits_32(WDOG_CTL_ADDR, ENABLE_BIT);
-	mmio_clrsetbits_32(WDOG_BARK_ADDR, WDOG_BARK_MASK, bark);
-	while ((mmio_read_32(WDOG_BARK_ADDR) & BARK_SYNC_BIT) == 0) {
-	}
-
-	mmio_clrsetbits_32(WDOG_BITE_ADDR, WDOG_BITE_MASK, bite);
-	while ((mmio_read_32(WDOG_BITE_ADDR) & BITE_SYNC_BIT) == 0) {
-	}
-
-	mmio_setbits_32(WDOG_CTL_ADDR, ENABLE_BIT);
-	mmio_setbits_32(WDOG_CTL_ADDR, CLK_ENABLE_BIT);
-	mmio_write_32(WDOG_RESET_ADDR, RESET);
+	wdog_program_start(bark, bite);
 	dsb();
 }
 
 void qti_watchdog_stop(void)
 {
-	mmio_write_32(WDOG_RESET_ADDR, RESET);
-	mmio_clrbits_32(WDOG_CTL_ADDR, ENABLE_BIT);
+	mmio_write_32(wdt_addr(WDT_RST), 1U);
+	wdog_disable();
 	dsb();
 }
 
 void qti_watchdog_pet(void)
 {
 	qti_watchdog_pet_ticks = qti_qtimer_get_raw();
-	mmio_write_32(WDOG_RESET_ADDR, RESET);
+	mmio_write_32(wdt_addr(WDT_RST), 1U);
 	dsb();
 }
 
@@ -158,11 +208,26 @@ void qti_watchdog_set_target(qti_watchdog_cpu_state_t state)
 	spin_unlock(&cpu.lock);
 }
 
+#if WDOG_HAS_CTL_INIT
+/*
+ * Classic block: one-time control programming (chip auto-pet + HW
+ * sleep/wakeup enable) before the watchdog is started.
+ */
+static void wdog_ctl_init(void)
+{
+	mmio_write_32(wdt_addr(WDT_EN), WDOG_CTL_INIT_VAL);
+}
+#else
+static void wdog_ctl_init(void)
+{
+}
+#endif
+
 int qti_watchdog_init(void)
 {
 	int ret;
 
-	mmio_write_32(WDOG_CTL_ADDR, CHIP_AUTOPET_EN | HW_SLEEP_WAKEUP_EN);
+	wdog_ctl_init();
 	ret = qti_interrupt_svc_register(WDOG_BARK_INT_ID, bark_handler, NULL);
 	if (ret) {
 		ERROR("Failure registering watchdog\n");
@@ -174,4 +239,3 @@ int qti_watchdog_init(void)
 
 	return 0;
 }
-

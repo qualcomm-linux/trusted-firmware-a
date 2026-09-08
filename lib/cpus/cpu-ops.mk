@@ -512,6 +512,12 @@ CPU_FLAG_LIST += ERRATA_C1NANO_4497400
 CPU_FLAG_LIST += ERRATA_DSU_798953
 CPU_FLAG_LIST += ERRATA_DSU_936184
 CPU_FLAG_LIST += ERRATA_DSU_2313941
+
+# Flag to apply DSU erratum 2900952 during reset. This erratum applies
+# to some implementations of DSU-120 revision r2p0. Erratum might be fixed
+# in some implementations of r2p0. This can be determined by reading
+# the IMP_CLUSTERREVIDR_EL1 register where a set bit indicates that
+# the erratum is fixed in this part. It is fixed in r2p1.
 CPU_FLAG_LIST += ERRATA_DSU_2900952
 
 # process all flags

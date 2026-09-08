@@ -16,10 +16,22 @@ const unsigned char qti_power_domain_tree_desc[] = {
 	PLAT_PDC_COUNT,
 	/* One domain to represent RSC */
 	PLAT_RSC_COUNT,
-	/* There is one top-level FCM cluster */
+	/* Number of top-level clusters */
 	PLAT_CLUSTER_COUNT,
-	/* No. of cores in the FCM cluster */
-	PLAT_CLUSTER0_CORE_COUNT
+	/*
+	 * Number of cores in each cluster, listed breadth-first. Platforms with
+	 * more than one cluster (e.g. Nord, 3 clusters) must list every cluster's
+	 * core count here: a single entry leaves the higher clusters reading
+	 * garbage and corrupts their PSCI per-core state, so only cluster0 comes
+	 * up. Single-cluster platforms define only PLAT_CLUSTER0_CORE_COUNT.
+	 */
+	PLAT_CLUSTER0_CORE_COUNT,
+#ifdef PLAT_CLUSTER1_CORE_COUNT
+	PLAT_CLUSTER1_CORE_COUNT,
+#endif
+#ifdef PLAT_CLUSTER2_CORE_COUNT
+	PLAT_CLUSTER2_CORE_COUNT,
+#endif
 };
 
 /*******************************************************************************

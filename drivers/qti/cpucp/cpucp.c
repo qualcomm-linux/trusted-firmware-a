@@ -10,6 +10,7 @@
 #include <arch_helpers.h>
 #include <assert.h>
 #include <cdefs.h>
+#include <common/debug.h>
 #include <lib/mmio.h>
 #include <lib/spinlock.h>
 #include <plat/common/platform.h>
@@ -201,7 +202,6 @@ static int cpucp_scmi_send(unsigned int protocol_id, unsigned int message_id,
 						protocol_id, 0U);
 	out_pkt->msg_hdr = message_header;
 
-	/* Mark the SCMI channel as busy. */
 	out_pkt->chan_sts = CHAN_STAT_CHAN_BUSY;
 
 	/*
@@ -369,4 +369,68 @@ void cpucp_clkdom_init(void)
 
 		break;
 	}
+}
+
+/* SCMI Power Domain Management protocol identifier (SCMI spec, Section 4.3). */
+#define SCMI_POWER_DOMAIN_MANAGEMENT_PROTOCOL	(0x11)
+
+/* SCMI Power Domain Management PROTOCOL message: POWER_STATE_SET. */
+#define POWER_STATE_SET				(0x4)
+
+#define POWER_STATE_ON				(1U)
+#define POWER_STATE_OFF				(0U)
+
+/*
+ * SCMI Power Domain Management POWER_STATE_SET command payload. domain_id is
+ * {cluster_id, core_id} packed as cluster_id << 8 | core_id, matching this
+ * platform's own MPIDR core/cluster field encoding (see qti_pwr_domain_on()
+ * in wildcat_pm.c: core = (mpidr >> 8) & 0xff, cluster = (mpidr >> 16) & 0xff).
+ */
+struct __packed __aligned(4) power_domain_config_set_payload {
+	uint32_t flags;
+	uint32_t domain_id;
+	uint32_t power_state;
+};
+
+/*
+ * cpucp_power_state_notify - tell CPUCP that the core identified by @core and
+ * @cluster has just powered on/off, via an SCMI Power Domain Management
+ * POWER_STATE_SET command.
+ *
+ * Nord's native PSCI CPU_ON path (qti_pwr_domain_on() in wildcat_pm.c) drives
+ * the NCC_ARCH cluster registers directly and never notifies CPUCP of the
+ * change. Sending it keeps CPUCP's own view of per-core power state in sync
+ * with the cores TF-A actually brings up.
+ */
+static void cpucp_power_state_notify(unsigned int core, unsigned int cluster,
+				     bool power_on)
+{
+	int32_t ret_status;
+	int32_t scmi_status = -1;
+	struct power_domain_config_set_payload payload;
+
+	payload.flags = 0U;
+	payload.domain_id = (cluster << 8) | core;
+	payload.power_state = power_on ? POWER_STATE_ON : POWER_STATE_OFF;
+
+	ret_status = cpucp_scmi_send(SCMI_POWER_DOMAIN_MANAGEMENT_PROTOCOL,
+				     POWER_STATE_SET, (char *)&payload,
+				     sizeof(payload), &scmi_status, NULL,
+				     NULL);
+
+	if ((ret_status != 0) || (scmi_status != 0)) {
+		NOTICE("CPUCP: power-%s notify failed (core=%u cluster=%u): ret=%d scmi=%d\n",
+		       power_on ? "on" : "off", core, cluster, ret_status,
+		       scmi_status);
+	}
+}
+
+void cpucp_notify_core_power_on(unsigned int core, unsigned int cluster)
+{
+	cpucp_power_state_notify(core, cluster, true);
+}
+
+void cpucp_notify_core_power_off(unsigned int core, unsigned int cluster)
+{
+	cpucp_power_state_notify(core, cluster, false);
 }

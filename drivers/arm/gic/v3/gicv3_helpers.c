@@ -169,9 +169,22 @@ void gicv3_spis_config_defaults(uintptr_t gicd_base)
 	num_ints = gicv3_get_spi_limit(gicd_base);
 	INFO("Maximum SPI INTID supported: %u\n", num_ints - 1);
 
-	/* Treat all (E)SPIs as G1NS by default. We do 32 at a time. */
+	/*
+	 * Treat all (E)SPIs as G1NS by default. We do 32 at a time.
+	 *
+	 * The GICv3 architecture defines GICD_IGRPMODR<n> as resetting to 0,
+	 * but that cannot be relied on in practice: the GIC-700 on SA8797P
+	 * (Nord) comes out of cold reset with IGRPMODR=0xffffffff (measured on
+	 * silicon). Left as-is with IGROUPR=~0 that is the reserved
+	 * (IGRPMODR=1, IGROUPR=1) encoding rather than G1NS, so write
+	 * IGRPMODR=0 explicitly to pin the group to the defined
+	 * (IGRPMODR=0, IGROUPR=1) = Group-1 Non-secure.
+	 */
 	for (i = MIN_SPI_ID; i < num_ints; i += (1U << IGROUPR_SHIFT)) {
-		gicd_write_igroupr(gicv3_get_multichip_base(i, gicd_base), i, ~0U);
+		uintptr_t base = gicv3_get_multichip_base(i, gicd_base);
+
+		gicd_write_igroupr(base, i, ~0U);
+		gicd_write_igrpmodr(base, i, 0U);
 	}
 
 #if GIC_EXT_INTID
@@ -181,7 +194,10 @@ void gicv3_spis_config_defaults(uintptr_t gicd_base)
 
 		for (i = MIN_ESPI_ID; i < num_eints;
 					i += (1U << IGROUPR_SHIFT)) {
-			gicd_write_igroupr(gicv3_get_multichip_base(i, gicd_base), i, ~0U);
+			uintptr_t base = gicv3_get_multichip_base(i, gicd_base);
+
+			gicd_write_igroupr(base, i, ~0U);
+			gicd_write_igrpmodr(base, i, 0U);
 		}
 	} else {
 		INFO("ESPI range is not implemented.\n");
@@ -312,8 +328,14 @@ void gicv3_ppi_sgi_config_defaults(uintptr_t gicr_base)
 
 	/* 32 interrupt IDs per GICR_IGROUPR register */
 	for (i = 0U; i < ppi_regs_num; ++i) {
-		/* Treat all SGIs/(E)PPIs as G1NS by default */
+		/*
+		 * Treat all SGIs/(E)PPIs as G1NS by default. GICR_IGRPMODR0
+		 * resets to an architecturally UNKNOWN value, so clear it
+		 * explicitly to pin the group to
+		 * (IGRPMODR=0, IGROUPR=1) = G1NS.
+		 */
 		gicr_write_igroupr(gicr_base, i, ~0U);
+		gicr_write_igrpmodr(gicr_base, i, 0U);
 	}
 
 	/* 4 interrupt IDs per GICR_IPRIORITYR register */

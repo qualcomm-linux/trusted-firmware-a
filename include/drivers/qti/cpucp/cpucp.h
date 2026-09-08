@@ -16,4 +16,13 @@
 /* Request to enable the clock domain owning the calling core on cold boot. */
 void cpucp_clkdom_init(void);
 
+/*
+ * Notify CPUCP that the given core (identified by its NCC core/cluster index,
+ * matching the mpidr core/cluster fields) has just powered on or off, via an
+ * SCMI Power Domain Management POWER_STATE_SET command, which Nord's native
+ * PSCI path does not otherwise send.
+ */
+void cpucp_notify_core_power_on(unsigned int core, unsigned int cluster);
+void cpucp_notify_core_power_off(unsigned int core, unsigned int cluster);
+
 #endif /* QTI_CPUCP_H */

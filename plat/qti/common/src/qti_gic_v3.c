@@ -7,6 +7,7 @@
 
 #include <common/bl_common.h>
 #include <drivers/arm/gicv3.h>
+#include <lib/mmio.h>
 
 #include <platform.h>
 #include <platform_def.h>
