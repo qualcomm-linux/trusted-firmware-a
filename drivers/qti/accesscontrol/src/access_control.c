@@ -4,20 +4,15 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <arch_helpers.h>
 #include <common/debug.h>
-#include <drivers/console.h>
 #include <drivers/qti/accesscontrol/accesscontrol.h>
-#include <lib/mmio.h>
 #include <lib/spinlock.h>
 #include <vmidmt.h>
-#include <xpu_target_info.h>
-
-#include <qti_interrupt_svc.h>
+#include <xpu_common.h>
 
 #define AC_PERM_X 0x1
 #define AC_PERM_W 0x2
@@ -137,120 +132,6 @@ enum ac_error {
 	AC_ERR_LAST,
 	AC_ERR_MAX = 0x7FFFFFFF,
 };
-
-#define ACC_INT_XPU_NON_SEC_DESC "SPI XPU NonSec"
-#define ACC_INT_XPU_SEC_DESC "SPI XPU Sec"
-
-static int xpu_err_non_sec_ctx = XPU_ERR_NON_SEC_CTX;
-static int xpu_err_sec_ctx = XPU_ERR_SEC_CTX;
-
-static int update_master_side_mpu(struct xpu_instance *instance,
-				  uint32_t dynamic_partition_count,
-				  enum domain_type domain, uintptr_t start_addr,
-				  uintptr_t end_addr, uint32_t perm_r,
-				  uint32_t perm_w)
-{
-	uint64_t last_index = instance->part_range_arr_size;
-	uint64_t first_index = last_index - dynamic_partition_count;
-	struct rg_partition_range *range_base = instance->partition_range;
-	struct rg_domain_ownership *owner_base = instance->rg_owner;
-	struct rg_domain_ownership *found_owner = NULL;
-	struct rg_partition_range *found_range = NULL;
-	struct rg_domain_ownership *owner;
-	struct rg_partition_range *range;
-	uint64_t idx;
-
-	range = range_base + first_index;
-	owner = owner_base + first_index + 1; /* +1 for unmapped entry */
-
-	for (idx = first_index; idx < last_index; idx++, range++, owner++) {
-		/* Check if this RG already covers the requested range */
-		if (range->start_addr == start_addr &&
-		    range->end_addr == end_addr) {
-			/* Free region */
-			if (domain == APPS_NS_DOMAIN) {
-				start_addr = 0xfffffffful;
-				end_addr = 0xfffffffful;
-				domain = NO_DOMAIN;
-
-				INFO("freeing RG for xpu 0x%lx idx:%llu\n",
-				     (unsigned long)instance->xpu_base_addr,
-				     (unsigned long long)idx);
-			}
-
-			found_range = range;
-			found_owner = owner;
-			break;
-		}
-
-		/*
-		 * Keep the first free RG; might be overridden if we later
-		 * find an exact range match.
-		 */
-		if (owner->owner_domain == NO_DOMAIN &&
-		    range->start_addr == 0xfffffffful &&
-		    range->end_addr == 0xfffffffful) {
-			if (!found_range) {
-				found_range = range;
-				found_owner = owner;
-			}
-		}
-	}
-
-	if (!found_range) {
-		ERROR("No free RG xpu addr : 0x%lx",
-		      (unsigned long)instance->xpu_base_addr);
-		return 1;
-	}
-
-	found_owner->owner_domain = domain;
-	found_range->start_addr = start_addr;
-	found_range->end_addr = end_addr;
-
-	return xpu_lock_down_assets_dynamic(instance, 1, instance->xpu_id,
-					    found_range->rg_num, perm_r,
-					    perm_w);
-}
-
-static int mpu_master_mpus_range(enum device_type dev_type,
-				 enum domain_type domain, uintptr_t start_addr,
-				 uintptr_t end_addr, uint32_t perm_r,
-				 uint32_t perm_w)
-{
-	struct mpu_ranges *range = msm_mpu_ranges;
-	uint32_t i, j;
-	int ret = 0;
-
-	for (i = 0; i < msm_mpu_ranges_count; i++, range++) {
-		if (range->device != dev_type)
-			continue;
-
-		struct xpu_instance *mpu = range->mpus;
-
-		for (j = 0; j < range->mpus_count; j++, mpu++) {
-			ret = update_master_side_mpu(mpu,
-						     range->device_prtn_cnt,
-						     domain, start_addr,
-						     end_addr, perm_r, perm_w);
-			if (ret)
-				goto error;
-		}
-
-		/* We found the device; no need to scan the rest. */
-		break;
-	}
-
-	return 0;
-
-error:
-	ERROR("Access control fatal (%x)\n",
-	      AC_ERR_MPU_UPDATE_LOCK_MEMORY_FAILED);
-
-	for (;;)
-		wfi();
-
-	return ret;
-}
 
 static enum ac_error
 process_sources(const uint32_t *src_vm_list, uint32_t src_vm_count,
@@ -383,11 +264,20 @@ static enum ac_error assign_regions(const qti_accesscontrol_mem_t *mem_regions,
 		uintptr_t region_end = region_base + region_size;
 		int rc;
 
-		rc = mpu_master_mpus_range(device, domain, region_base,
-					   region_end, read_perm_domain,
-					   write_perm_domain);
-		if (rc != 0)
-			return AC_ERR_XPU_ADD_MAPPING_FAILED;
+		rc = xpu_mem_assign(device, domain, region_base, region_end,
+				    read_perm_domain, write_perm_domain);
+		if (rc != 0) {
+			/*
+			 * A failed assignment leaves the XPU policy in an
+			 * indeterminate state, so this is not recoverable.
+			 */
+			ERROR("Access control fatal (%x)\n",
+			      AC_ERR_MPU_UPDATE_LOCK_MEMORY_FAILED);
+
+			for (;;) {
+				wfi();
+			}
+		}
 	}
 
 	return AC_SUCCESS;
@@ -434,59 +324,6 @@ out:
 	return 0;
 }
 
-static void *xpu_isr(uint32_t int_num, void *ctx)
-{
-	xpu_print_log(ctx);
-	console_flush();
-
-	return ctx;
-}
-
-static int xpu_register_interrupts(void)
-{
-	int err = 0;
-
-	err = qti_interrupt_svc_register(QTISECLIB_INT_ID_XPU_SEC, xpu_isr,
-					 &xpu_err_sec_ctx);
-	if (err)
-		return err;
-
-	err = qti_interrupt_svc_register(QTISECLIB_INT_ID_XPU_NON_SEC, xpu_isr,
-					 &xpu_err_non_sec_ctx);
-	if (err)
-		qti_interrupt_svc_unregister(QTISECLIB_INT_ID_XPU_SEC);
-
-	return err;
-}
-
-static void enable_interrupts(const struct xpu_intr_reg_dtls *nsec,
-			      const struct xpu_intr_reg_dtls *sec)
-{
-	for (size_t i = 0; i < ACC_XPU_ERR_INT_REG_NUM; i++) {
-		if (nsec) {
-			mmio_setbits_32(nsec->xpu_intr_reg_addr,
-					nsec->xpu_intr_reg_mask);
-			nsec++;
-		}
-
-		if (sec) {
-			mmio_setbits_32(sec->xpu_intr_reg_addr,
-					sec->xpu_intr_reg_mask);
-			sec++;
-		}
-	}
-}
-
-static void xpu_static_config(void)
-{
-	xpu_master_mpu_init(msm_mpu_ranges, msm_mpu_ranges_count);
-	xpu_lock_down_assets(msm_xpu_cfg, msm_xpu_cfg_count);
-	xpu_configure_tz();
-	dsbsy();
-
-	enable_interrupts(xpu_non_sec_intr_en_reg, xpu_sec_intr_en_reg);
-}
-
 uint64_t qti_accesscontrol_mem_assign(const qti_accesscontrol_mem_t *mem,
 				      uint32_t mem_len, const uint32_t *src,
 				      uint32_t src_len,
@@ -500,13 +337,24 @@ void qti_accesscontrol_init(void)
 {
 	int rc;
 
+	/*
+	 * Bring up the configuration source first: on XPU4 both the VMIDMT and
+	 * the XPU configuration are read out of the access-control config image,
+	 * so nothing below can run until it has been parsed and validated.
+	 */
+	rc = acc_cfg_init();
+	if (rc) {
+		ERROR("Error reading access control config, fatal (%d)\n", rc);
+		goto error;
+	}
+
 	rc = vmidmt_configure();
 	if (rc) {
 		ERROR("Error configuring the VMIDMT, fatal (%d)\n", rc);
 		goto error;
 	}
 
-	xpu_static_config();
+	xpu_do_static_config();
 
 	rc = xpu_register_interrupts();
 	if (rc) {
