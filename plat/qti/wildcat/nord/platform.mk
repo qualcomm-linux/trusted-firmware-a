@@ -118,6 +118,8 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 				$(PLAT_QTI_ROOT)/common/src/qti_ringbuf_console_helper.c	\
 				$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_pauth.c         \
 				$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_unhandled_exception_asm.S \
+				$(QTI_PLAT_PATH)/common/src/qti_pm_pshold.c		\
+				$(QTI_PLAT_PATH)/$(CHIPSET)/src/qti_nord_pm.c		\
 				$(PLAT_QTI_ROOT)/common/src/qti_stack_protector.c	\
 				$(QTI_PLAT_PATH)/common/src/wildcat_bl31_setup.c	\
 				$(QTI_PLAT_PATH)/common/src/wildcat_common.c		\
