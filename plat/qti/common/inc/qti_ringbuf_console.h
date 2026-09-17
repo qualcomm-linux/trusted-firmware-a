@@ -76,6 +76,7 @@ struct console_ringbuf {
 	struct diag_conf conf;
 	struct circ_wo_buf wo_cbuf;
 };
+typedef struct console_ringbuf console_ringbuf_t;
 
 /*
  * TF-A ringbuf console utility functions
