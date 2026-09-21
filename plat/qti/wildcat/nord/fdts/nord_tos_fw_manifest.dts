@@ -1,0 +1,29 @@
+/*
+ * Copyright (c) 2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * FF-A Secure Partition Manifest for OP-TEE running as the single S-EL1
+ * Secure Partition on Nord when the SPMC is located at EL3
+ * (SPMC_AT_EL3=1).
+ *
+ */
+
+/dts-v1/;
+
+/ {
+	compatible = "arm,ffa-manifest-1.0";
+
+	description = "op-tee";
+	ffa-version = <0x00010001>; /* 31:16 - Major, 15:0 - Minor */
+	uuid = <0xe0786148 0xe311f8e7 0x02005ebc 0x1bc5d5a5>; /* OP-TEE UUID */
+	id = <0x8001>;
+	execution-ctx-count = <18>; /* Must match PLATFORM_CORE_COUNT */
+	exception-level = <2>; /* S-EL1 */
+	execution-state = <0>; /* AArch64 */
+	xlat-granule = <0>; /* 4KiB */
+	messaging-method = <0x3>; /* Direct request/response supported. */
+
+	/* Boot protocol */
+	gp-register-num = <0x0>;
+};
