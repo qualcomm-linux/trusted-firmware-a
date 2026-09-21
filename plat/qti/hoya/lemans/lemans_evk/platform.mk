@@ -115,17 +115,26 @@ include drivers/qti/rpmh/rpmh.mk
 QTI_CLOCK_RAIL_VOTE := 1
 include drivers/qti/clock/clock.mk
 include drivers/qti/cpucp/cpucp.mk
+include drivers/qti/qgic/qgic.mk
 
 PLAT_INCLUDES   +=      -Iinclude/drivers/qti/sec_core/${CHIPSET} \
 			-Iinclude/drivers/qti/qtimer/${CHIPSET} \
 			-Iinclude/drivers/qti/watchdog/${CHIPSET}
 
+QTI_USE_QTIMER		:=	1
+QTI_USE_NCC_QTIMER	:=	0
+$(eval $(call add_define,QTI_USE_NCC_QTIMER))
+
 BL31_SOURCES	+=	$(PLAT_PATH)/hoya/common/hoya_pm.c \
 			$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_interface_stub.c \
 			drivers/qti/sec_core/sec_core.c \
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c \
+			drivers/qti/qgic/qgic_intr_svc.c \
 			drivers/qti/qtimer/qtimer.c \
-			drivers/qti/watchdog/watchdog.c
+			$(PLAT_PATH)/hoya/common/src/qti_qtimer_platform.c \
+			drivers/qti/watchdog/watchdog.c \
+			drivers/qti/watchdog/v1/watchdog_ver.c \
+			$(PLAT_PATH)/hoya/common/src/qti_watchdog_platform.c
 else
 $(eval $(call add_define,QTISECLIB_PATH))
 # use library provided by QTISECLIB_PATH

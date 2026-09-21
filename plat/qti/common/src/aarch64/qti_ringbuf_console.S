@@ -92,16 +92,6 @@ ringbuf_putc_stash:
 ringbuf_start_of_str:
 	.byte	1
 
-/* -----------------------------------------------------------------------
- * .data.ringbuf_putc_lock
- *
- * Global lock that serializes console_ringbuf_putc() across CPUs.
- * 0 = unlocked, 1 = locked.
- * ----------------------------------------------------------------------- */
-.section .data.ringbuf_putc_lock
-	.align	2
-ringbuf_putc_lock:
-	.word	0
 
 	.globl	qti_console_ringbuf_register
 	.globl	console_ringbuf_putc
@@ -211,17 +201,6 @@ endfunc console_ringbuf_putc_internal
  * is clobbered by the callee.
  * ----------------------------------------------------------------------- */
 func console_ringbuf_putc
-	/* ------------------------------------------------------------------
-	 * Acquire the global putc lock before touching shared stash/state.
-	 * ------------------------------------------------------------------ */
-	adrp	x16, ringbuf_putc_lock
-	add	x16, x16, :lo12:ringbuf_putc_lock
-ringbuf_putc_lock_retry:
-	ldaxr	w17, [x16]			/* w17 = lock value */
-	cbnz	w17, ringbuf_putc_lock_retry
-	mov	w17, #1				/* attempt to set the lock: */
-	stxr	w2, w17, [x16]
-	cbnz	w2, ringbuf_putc_lock_retry /* atomic write of lock failed */
 
 	/* ------------------------------------------------------------------
 	 * Step 1: Save the caller's link register and console_t* to the
@@ -338,17 +317,14 @@ putc_write_char:
 
 putc_do_write:
 	/*
-	 * Write the final character, release the lock, restore caller's
-	 * x30, and return to the original caller.
+	 * Restore the caller link register from the stash, then
+	 * tail-call putc_internal to write the character and return
+	 * directly to the original caller (no extra stack frame).
 	 */
-	bl	console_ringbuf_putc_internal
-	adrp	x16, ringbuf_putc_lock
-	add	x16, x16, :lo12:ringbuf_putc_lock
-	stlr	wzr, [x16]		/* zero the lock */
 	adrp	x2, ringbuf_putc_stash
 	add	x2, x2, :lo12:ringbuf_putc_stash
-	ldr	x30, [x2, #0]		/* restore caller's x30              */
-	ret
+	ldr	x30, [x2, #0]		/* restore caller x30 */
+	b	console_ringbuf_putc_internal	/* tail call */
 endfunc console_ringbuf_putc
 
 /* -----------------------------------------------------------------------

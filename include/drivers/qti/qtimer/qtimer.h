@@ -11,6 +11,6 @@
 
 uint64_t qti_qtimer_get_usec(void);
 uint64_t qti_qtimer_get_raw(void);
-void qti_qtimer_init(void);
+int qti_qtimer_init(void);
 
 #endif /* QTIMER_H */
