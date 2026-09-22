@@ -18,6 +18,7 @@
 #define SCMI_AP_CORE_PROTO_VER			MAKE_SCMI_VERSION(3, 0)
 #define SCMI_PWR_DMN_PROTO_VER			MAKE_SCMI_VERSION(3, 0)
 #define SCMI_SYS_PWR_PROTO_VER			MAKE_SCMI_VERSION(3, 0)
+#define SCMI_CLOCK_PROTO_VER                    MAKE_SCMI_VERSION(3, 0)
 
 #define GET_SCMI_MAJOR_VER(ver)			(((ver) >> 16) & 0xffff)
 #define GET_SCMI_MINOR_VER(ver)			((ver) & 0xffff)
@@ -40,6 +41,7 @@
 #define SCMI_BASE_PROTO_ID			0x10
 #define SCMI_PWR_DMN_PROTO_ID			0x11
 #define SCMI_SYS_PWR_PROTO_ID			0x12
+#define SCMI_CLOCK_PROTO_ID                     0x14
 /* The AP core protocol is a CSS platform-specific extension */
 #define SCMI_AP_CORE_PROTO_ID			0x90
 
@@ -67,6 +69,14 @@
 /* SCMI system power management protocol message IDs */
 #define SCMI_SYS_PWR_STATE_SET_MSG		0x3
 #define SCMI_SYS_PWR_STATE_GET_MSG		0x4
+
+/* SCMI clock management protocol message IDs */
+#define SCMI_CLOCK_ATTRIBUTES_MSG              0x3
+#define SCMI_CLOCK_DESCRIBE_RATES_MSG          0x4
+#define SCMI_CLOCK_RATE_SET_MSG                0x5
+#define SCMI_CLOCK_RATE_GET_MSG                0x6
+#define SCMI_CLOCK_CONFIG_SET_MSG              0x7
+#define SCMI_CLOCK_CONFIG_GET_MSG              0xB
 
 /* SCMI AP core protocol message IDs */
 #define SCMI_AP_CORE_RESET_ADDR_SET_MSG		0x3
@@ -108,6 +118,13 @@
  */
 #define SCMI_AP_CORE_LOCK_ATTR_SHIFT		0x0
 #define SCMI_AP_CORE_LOCK_ATTR			(1U << SCMI_AP_CORE_LOCK_ATTR_SHIFT)
+
+/*
+ * Macros to describe the bit-fields of the `flags` parameter of clock
+ * management protocol CLOCK_RATE_SET message.
+ */
+#define SCMI_CLOCK_RATE_SET_FLAG_SYNC          0
+#define SCMI_CLOCK_RATE_SET_FLAG_ASYNC         1
 
 /* SCMI Error code definitions */
 #define SCMI_E_QUEUED			1
@@ -191,6 +208,25 @@ int scmi_pwr_state_get(void *p, uint32_t domain_id, uint32_t *scmi_pwr_state);
 int scmi_sys_pwr_init(scmi_channel_t *ch);
 int scmi_sys_pwr_state_set(void *p, uint32_t flags, uint32_t system_state);
 int scmi_sys_pwr_state_get(void *p, uint32_t *system_state);
+
+/*
+ * Clock management protocol commands. Refer to the SCMI specification for
+ * more details on these commands.
+ */
+int scmi_clock_protocol_attributes(void *p, uint32_t *max_num_pending_async_rate_chgs,
+			       uint32_t *num_clocks);
+int scmi_clock_attributes(void *p, uint32_t clock_id, uint32_t *attributes,
+			       char *clock_name, uint32_t *clock_enable_delay);
+int scmi_clock_describe_rates(void *p, uint32_t clock_id, uint32_t rate_index,
+			       uint32_t *num_rates_flags, uint32_t *rate_array,
+			       size_t rate_array_size);
+int scmi_clock_rate_set(void *p, uint32_t clock_id, uint32_t flags, uint64_t rate);
+int scmi_clock_rate_get(void *p, uint32_t clock_id, uint64_t *rate);
+int scmi_clock_config_set(void *p, uint32_t clock_id, uint32_t attributes,
+			       uint32_t extended_config_val);
+int scmi_clock_config_get(void *p, uint32_t clock_id, uint32_t flags,
+			       uint32_t *attributes, uint32_t *config,
+			       uint32_t *extended_config_val);
 
 /* SCMI AP core configuration protocol commands. */
 int scmi_ap_core_init(scmi_channel_t *ch);
