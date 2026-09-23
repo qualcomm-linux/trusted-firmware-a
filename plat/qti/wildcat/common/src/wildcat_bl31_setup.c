@@ -39,6 +39,7 @@
 #include <qti_uart_console.h>
 #include <arch_helpers.h>
 #include <tfa_bl31_shared_imem.h>
+#include "accesscontrol.h"
 
 #ifdef QTI_MBOX
 #include <drivers/qti/mbox/qti_mbox.h>
@@ -332,6 +333,8 @@ void bl31_platform_setup(void)
 	if (qti_watchdog_init() != 0) {
 		ERROR("Watchdog initialization error\n");
 	}
+
+	qti_accesscontrol_init();
 
 	bl31qtilib_bl31_platform_setup();
 }
