@@ -192,6 +192,10 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 BL31_SOURCES		+=	${QGIC_DRV_PATH}/qgic_intr_el3.c
 BL31_SOURCES		+=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c
 
+XPU_VERSION		:= 4
+include drivers/qti/accesscontrol/access_control.mk
+BL31_SOURCES		+=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_ac_cfg.c
+
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET}
 
 QTI_USE_QTIMER		:=	1
