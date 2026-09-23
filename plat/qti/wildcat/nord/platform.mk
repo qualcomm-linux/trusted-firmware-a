@@ -105,6 +105,9 @@ ENABLE_ASSERTIONS		:=	1
 # Enable backtrace dumps.
 ENABLE_BACKTRACE		:=	1
 
+PMIC_ARB_VERSION	:=	pmicarb7
+include drivers/qti/pmic/pmic.mk
+
 QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 				-I${QTI_PLAT_PATH}/common/inc				\
 				-I${QTI_PLAT_PATH}/common/inc/$(ARCH)			\
@@ -182,7 +185,7 @@ QTI_NCC_CPU		:= 1
 #driver can expose older soc_id format
 $(eval $(call add_define, QTI_NO_SMCC_ARCH_SOC_ID))
 
-CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/qcom_oryon_v1.S
+CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/qcom_phoenix.S
 
 BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${GIC_SOURCES}					\

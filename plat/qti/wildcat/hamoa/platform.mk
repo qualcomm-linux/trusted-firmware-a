@@ -184,7 +184,7 @@ QTI_NCC_CPU := 1
 #expose older soc_id format
 $(eval $(call add_define, QTI_NO_SMCC_ARCH_SOC_ID))
 
-CPU_SOURCES := $(QTI_PLAT_PATH)/common/src/aarch64/qcom_oryon_v1.S
+CPU_SOURCES := $(QTI_PLAT_PATH)/common/src/aarch64/qcom_phoenix.S
 
 BL31_SOURCES +=			\
 	${QTI_BL31_SOURCES}	\

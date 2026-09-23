@@ -150,6 +150,16 @@
 #define QTI_SMEM_BASE ULL(0x89B00000)
 #define QTI_SMEM_SIZE ULL(0x00200000)
 
+/* LC PON register offsets */
+#define PON_PS_HOLD_RESET_CTL 0x852
+#define PON_PS_HOLD_RESET_CTL2 0x853
+
+/* TME shared mailbox RAM and interrupt registers */
+#define QTI_TME_MBOX_RAM_HIGH		0x3623e800
+#define QTI_TME_MBOX_RAM_HIGH_SIZE	0x00001000
+#define QTI_TFA_TME_MBOX_INTERRUPT	0x17824010
+#define QTI_TFA_TME_MBOX_INTERRUPT_MSK	0x1
+
 /*----------------------------------------------------------------------------*/
 /* LC PON register offsets */
 /*----------------------------------------------------------------------------*/
