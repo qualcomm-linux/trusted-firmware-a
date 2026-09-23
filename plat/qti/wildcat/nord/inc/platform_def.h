@@ -173,6 +173,16 @@
 /* Number of boot image entries supported for the platform */
 #define BOOT_IMAGES_NUM_ENTRIES 25
 
+/*
+ * TZ AC config and HYP AC config SW ids, base addresses and sizes.
+ */
+#define TZ_AC_CONFIG_SW_TYPE		0x96
+#define HYP_AC_CONFIG_SW_TYPE		0x97
+#define TZ_TZ_AC_CONFIG_BASE_ADDR	UL(0xBC000000)
+#define TZ_TZ_AC_CONFIG_SIZE		0x10000		/* 64 KB */
+#define TZ_HYP_AC_CONFIG_BASE_ADDR	UL(0x83DE7000)
+#define TZ_HYP_AC_CONFIG_SIZE		0x10000		/* 64 KB */
+
 /*----------------------------------------------------------------------------*/
 /* TME shared mailbox RAM                                                     */
 /*----------------------------------------------------------------------------*/

@@ -13,16 +13,6 @@
 #include <common/debug.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
 
-/*
- * Base address of the access-control config image. The image is placed in DDR
- * by an earlier boot stage; BL31 is handed only this address and derives every
- * table from the contents.
- *
- * TODO: this is a provisional fixed address. Replace with the real handoff
- * mechanism (BL31 parameters or a reserved-memory node) once known.
- */
-#define AC_CFG_IMAGE_BASE	UL(0xBC000000)
-
 /* Validated image header, NULL until ac_cfg_init() succeeds. */
 static const struct ac_global_data *ac_cfg;
 
@@ -186,18 +176,6 @@ static int ac_cfg_table(enum ac_xpu_target_cfg ptr_tag,
 
 	*data = (const void *)entry;
 	*count = entries;
-
-	return 0;
-}
-
-int plat_qti_ac_get_config_image(uintptr_t *base, size_t *size)
-{
-	if (base == NULL || size == NULL) {
-		return -EINVAL;
-	}
-
-	*base = AC_CFG_IMAGE_BASE;
-	*size = AC_TZ_AC_CONFIG_IMAGE_SIZE;
 
 	return 0;
 }

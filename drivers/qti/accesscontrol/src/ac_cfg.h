@@ -30,7 +30,6 @@
  * snake_case; nothing has been added, removed, reordered or repacked.
  */
 
-#define AC_TZ_AC_CONFIG_IMAGE_SIZE	0x10000		/* 64 KB */
 #define AC_TZ_MAGIC_COOKIE		0x072382d3
 
 #define AC_INTERRUPT_DESC_MAX_LEN	32
