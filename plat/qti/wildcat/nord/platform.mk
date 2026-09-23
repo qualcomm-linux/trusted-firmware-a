@@ -253,4 +253,8 @@ include drivers/qti/mbox/mbox.mk
 
 BL31_SOURCES	+=	$(QTI_PLAT_PATH)/common/src/qti_mbox_plat.c
 
+# TMECOM
+QTI_TMECOM	:=	1
+$(eval $(call add_define,QTI_USE_TMECOM))
+include drivers/qti/tme/tme.mk
 include $(QTI_PLAT_PATH)/common/common.mk
