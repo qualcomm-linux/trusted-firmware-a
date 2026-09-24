@@ -358,6 +358,7 @@ void plat_qti_pwr_domain_on_finish(int core_pos, const uint8_t *states)
 	(void)core_pos;
 	(void)states;
 
+	clkdom_init();
 	plat_qti_gic_pcpu_init();
 }
 

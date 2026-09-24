@@ -159,7 +159,8 @@ void bl31_platform_setup(void)
 
 	qti_clock_init(clocked_boot_init);
 	qti_rpmh_deinit();
-
+	qti_scmi_init();
+	clkdom_init();
 	plat_qti_bl31_setup_post();
 }
 

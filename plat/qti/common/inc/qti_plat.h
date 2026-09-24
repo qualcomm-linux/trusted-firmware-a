@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include <common/bl_common.h>
+#include <drivers/arm/css/scmi.h>
 #include <drivers/arm/gicv3.h>
 #include <lib/cassert.h>
 #include <lib/el3_runtime/cpu_data.h>
@@ -55,6 +56,11 @@ int  plat_qti_pwr_psci_init(uintptr_t warmboot_entry);
 void plat_qti_bl31_setup_post(void);
 void plat_qti_invoke_unhandled_isr(uint32_t id, void *handle);
 
+void qti_scmi_init(void);
+scmi_channel_t *qti_scmi_get_channel(void);
+void scmi_ring_doorbell(struct scmi_channel_plat_info *plat_info);
+void clkdom_init(void);
+
 /*
  * Composite PSCI power-state encoding helpers, shared by the common PSCI layer
  * and the per-platform PM backends that define plat_qti_pm_idle_states(). The
@@ -93,5 +99,6 @@ typedef struct chip_id_info {
 	uint16_t jtag_id;
 	uint16_t chipinfo_id;
 } chip_id_info_t;
+
 
 #endif /* QTI_PLAT_H */
