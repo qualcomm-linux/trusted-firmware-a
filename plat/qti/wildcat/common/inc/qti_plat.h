@@ -85,6 +85,7 @@ void gic_set_spi_routing(unsigned int id, unsigned int irm, u_register_t mpidr);
 
 void qti_pmic_prepare_reset(void);
 void qti_pmic_prepare_shutdown(void);
+void qti_platform_psci_system_reset(void);
 
 /* Optional functions required in ARM standard platforms */
 unsigned int plat_qcom_core_pos_by_mpidr(u_register_t mpidr);

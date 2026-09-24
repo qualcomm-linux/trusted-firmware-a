@@ -133,7 +133,6 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 				$(QTI_PLAT_PATH)/common/src/qti_topology.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_pm.c			\
 				$(QTI_PLAT_PATH)/common/src/qti_rng.c			\
-				$(PLAT_QTI_ROOT)/common/src/spmi_arb.c			\
 				$(QTI_PLAT_PATH)/bl31qtilib/src/bl31qtilib_cb_interface.c	\
 				$(QTI_PLAT_PATH)/common/src/qti_plat_helpers.c \
 				drivers/qti/crypto/rng.c
@@ -141,13 +140,21 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 
 # Ensure Widevine is not being used
 ifeq ($(CROS_WIDEVINE_SMC), 0)
-QTI_BL31_SOURCES		+=	$(QTI_PLAT_PATH)/common/src/qti_oem_svc.c
+QTI_BL31_SOURCES		+=	\
+					$(QTI_PLAT_PATH)/common/src/qti_fuseprov_platform.c	\
+					$(QTI_PLAT_PATH)/common/src/qti_oem_svc.c	\
+					$(QTI_PLAT_PATH)/common/src/qti_secboot.c	\
+
 endif
 
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 
 PLAT_INCLUDES		+=	${QTI_EXTERNAL_INCLUDES}
 PLAT_INCLUDES		+=	-I${QTI_PLAT_PATH}/common/inc/$(ARCH)
+PLAT_INCLUDES		+=	\
+				-Iinclude/drivers/qti/pmic	\
+				-Iinclude/drivers/qti/pmic/${PMIC_ARB_VERSION}	\
+				-Iinclude/drivers/qti/pmic/${CHIPSET}	\
 
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
@@ -256,5 +263,15 @@ BL31_SOURCES	+=	$(QTI_PLAT_PATH)/common/src/qti_mbox_plat.c
 # TMECOM
 QTI_TMECOM	:=	1
 $(eval $(call add_define,QTI_USE_TMECOM))
+$(eval $(call add_define,QTI_TMECOM_TEST))
 include drivers/qti/tme/tme.mk
+
+# Fuseprov driver: parses SEC.DAT and blows fuses via the TME transport.
+# Enable FuseProv read-back diagnostics.
+# $(eval $(call add_define, QTI_FUSEPROV_TEST))
+include drivers/qti/fuseprov/fuseprov.mk
+
+# Enable anti-rollback fuse read-back diagnostics.
+# $(eval $(call add_define, QTI_ARB_TEST))
+
 include $(QTI_PLAT_PATH)/common/common.mk

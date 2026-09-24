@@ -31,6 +31,10 @@
 #include <plat/common/platform.h>
 #include <services/std_svc.h>
 
+#if defined(QTI_USE_TMECOM)
+#include <qti_secboot.h>
+#endif
+
 #if ENABLE_RUNTIME_INSTRUMENTATION
 	PMF_REGISTER_SERVICE_SMC(rt_instr_svc, PMF_RT_INSTR_SVC_ID,
 		RT_INSTR_TOTAL_IDS, PMF_STORE_ENABLE)
@@ -228,6 +232,10 @@ void __no_pauth bl31_main(u_register_t arg0, u_register_t arg1, u_register_t arg
 	 * from BL31
 	 */
 	bl31_plat_runtime_setup();
+
+#if defined(QTI_USE_TMECOM)
+	qti_secboot_post_milestone_setup();
+#endif
 
 #if ENABLE_RUNTIME_INSTRUMENTATION
 	console_flush();

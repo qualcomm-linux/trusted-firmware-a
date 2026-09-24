@@ -8,6 +8,7 @@
 
 #include <platform_def.h>
 #include <qti_plat.h>
+#include <pm_pon.h>
 #include <spmi_arb.h>
 
 /*
