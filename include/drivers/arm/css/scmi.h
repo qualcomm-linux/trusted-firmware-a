@@ -125,6 +125,8 @@
  */
 #define SCMI_CLOCK_RATE_SET_FLAG_SYNC          0
 #define SCMI_CLOCK_RATE_SET_FLAG_ASYNC         1
+#define SCMI_CLOCK_CONFIG_SET_ENABLE_SHIFT     0
+#define SCMI_CLOCK_CONFIG_SET_ENABLE           (1U << SCMI_CLOCK_CONFIG_SET_ENABLE_SHIFT)
 
 /* SCMI Error code definitions */
 #define SCMI_E_QUEUED			1
