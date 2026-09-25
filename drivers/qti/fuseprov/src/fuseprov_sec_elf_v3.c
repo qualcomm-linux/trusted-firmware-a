@@ -514,7 +514,7 @@ fuseprov_error_etype fuseprov_blow_fuses_sec_elf_v3(
 	fuseprov_qfuse_entry_t *entries;
 	uint32_t entry_count;
 	fuseprov_error_etype ret;
-	uint32_t i;
+	uint32_t magic;
 
 	if (buf == NULL || len == 0 || len > FUSEPROV_SECDAT_BUFFER_SIZE ||
 	    t == NULL || did_program == NULL) {
@@ -523,7 +523,10 @@ fuseprov_error_etype fuseprov_blow_fuses_sec_elf_v3(
 
 	*did_program = false;
 
-	/* Not an error: no sec partition, or an empty one, is valid */
+	/* The buffer may contain arbitrary data when no secdata is
+	 * present.
+	 * Validate the header magic values instead of checking for zeroes.
+	uint32_t i;
 	for (i = 0; ((i < len) && (buf[i] == 0)); i++);
 
 	if (i == len) {
@@ -532,6 +535,23 @@ fuseprov_error_etype fuseprov_blow_fuses_sec_elf_v3(
 	}
 
 	NOTICE("Fuseprov: Non-Zero Byte: %d.\n", i);
+ 	 */
+
+	/* Validate the magic numbers as check for non-empty buffer */
+	bool invalid_secdata = len < 2u*sizeof(uint32_t);
+	if (!invalid_secdata) {
+	        memcpy(&magic, buf, sizeof(uint32_t));
+	        invalid_secdata |= magic != FUSEPROV_SECDAT_MAGIC1;
+	        memcpy(&magic, buf + sizeof(uint32_t), sizeof(uint32_t));
+	        invalid_secdata |= magic != FUSEPROV_SECDAT_MAGIC2;
+	}
+	if (invalid_secdata) {
+	        NOTICE("Fuseprov: secdata magic numbers are unavailable\n");
+	        NOTICE("Fuseprov: Clearing the secdata buffer\n");
+	        memset(buf, 0, len);
+	        return FUSEPROV_SECDAT_DEFAULT_NOFUSES;
+	}
+
 	NOTICE("Fuseprov: Starting fuse provisioning\n");
 
 	/* Parse SEC.DAT header and get the flat fuse-entry array */
