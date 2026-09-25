@@ -97,10 +97,10 @@
 /*----------------------------------------------------------------------------*/
 /* BL31 specific defines. */
 /*----------------------------------------------------------------------------*/
-#define TFA_SHARED_MEMORY_BASE	0xBC300000
-#define TFA_SHARED_MEMORY_SIZE	0x0
+#define TFA_SHARED_MEMORY_BASE        0xBC300000
+#define TFA_SHARED_MEMORY_SIZE        0x0
 #define BL31_BASE (TFA_SHARED_MEMORY_BASE + TFA_SHARED_MEMORY_SIZE)
-#define BL31_SIZE 0x000A6000	/* 664 KB */
+#define BL31_SIZE 0x000A6000        /* 664 KB */
 
 #define BL31_LIMIT (BL31_BASE + BL31_SIZE)
 
@@ -147,15 +147,15 @@
 /*----------------------------------------------------------------------------*/
 /* SMEM base address                                                          */
 /*----------------------------------------------------------------------------*/
-#define QTI_SMEM_BASE ULL(0x89B00000)
-#define QTI_SMEM_SIZE ULL(0x00400000)
+#define QTI_SMEM_BASE 0x89B00000
+#define QTI_SMEM_SIZE 0x00400000
 
 
 /* TME shared mailbox RAM and interrupt registers */
-#define QTI_TME_MBOX_RAM_HIGH		0x3623e800
-#define QTI_TME_MBOX_RAM_HIGH_SIZE	0x00001000
-#define QTI_TFA_TME_MBOX_INTERRUPT	0x17824010
-#define QTI_TFA_TME_MBOX_INTERRUPT_MSK	0x1
+#define QTI_TME_MBOX_RAM_HIGH                0x3623e800
+#define QTI_TME_MBOX_RAM_HIGH_SIZE        0x00001000
+#define QTI_TFA_TME_MBOX_INTERRUPT        0x17824010
+#define QTI_TFA_TME_MBOX_INTERRUPT_MSK        0x1
 
 /*----------------------------------------------------------------------------*/
 /* LC PON register offsets */
@@ -163,35 +163,37 @@
 #define QTI_PS_HOLD_REG 0xC264000
 
 /*----------------------------------------------------------------------------*/
-/* Nord MD to SAIL communication registers and values                          */
+/* Nord MD to SAIL communication registers and values */
 /*----------------------------------------------------------------------------*/
-#define QTI_TCSR_MAIN2SAIL_GP_NONSEC_STATUS7_REG	U(0x01F7A028)
-#define QTI_TCSR_MAIN2SAIL_GP_NONSEC_STATUS8_REG	U(0x01F7A02C)
-#define QTI_TCSR_SAIL2MAIN_GP_NONSEC_SHADOW_STATUS4_REG	U(0x01F7B014)
+#define QTI_TCSR_MAIN2SAIL_GP_NONSEC_STATUS7_REG        0x01F7A028
+#define QTI_TCSR_MAIN2SAIL_GP_NONSEC_STATUS8_REG        0x01F7A02C
+#define QTI_TCSR_SAIL2MAIN_GP_NONSEC_SHADOW_STATUS4_REG        0x01F7B014
 
-#define QTI_APSS_INTU_TZ_IPC_INTERRUPT		U(0x17824004)
-#define QTI_APSS_INTU_TZ_SPARE_IPC_BMSK	U(0x0080000)
+#define QTI_APSS_INTU_TZ_IPC_INTERRUPT                0x17824004
+#define QTI_APSS_INTU_TZ_SPARE_IPC_BMSK        U(0x0080000)
 
-#define QTI_MD_SD_MSG_TYPE_SHIFT	U(16)
-#define QTI_MD_SD_MSG_TYPE_MASK		(U(0xFF) << QTI_MD_SD_MSG_TYPE_SHIFT)
-#define QTI_MD_SD_SUBSYS_TYPE_SHIFT	U(24)
-#define QTI_MD_SD_SUBSYS_TYPE_MASK	(U(0xFF) << QTI_MD_SD_SUBSYS_TYPE_SHIFT)
+#define QTI_MD_SD_MSG_TYPE_SHIFT        U(16)
+#define QTI_MD_SD_MSG_TYPE_MASK \
+        (U(0xFF) << QTI_MD_SD_MSG_TYPE_SHIFT)
+#define QTI_MD_SD_SUBSYS_TYPE_SHIFT        U(24)
+#define QTI_MD_SD_SUBSYS_TYPE_MASK \
+        (U(0xFF) << QTI_MD_SD_SUBSYS_TYPE_SHIFT)
 
-#define QTI_SAIL_RESET_READY		U(0xA0300100)
-#define QTI_PSCI_GRACEFUL_SHUTDOWN_CMD	U(0x5AF00004)
-#define QTI_PSCI_HARD_RESET_CMD		U(0x5AF00005)
-#define QTI_MD_GRACEFUL_SHUTDOWN	U(0xB2200430)
-#define QTI_MD_SOC_HR			U(0xB2200510)
-#define QTI_MD_SD_TZ_SRC		U(0xB2)
-#define QTI_MD_SD_NO_ACK		U(0x10)
-#define QTI_MD_SD_WAIT_FOR_ACK		U(0x20)
+#define QTI_SAIL_RESET_READY                U(0xA0300100)
+#define QTI_PSCI_GRACEFUL_SHUTDOWN_CMD        U(0x5AF00004)
+#define QTI_PSCI_HARD_RESET_CMD                U(0x5AF00005)
+#define QTI_MD_GRACEFUL_SHUTDOWN        U(0xB2200430)
+#define QTI_MD_SOC_HR                        U(0xB2200510)
+#define QTI_MD_SD_TZ_SRC                U(0xB2)
+#define QTI_MD_SD_NO_ACK                U(0x10)
+#define QTI_MD_SD_WAIT_FOR_ACK                U(0x20)
 
 /*
  * The Qualcomm QGIC2 implementation seems to have PIDR0-4 and PIDR4-7
  * erroneously swapped for some reason. PIDR2 is actually at 0xFD8.
  * Override the address in <drivers/arm/gicv2.h> to avoid a failing assert().
  */
-#define GICD_PIDR2_GICV2 U(0xFFE8)
+#define GICD_PIDR2_GICV2 0xFFE8
 
 /* Timer */
 #define PLAT_SYSCNT_FREQ 19200000
@@ -206,13 +208,13 @@
 /*----------------------------------------------------------------------------*/
 /* TME shared mailbox RAM                                                     */
 /*----------------------------------------------------------------------------*/
-#define QTI_TME_MBOX_RAM_HIGH		0x3623e800
-#define QTI_TME_MBOX_RAM_HIGH_SIZE	0x00001000
+#define QTI_TME_MBOX_RAM_HIGH                0x3623e800
+#define QTI_TME_MBOX_RAM_HIGH_SIZE        0x00001000
 
 /*----------------------------------------------------------------------------*/
 /* TFA MBOX interrupt-set register used to signal the TME                     */
 /*----------------------------------------------------------------------------*/
-#define QTI_TFA_TME_MBOX_INTERRUPT	0x17824010
-#define QTI_TFA_TME_MBOX_INTERRUPT_MSK	0x1
+#define QTI_TFA_TME_MBOX_INTERRUPT        0x17824010
+#define QTI_TFA_TME_MBOX_INTERRUPT_MSK        0x1
 
 #endif /* PLATFORM_DEF_H */

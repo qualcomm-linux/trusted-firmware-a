@@ -15,7 +15,7 @@ int qti_fuseprov_init(void);
 #if defined(QTI_ARB_TEST)
 /* Read back the anti-rollback test rows through the supplied transport. */
 void qti_arb_read_test(const fuseprov_transport_t *transport);
-#endif
+#endif /* QTI_ARB_TEST */
 
 /* Qualcomm abstraction for updating boot-image anti-rollback fuse versions. */
 int qti_secboot_update_rollback_fuse_version(void);

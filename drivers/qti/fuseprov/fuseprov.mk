@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-FUSEPROV_SOURCES	:= drivers/qti/fuseprov/src/fuseprov_core.c \
-			   drivers/qti/fuseprov/src/fuseprov_sec_elf_v3.c \
-			   drivers/qti/fuseprov/port/tme/fuseprov_port_tme.c
+FUSEPROV_SOURCES        := \
+                           drivers/qti/fuseprov/port/tme/fuseprov_port_tme.c \
+                           drivers/qti/fuseprov/src/fuseprov_core.c \
+                           drivers/qti/fuseprov/src/fuseprov_sec_elf_v3.c \
 
-BL31_SOURCES	+=	${FUSEPROV_SOURCES}
+BL31_SOURCES        +=        ${FUSEPROV_SOURCES}

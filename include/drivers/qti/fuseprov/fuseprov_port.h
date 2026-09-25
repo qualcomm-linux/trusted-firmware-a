@@ -21,9 +21,9 @@
  * @return: FUSEPROV_OK on success, error code on failure
  */
 fuseprov_err_t fuseprov_row_read(const fuseprov_transport_t *t,
-				 uint32_t addr,
-				 fuseprov_addr_space_t space,
-				 uint32_t out[2]);
+                                 uint32_t addr,
+                                 fuseprov_addr_space_t space,
+                                 uint32_t out[2]);
 
 /* Write multiple fuse rows to QFPROM atomically
  * @t: transport contract pointer
@@ -34,10 +34,10 @@ fuseprov_err_t fuseprov_row_read(const fuseprov_transport_t *t,
  * @return: FUSEPROV_OK on success, error code on failure
  */
 fuseprov_err_t fuseprov_rows_write(const fuseprov_transport_t *t,
-				   const uint32_t addr[],
-				   const uint64_t data[],
-				   uint32_t count,
-				   uintptr_t *addr_err);
+                                   const uint32_t addr[],
+                                   const uint64_t data[],
+                                   uint32_t count,
+                                   uintptr_t *addr_err);
 
 /* Main SEC.DAT v3 parser and fuse blower - implemented in fuseprov_sec_elf_v3.c
  * @t: transport contract pointer
@@ -47,9 +47,9 @@ fuseprov_err_t fuseprov_rows_write(const fuseprov_transport_t *t,
  * @return: FUSEPROV_SUCCESS on success, error code on failure
  */
 fuseprov_error_etype fuseprov_blow_fuses_sec_elf_v3(
-	const fuseprov_transport_t *t,
-	uint8_t *buf,
-	uint32_t len,
-	bool *did_program);
+        const fuseprov_transport_t *t,
+        uint8_t *buf,
+        uint32_t len,
+        bool *did_program);
 
 #endif /* FUSEPROV_PORT_H */
