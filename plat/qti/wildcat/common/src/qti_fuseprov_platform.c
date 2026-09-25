@@ -105,56 +105,6 @@ void qti_arb_read_test(const fuseprov_transport_t *transport)
 }
 #endif /* QTI_ARB_TEST */
 
-/* Blow fuses and trigger reset
- *
- * This function locates the SEC.DAT buffer, calls the fuseprov driver to parse
- * and blow fuses via the TME transport, and triggers a device reset on completion
- * or error.
- *
- * @param secdat_buffer: Pointer to SEC.DAT buffer
- * @param secdat_len: Length of SEC.DAT buffer
- *
- * @return Returns success when provisioning completes; a reset is only
- *         performed when at least one fuse row was programmed.
- */
-int qti_fuseprov_blow_fuses_and_reset(uint8_t *secdat_buffer,
-				      size_t secdat_len)
-{
-	fuseprov_error_etype ret;
-	const fuseprov_transport_t *transport;
-	bool did_program = false;
-
-	if (secdat_buffer == NULL || secdat_len == 0) {
-		ERROR("Fuseprov: Invalid SEC.DAT buffer\n");
-		return -1;
-	}
-
-	NOTICE("Fuseprov: Starting fuse provisioning and reset sequence\n");
-
-	/* Get the TME transport for fuse read/write operations */
-	transport = fuseprov_port_tme_get();
-	if (transport == NULL) {
-		ERROR("Fuseprov: Failed to get TME transport\n");
-		return -1;
-	}
-
-	/* Parse SEC.DAT and blow fuses via transport abstraction */
-	ret = fuseprov_blow_fuses_sec_elf_v3(transport,
-					     secdat_buffer,
-					     secdat_len,
-					     &did_program);
-	if (ret != FUSEPROV_SUCCESS && ret != FUSEPROV_SECDAT_LOCK_BLOWN) {
-		ERROR("Fuseprov: Fuse provisioning failed with error %d\n", ret);
-		return ret;
-	}
-
-	NOTICE("Fuseprov: Fuse provisioning complete, reset deferred\n");
-
-	/* TODO: Re-enable when the FuseProv reset dependency is available. */
-	/* qti_fuseprov_trigger_reset(false); */
-	return FUSEPROV_SUCCESS;
-}
-
 /* Ask TME where it authenticated sec.elf during boot, then parse and blow
  * fuses from that buffer.
  *

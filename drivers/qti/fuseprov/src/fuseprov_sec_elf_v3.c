@@ -11,6 +11,9 @@
 #include <drivers/qti/fuseprov/fuseprov_port.h>
 #include <drivers/qti/fuseprov/fuseprov_sec_elf_v3.h>
 
+#define FUSEPROV_RANDOM_ROW_COUNT	5U
+#define FUSEPROV_RANDOM_DATA_SIZE	(FUSEPROV_RANDOM_ROW_COUNT * sizeof(uint64_t))
+
 /* Calculate FEC bits [62:56] for the 56 data bits in a QFPROM row. */
 static uint32_t fuseprov_calculate_fec(uint32_t lsb_data,
 					      uint32_t msb_data)
@@ -69,6 +72,55 @@ static fuseprov_error_etype fuseprov_row_is_programmed(
 		return FUSEPROV_QFPROM_READ_ERROR;
 
 	*programmed = (fuse_data[0] != 0U || fuse_data[1] != 0U);
+	return FUSEPROV_SUCCESS;
+}
+
+static uint32_t fuseprov_count_random_rows(
+	const fuseprov_qfuse_entry_t *entries, uint32_t entry_count,
+	fuseprov_region_type_t region_type)
+{
+	uint32_t i;
+	uint32_t random_row_count = 0U;
+
+	for (i = 0U; i < entry_count; i++) {
+		if (entries[i].region_type == region_type &&
+		    entries[i].operation == FUSEPROV_OPERATION_BLOW_RANDOM) {
+			random_row_count++;
+		}
+	}
+
+	return random_row_count;
+}
+
+static fuseprov_error_etype fuseprov_validate_random_row_counts(
+	const fuseprov_qfuse_entry_t *entries, uint32_t entry_count)
+{
+	uint32_t random_row_count;
+
+	random_row_count = fuseprov_count_random_rows(entries, entry_count,
+						      FUSEPROV_REGION_TYPE_SEC_HW_KEY);
+	if (random_row_count > FUSEPROV_RANDOM_ROW_COUNT) {
+		ERROR("Fuseprov: too many SHK random rows (%u > %u)\n",
+		      random_row_count, FUSEPROV_RANDOM_ROW_COUNT);
+		return FUSEPROV_SHK_GENERATION_FAILED;
+	}
+
+	random_row_count = fuseprov_count_random_rows(entries, entry_count,
+						      FUSEPROV_REGION_TYPE_OEM_PRODUCT_SEED);
+	if (random_row_count > FUSEPROV_RANDOM_ROW_COUNT) {
+		ERROR("Fuseprov: too many OEM product seed random rows (%u > %u)\n",
+		      random_row_count, FUSEPROV_RANDOM_ROW_COUNT);
+		return FUSEPROV_SHK_GENERATION_FAILED;
+	}
+
+	random_row_count = fuseprov_count_random_rows(entries, entry_count,
+						      FUSEPROV_REGION_TYPE_OEM_SPARE);
+	if (random_row_count > FUSEPROV_RANDOM_ROW_COUNT) {
+		ERROR("Fuseprov: too many OEM spare random rows (%u > %u)\n",
+		      random_row_count, FUSEPROV_RANDOM_ROW_COUNT);
+		return FUSEPROV_OEM_SPARE_RAND_GEN_FAILED;
+	}
+
 	return FUSEPROV_SUCCESS;
 }
 
@@ -276,7 +328,7 @@ static fuseprov_error_etype fuseprov_provision_shk(
 	uint32_t entry_count,
 	bool *did_program)
 {
-	uint8_t random_data[40];
+	uint8_t random_data[FUSEPROV_RANDOM_DATA_SIZE];
 	uint32_t i;
 	uint32_t random_index = 0;
 	int ret;
@@ -335,7 +387,7 @@ static fuseprov_error_etype fuseprov_provision_oem_product_seed(
 	uint32_t entry_count,
 	bool *did_program)
 {
-	uint8_t random_data[40];
+	uint8_t random_data[FUSEPROV_RANDOM_DATA_SIZE];
 	uint32_t fuse_data[2];
 	uint32_t i;
 	uint32_t random_index = 0;
@@ -399,7 +451,7 @@ static fuseprov_error_etype fuseprov_provision_oem_spare(
 	uint32_t entry_count,
 	bool *did_program)
 {
-	uint8_t random_data[40];
+	uint8_t random_data[FUSEPROV_RANDOM_DATA_SIZE];
 	uint32_t i;
 	uint32_t random_index = 0;
 	int ret;
@@ -488,6 +540,11 @@ fuseprov_error_etype fuseprov_blow_fuses_sec_elf_v3(
 		ERROR("Fuseprov: Failed to parse SEC.DAT header\n");
 		return ret;
 	}
+
+	/* Validate all random-entry counts before programming any fuse row. */
+	ret = fuseprov_validate_random_row_counts(entries, entry_count);
+	if (ret != FUSEPROV_SUCCESS)
+		return ret;
 
 	/* Blow fuses in order: GENERAL -> SHK -> OEM_PRODUCT_SEED ->
 	 * OEM_SPARE -> OEM_CONFIG -> SECBOOT -> FEC_EN -> READ_PERM ->
