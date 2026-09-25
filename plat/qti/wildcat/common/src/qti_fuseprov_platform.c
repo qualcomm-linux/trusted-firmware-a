@@ -26,23 +26,16 @@ static __dead2 void qti_fuseprov_trigger_reset(bool warm_reset)
 
         qti_platform_psci_system_reset();
 
-        /* Deasserting PS_HOLD starts the reset selected in the PMIC. */
+        /* Deasserting PS_HOLD starts the PMIC-selected reset. */
         NOTICE("Fuseprov-Reset: Writing the Register for PS Hold to Low\n");
         mmio_write_32(QTI_PS_HOLD_REG, 0U);
         NOTICE("Fuseprov-Reset: Written the Register for PS Hold to Low\n");
 
-        /* The reset is asynchronous; do not continue execution if delayed. */
+        /* Keep the CPU idle if reset assertion is delayed. */
         while (true) wfi();
 }
 
 #if defined(QTI_FUSEPROV_TEST)
-/*
- * Boot-time self-test: read the QFPROM_CORR_OEM_CONFIG_ROW1_MSB register
- * through the fuseprov transport abstraction (the same path
- * qti_fuseprov_init() uses to blow fuses) to confirm that this init flow is
- * actually being reached and exercised at boot.  Read-only -- never panics,
- * a failure is logged only.
- */
 #define QFPROM_RAW_OEM_CONFIG_ROW1_MSB 0x360C0164
 
 static void qti_fuseprov_read_test(const fuseprov_transport_t *transport)
@@ -69,11 +62,6 @@ static void qti_fuseprov_read_test(const fuseprov_transport_t *transport)
 #endif /* QTI_FUSEPROV_TEST */
 
 #if defined(QTI_ARB_TEST)
-/*
- * ANTIROLLBACK1 is a legacy HWIO register token.  TF-A uses the absolute
- * TME/QFPROM address for fuse reads, so its value is zero here and the
- * address supplied by the platform is retained by the OR expression below.
- */
 #define QFPROM_RAW_ANTIROLLBACK_ROW10_LSB        0x360C0318
 #define QFPROM_RAW_ANTIROLLBACK_ROW10_MSB        0x360C031C
 
@@ -110,19 +98,9 @@ void qti_arb_read_test(const fuseprov_transport_t *transport)
 }
 #endif /* QTI_ARB_TEST */
 
-/* Ask TME where it authenticated sec.elf during boot, then parse and blow
- * fuses from that buffer.
- *
- * This is the TF-A counterpart of the Zephyr fuseprov_init() boot hook: it
- * performs the same "self-locate the buffer via TME, then provision" work.
- * Unlike the Zephyr version it is not registered against any boot-time init
- * framework -- TF-A has none -- so it is exposed here for a caller to invoke
- * once one is chosen.
- *
- * @return: 0 if provisioning found nothing to do or the SEC.DAT was already
- *          locked; -1 if the sec.elf region could not be located or mapped;
- *          the fuseprov_error_etype value on a fuse-blow failure. A reset is
- *          triggered only after successful fuse programming.
+/* Provision the platform-defined authenticated SEC.DAT buffer.
+ * @return 0 if provisioning succeeds or is not required; -1 if the buffer
+ *         cannot be mapped; otherwise a fuseprov_error_etype value.
  */
 int qti_fuseprov_init(void)
 {
@@ -143,9 +121,7 @@ int qti_fuseprov_init(void)
                 return -1;
         }
 
-        /* secelf_pa is a DDR physical address; it is not part of any static
-         * MMU region, so map it before use.
-         */
+        /* The DDR buffer is outside the static MMU map. */
         if (qti_mmap_add_dynamic_region(secelf_pa, secelf_len,
                                         MT_RW_DATA | MT_SECURE) != 0) {
                 ERROR("Fuseprov: failed to map sec.elf buffer\n");

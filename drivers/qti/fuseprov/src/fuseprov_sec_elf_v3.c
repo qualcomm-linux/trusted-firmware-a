@@ -15,7 +15,7 @@
 #define FUSEPROV_RANDOM_DATA_SIZE \
         (FUSEPROV_RANDOM_ROW_COUNT * sizeof(uint64_t))
 
-/* Calculate FEC bits [62:56] for the 56 data bits in a QFPROM row. */
+/* QFPROM stores FEC for the lower 56 data bits in MSB bits [62:56]. */
 static uint32_t fuseprov_calculate_fec(uint32_t lsb_data,
                                               uint32_t msb_data)
 {
@@ -41,7 +41,7 @@ static uint32_t fuseprov_calculate_fec(uint32_t lsb_data,
         for (i = 6; i >= 0; i--)
                 fec_val |= (uint32_t)lfsr[i] << i;
 
-        /* Clear existing FEC bits [62:56] in the MSB word. */
+        /* Preserve only data bits before inserting the newly computed FEC. */
         msb_data &= 0x80FFFFFFU;
 
         return (fec_val << 24) | msb_data;
@@ -61,7 +61,7 @@ static void fuseprov_clear_entry_data(fuseprov_qfuse_entry_t *entry)
                 msb[i] = 0U;
 }
 
-/* Check whether a row contains any programmed fuse bits. */
+/* Read the corrected row to avoid reprogramming a previously blown row. */
 static fuseprov_error_etype fuseprov_row_is_programmed(
         const fuseprov_transport_t *t, uint32_t address, bool *programmed)
 {
@@ -126,11 +126,7 @@ static fuseprov_error_etype fuseprov_validate_random_row_counts(
         return FUSEPROV_SUCCESS;
 }
 
-/* Validate SEC.DAT header and extract the flat fuse-entry array
- *
- * SEC.DAT v3 has no segments, footer or hash: a fixed header is immediately
- * followed by hdr->num_entries fuseprov_qfuse_entry_t records.
- */
+/* SEC.DAT v3 contains a fixed header followed by a flat entry array. */
 static fuseprov_error_etype fuseprov_parse_secdat_hdr(
         uint8_t *buffer, size_t buffer_len,
         fuseprov_secdat_hdr_t *hdr,
@@ -182,8 +178,7 @@ static fuseprov_error_etype fuseprov_parse_secdat_hdr(
         return FUSEPROV_SUCCESS;
 }
 
-/* Blow fuses in a specific category via transport abstraction */
-/* Map a SEC.DAT region type to its blow category
+/* Map a SEC.DAT region type to its ordered provisioning category.
  *
  * Regions without an explicit category fall back to GENERAL so that region
  * types such as OEM_PK_HASH, ANTI_ROLLBACK, IMAGE_ENCR_KEY and MRC_2_0 are
@@ -250,7 +245,6 @@ static fuseprov_error_etype fuseprov_blow_fuseregion(
                 if (entries[i].lsb_val == 0 && entries[i].msb_val == 0) {
                         continue;
                 }
-                /* Read current fuse value */
                 ret = fuseprov_row_read(t, entries[i].raw_row_address,
                                        FUSEPROV_ADDR_CORR, fuse_data);
                 if (ret != FUSEPROV_OK) {
@@ -271,7 +265,6 @@ static fuseprov_error_etype fuseprov_blow_fuseregion(
 
                 mask_fec_msb_bits = fec_enabled ? FUSEPROV_FEC_ROW_MSB_MASK :
                         FUSEPROV_GEN_ROW_MSB_MASK;
-                /* Blow only if we need to -- skip if already blown */
                 bool flag_skip_blow = true;
                 flag_skip_blow &= (fuse_data[0] & entries[i].lsb_val) ==
                         entries[i].lsb_val;
@@ -283,7 +276,6 @@ static fuseprov_error_etype fuseprov_blow_fuseregion(
                         continue;
                 }
 
-                /* Write new fuse value */
                 msb_data = entries[i].msb_val;
                 if (fec_enabled)
                         msb_data = fuseprov_calculate_fec(entries[i].lsb_val,
@@ -304,7 +296,6 @@ static fuseprov_error_etype fuseprov_blow_fuseregion(
                        entries[i].raw_row_address, entries[i].lsb_val,
                        msb_data);
 
-                /* Scrub only after the write API reported success. */
                 fuseprov_clear_entry_data(&entries[i]);
                 *did_program = true;
         }
@@ -312,7 +303,7 @@ static fuseprov_error_etype fuseprov_blow_fuseregion(
         return FUSEPROV_SUCCESS;
 }
 
-/* Provision SHK (Secondary Hardware Key) with random data */
+/* Generate and provision random Secondary Hardware Key rows. */
 static fuseprov_error_etype fuseprov_provision_shk(
         const fuseprov_transport_t *t,
         fuseprov_qfuse_entry_t *entries,
@@ -324,14 +315,12 @@ static fuseprov_error_etype fuseprov_provision_shk(
         uint32_t random_index = 0;
         int ret;
 
-        /* Generate random data for SHK (5 fuse rows * 8 bytes) */
         ret = qti_rng_get_data(random_data, sizeof(random_data));
         if (ret != 0) {
                 ERROR("Fuseprov: Failed to generate random data for SHK\n");
                 return FUSEPROV_SHK_GENERATION_FAILED;
         }
 
-        /* Blow SHK fuses with random data */
         for (i = 0; i < entry_count; i++) {
                 if (entries[i].region_type == FUSEPROV_REGION_TYPE_SEC_HW_KEY &&
                     entries[i].operation == FUSEPROV_OPERATION_BLOW_RANDOM) {
@@ -370,7 +359,7 @@ static fuseprov_error_etype fuseprov_provision_shk(
         return FUSEPROV_SUCCESS;
 }
 
-/* Provision OEM product seed with random data */
+/* Generate and provision random OEM product-seed rows. */
 static fuseprov_error_etype fuseprov_provision_oem_product_seed(
         const fuseprov_transport_t *t,
         fuseprov_qfuse_entry_t *entries,
@@ -439,7 +428,7 @@ static fuseprov_error_etype fuseprov_provision_oem_product_seed(
         return FUSEPROV_SUCCESS;
 }
 
-/* Provision OEM spare data with random values */
+/* Generate and provision random OEM spare rows. */
 static fuseprov_error_etype fuseprov_provision_oem_spare(
         const fuseprov_transport_t *t,
         fuseprov_qfuse_entry_t *entries,
@@ -498,9 +487,7 @@ static fuseprov_error_etype fuseprov_provision_oem_spare(
         return FUSEPROV_SUCCESS;
 }
 
-/* Main entry point: parse and blow fuses from SEC.DAT v3
- * This is the portable layer entry point that takes a transport contract
- */
+/* Parse and provision the authenticated SEC.DAT v3 buffer. */
 fuseprov_error_etype fuseprov_blow_fuses_sec_elf_v3(
         const fuseprov_transport_t *t,
         uint8_t *buf,
@@ -551,22 +538,17 @@ fuseprov_error_etype fuseprov_blow_fuses_sec_elf_v3(
 
         NOTICE("Fuseprov: Starting fuse provisioning\n");
 
-        /* Parse SEC.DAT header and get the flat fuse-entry array */
         ret = fuseprov_parse_secdat_hdr(buf, len, &hdr, &entries, &entry_count);
         if (ret != FUSEPROV_SUCCESS) {
                 ERROR("Fuseprov: Failed to parse SEC.DAT header\n");
                 return ret;
         }
 
-        /* Validate all random-entry counts before programming any fuse row. */
         ret = fuseprov_validate_random_row_counts(entries, entry_count);
         if (ret != FUSEPROV_SUCCESS)
                 return ret;
 
-        /* Blow fuses in order: GENERAL -> SHK -> OEM_PRODUCT_SEED ->
-         * OEM_SPARE -> OEM_CONFIG -> SECBOOT -> FEC_EN -> READ_PERM ->
-         * WRITE_PERM (last, locks everything)
-         */
+        /* Write-permission rows are last because they lock further writes. */
         ret = fuseprov_blow_fuseregion(t, entries, entry_count,
                                       FUSEPROV_CATEGORY_GENERAL, did_program);
         if (ret != FUSEPROV_SUCCESS) {

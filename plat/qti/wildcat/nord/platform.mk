@@ -269,12 +269,7 @@ $(eval $(call add_define,QTI_USE_TMECOM))
 $(eval $(call add_define,QTI_TMECOM_TEST))
 include drivers/qti/tme/tme.mk
 
-# Fuseprov driver: parses SEC.DAT and blows fuses via the TME transport.
-# Enable FuseProv read-back diagnostics.
-# $(eval $(call add_define, QTI_FUSEPROV_TEST))
+# Fuse provisioning uses TME for authenticated SEC.DAT access and QFPROM I/O.
 include drivers/qti/fuseprov/fuseprov.mk
-
-# Enable anti-rollback fuse read-back diagnostics.
-# $(eval $(call add_define, QTI_ARB_TEST))
 
 include $(QTI_PLAT_PATH)/common/common.mk

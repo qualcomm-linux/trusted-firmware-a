@@ -10,13 +10,13 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* Address space for fuse read/write operations */
+/* QFPROM address space used for a fuse operation. */
 typedef enum {
-        FUSEPROV_ADDR_RAW  = 0,  /* Raw (uncorrected) address space */
-        FUSEPROV_ADDR_CORR = 1,  /* Corrected address space */
+        FUSEPROV_ADDR_RAW  = 0,
+        FUSEPROV_ADDR_CORR = 1,
 } fuseprov_addr_space_t;
 
-/* Low-level transport error codes */
+/* Errors returned by a fuse transport. */
 typedef enum {
         FUSEPROV_OK = 0,
         FUSEPROV_ERR_ADDR_INVALID,
@@ -25,36 +25,36 @@ typedef enum {
         FUSEPROV_ERR_FEC_ENABLED_NOT_WRITEABLE,
         FUSEPROV_ERR_VERIFY_FAILED,
         FUSEPROV_ERR_ROW_BOUNDARY,
-        FUSEPROV_ERR_TRANSPORT,  /* RMB/IPC failure, timeout, etc. */
+        FUSEPROV_ERR_TRANSPORT,
         FUSEPROV_ERR_UNKNOWN,
 } fuseprov_err_t;
 
-/* Transport contract: function pointers for fuse read/write operations */
+/* Transport contract for QFPROM row access. */
 typedef struct {
-        /* Read a single fuse row from QFPROM
-         * @ctx: opaque context pointer (port-specific)
-         * @addr: fuse row address
-         * @space: address space (raw or corrected)
-         * @out: output buffer for row data [LSB, MSB]
-         * @return: FUSEPROV_OK on success, error code on failure
+        /* Read one row.
+         * @param ctx port-specific context
+         * @param addr fuse row address
+         * @param space raw or corrected address space
+         * @param out output words in LSB, MSB order
+         * @return FUSEPROV_OK on success, otherwise a transport error
          */
         fuseprov_err_t (*read_row)(void *ctx, uint32_t addr,
                                    fuseprov_addr_space_t space,
                                    uint32_t out[2]);
 
-        /* Write multiple fuse rows to QFPROM atomically
-         * @ctx: opaque context pointer (port-specific)
-         * @addr: array of fuse row addresses
-         * @data: array of fuse row data (64-bit: [LSB, MSB])
-         * @count: number of rows to write
-         * @addr_err: output parameter for address that failed (if any)
-         * @return: FUSEPROV_OK on success, error code on failure
+        /* Write multiple rows.
+         * @param ctx port-specific context
+         * @param addr row-address array
+         * @param data row-data array
+         * @param count number of rows
+         * @param addr_err optional failed-address output
+         * @return FUSEPROV_OK on success, otherwise a transport error
          */
         fuseprov_err_t (*write_rows)(void *ctx, const uint32_t addr[],
                                      const uint64_t data[], uint32_t count,
                                      uintptr_t *addr_err);
 
-        /* Opaque context pointer passed to read_row/write_rows */
+        /* Port-specific context passed to the callbacks. */
         void *ctx;
 } fuseprov_transport_t;
 

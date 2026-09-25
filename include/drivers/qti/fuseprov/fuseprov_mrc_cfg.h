@@ -7,9 +7,9 @@
 #ifndef FUSEPROV_MRC_CFG_H
 #define FUSEPROV_MRC_CFG_H
 
-/* SEC.DAT buffer size limit - chipset-specific override */
+/* Platforms may override the maximum authenticated SEC.DAT size. */
 #ifndef FUSEPROV_SECDAT_BUFFER_SIZE
-#define FUSEPROV_SECDAT_BUFFER_SIZE         4096  /* NEEDSWORK: IPCatalog */
+#define FUSEPROV_SECDAT_BUFFER_SIZE         4096
 #endif /* FUSEPROV_SECDAT_BUFFER_SIZE */
 
 #endif /* FUSEPROV_MRC_CFG_H */

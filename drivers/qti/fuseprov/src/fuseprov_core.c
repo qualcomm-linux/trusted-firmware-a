@@ -7,9 +7,6 @@
 #include <common/debug.h>
 #include <drivers/qti/fuseprov/fuseprov_port.h>
 
-/* Transport wrapper: read a single fuse row
- * Maps transport errors to parser-level errors
- */
 fuseprov_err_t fuseprov_row_read(const fuseprov_transport_t *t,
                                  uint32_t addr,
                                  fuseprov_addr_space_t space,
@@ -23,9 +20,6 @@ fuseprov_err_t fuseprov_row_read(const fuseprov_transport_t *t,
         return t->read_row(t->ctx, addr, space, out);
 }
 
-/* Transport wrapper: write multiple fuse rows atomically
- * Maps transport errors to parser-level errors
- */
 fuseprov_err_t fuseprov_rows_write(const fuseprov_transport_t *t,
                                    const uint32_t addr[],
                                    const uint64_t data[],

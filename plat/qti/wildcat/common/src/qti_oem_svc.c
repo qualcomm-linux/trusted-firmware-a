@@ -38,7 +38,6 @@ enum {
         QTI_OEM_SVC_INVALID_PARAM = -3,
 };
 
-/* OEM SVC handler */
 static uintptr_t oem_svc_smc_handler(uint32_t smc_fid, u_register_t x1,
                                      u_register_t x2, u_register_t x3,
                                      u_register_t x4, void *cookie,
@@ -51,10 +50,10 @@ static uintptr_t oem_svc_smc_handler(uint32_t smc_fid, u_register_t x1,
         case TZ_PSCI_WARM_RESET:
                 SMC_RET1(handle, bl31qtilib_psci_warm_reset());
         case TZ_FUSEPROV_BLOW_FUSES:
-                /* Buffer is located via TME, not the caller-supplied x1/x2 */
+                /* Provisioning uses the platform-defined authenticated buffer. */
                 SMC_RET1(handle, qti_fuseprov_init());
         default:
-                /* Allow the call to be forwarded to QTEE if using qteed */
+                /* Preserve forwarding of OEM calls not handled by TF-A. */
                 forward_to_spd = true;
                 break;
         }
@@ -67,7 +66,6 @@ static uintptr_t oem_svc_smc_handler(uint32_t smc_fid, u_register_t x1,
         return (uintptr_t)handle;
 }
 
-/* Register OEM Service Calls as runtime service */
 DECLARE_RT_SVC(oem_svc_smc_handler_fast, OEN_OEM_START, OEN_OEM_END,
                SMC_TYPE_FAST, NULL, oem_svc_smc_handler);
 

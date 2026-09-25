@@ -46,12 +46,7 @@ int qti_mmap_add_dynamic_region(uintptr_t base_pa, size_t size,
                                 unsigned int attr);
 int qti_mmap_remove_dynamic_region(uintptr_t base_va, size_t size);
 
-/*
- * Utility functions common to ARM standard platforms.
- * TODO: The below CR is created to handle page table
- * with and without coherent memory.
- * https://orbit/CR/4444422
- */
+/* Utility functions common to ARM standard platforms. */
 #if USE_COHERENT_MEM
 void qti_setup_page_tables(uintptr_t total_base, size_t total_size,
                            uintptr_t code_start, uintptr_t code_limit,

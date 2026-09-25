@@ -11,12 +11,7 @@
 #include "TmeInterfaces.h"
 #include "TmeInterfacesDefs.h"
 
-/* TME transport: read fuse row via TME.
- *
- * fuseprov_addr_space_t values (FUSEPROV_ADDR_RAW=0, FUSEPROV_ADDR_CORR=1)
- * are numerically identical to TmeQfpromAddrSpace_t, so a direct cast is
- * safe.
- */
+/* The transport enum values match TmeQfpromAddrSpace_t. */
 static fuseprov_err_t tme_read_row(void *ctx, uint32_t addr,
                                    fuseprov_addr_space_t space,
                                    uint32_t out[2])
@@ -38,7 +33,6 @@ static fuseprov_err_t tme_read_row(void *ctx, uint32_t addr,
         return FUSEPROV_OK;
 }
 
-/* TME transport: write fuse rows via TME. */
 static fuseprov_err_t tme_write_rows(void *ctx, const uint32_t addr[],
                                      const uint64_t data[], uint32_t count,
                                      uintptr_t *addr_err)
@@ -67,9 +61,7 @@ static fuseprov_err_t tme_write_rows(void *ctx, const uint32_t addr[],
                 ERROR("Fuseprov: TME fuse write failed "
                       "(ret=%d, qfprom_status=%u)\n",
                       ret, qfprom_status);
-                /* TmeFuseWriteMultiple() does not report the failing
-                 * address.
-                 */
+                /* The TME API does not identify a failed row. */
                 (void)addr_err;
                 return FUSEPROV_ERR_TRANSPORT;
         }
@@ -77,7 +69,6 @@ static fuseprov_err_t tme_write_rows(void *ctx, const uint32_t addr[],
         return FUSEPROV_OK;
 }
 
-/* Get the TME transport instance */
 const fuseprov_transport_t *fuseprov_port_tme_get(void)
 {
         static const fuseprov_transport_t tme_transport = {

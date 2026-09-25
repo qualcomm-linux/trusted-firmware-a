@@ -9,7 +9,7 @@
 
 #include <drivers/qti/fuseprov/fuseprov_transport.h>
 
-/* Get the TME transport instance for Wildcat/Nord platforms */
+/* Return the TME-backed transport used by Wildcat/Nord fuse provisioning. */
 const fuseprov_transport_t *fuseprov_port_tme_get(void);
 
 #endif /* FUSEPROV_PORT_TME_H */

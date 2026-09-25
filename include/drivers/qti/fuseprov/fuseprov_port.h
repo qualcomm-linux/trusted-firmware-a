@@ -11,27 +11,25 @@
 #include "fuseprov_transport.h"
 #include "fuseprov_sec_elf_v3.h"
 
-/* Transport wrapper functions - implemented in fuseprov_core.c */
-
-/* Read a single fuse row from QFPROM
- * @t: transport contract pointer
- * @addr: fuse row address
- * @space: address space (raw or corrected)
- * @out: output buffer for row data [LSB, MSB]
- * @return: FUSEPROV_OK on success, error code on failure
+/* Read one QFPROM row through the selected transport.
+ * @param t transport contract
+ * @param addr fuse row address
+ * @param space raw or corrected address space
+ * @param out output words in LSB, MSB order
+ * @return FUSEPROV_OK on success, otherwise a transport error
  */
 fuseprov_err_t fuseprov_row_read(const fuseprov_transport_t *t,
                                  uint32_t addr,
                                  fuseprov_addr_space_t space,
                                  uint32_t out[2]);
 
-/* Write multiple fuse rows to QFPROM atomically
- * @t: transport contract pointer
- * @addr: array of fuse row addresses
- * @data: array of fuse row data (64-bit: [LSB, MSB])
- * @count: number of rows to write
- * @addr_err: output parameter for address that failed (if any)
- * @return: FUSEPROV_OK on success, error code on failure
+/* Write multiple QFPROM rows through the selected transport.
+ * @param t transport contract
+ * @param addr row-address array
+ * @param data row-data array, with LSB in bits [31:0]
+ * @param count number of rows
+ * @param addr_err optional failed-address output
+ * @return FUSEPROV_OK on success, otherwise a transport error
  */
 fuseprov_err_t fuseprov_rows_write(const fuseprov_transport_t *t,
                                    const uint32_t addr[],
@@ -39,12 +37,12 @@ fuseprov_err_t fuseprov_rows_write(const fuseprov_transport_t *t,
                                    uint32_t count,
                                    uintptr_t *addr_err);
 
-/* Main SEC.DAT v3 parser and fuse blower - implemented in fuseprov_sec_elf_v3.c
- * @t: transport contract pointer
- * @buf: SEC.DAT buffer
- * @len: SEC.DAT buffer length
- * @did_program: set true if at least one fuse row was programmed
- * @return: FUSEPROV_SUCCESS on success, error code on failure
+/* Parse and provision an authenticated SEC.DAT v3 buffer.
+ * @param t transport contract
+ * @param buf SEC.DAT buffer
+ * @param len SEC.DAT buffer length
+ * @param did_program set true if a row was programmed
+ * @return FUSEPROV_SUCCESS on success, otherwise a provisioning error
  */
 fuseprov_error_etype fuseprov_blow_fuses_sec_elf_v3(
         const fuseprov_transport_t *t,

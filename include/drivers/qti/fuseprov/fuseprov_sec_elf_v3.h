@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-/* High-level parser error codes (mirrors TZ fuseprov_error_etype) */
+/* Errors reported while parsing or provisioning SEC.DAT. */
 typedef enum {
         FUSEPROV_SUCCESS = 0,
         FUSEPROV_FAILURE = 1,
@@ -46,23 +46,22 @@ typedef enum {
  * before this buffer is ever parsed.
  */
 typedef struct {
-        uint32_t magic1;           /* 0x3B7251CA */
-        uint32_t magic2;           /* 0x2A126F29 */
-        uint32_t revision;         /* 3 */
-        uint32_t num_entries;      /* Number of fuse entries following the
-                                    * header */
+        uint32_t magic1;
+        uint32_t magic2;
+        uint32_t revision;
+        uint32_t num_entries;
 } fuseprov_secdat_hdr_t;
 
-/* Individual fuse entry */
+/* One SEC.DAT fuse entry. */
 typedef struct {
-        uint32_t region_type;      /* Region type (OEM_CONFIG, SECBOOT, etc.) */
-        uint32_t raw_row_address;  /* QFPROM row address */
-        uint32_t lsb_val;          /* LSB value to write */
-        uint32_t msb_val;          /* MSB value to write */
-        uint32_t operation;        /* Operation type (BLOW, BLOW_RANDOM) */
+        uint32_t region_type;
+        uint32_t raw_row_address;
+        uint32_t lsb_val;
+        uint32_t msb_val;
+        uint32_t operation;
 } fuseprov_qfuse_entry_t;
 
-/* Region type enums */
+/* SEC.DAT region types. */
 typedef enum {
         FUSEPROV_REGION_TYPE_OEM_SEC_BOOT = 0x0,
         FUSEPROV_REGION_TYPE_OEM_PK_HASH = 0x1,
@@ -78,17 +77,17 @@ typedef enum {
         FUSEPROV_REGION_TYPE_OEM_PRODUCT_SEED = 0xB,
 } fuseprov_region_type_t;
 
-/* Operation type enums */
+/* SEC.DAT fuse operations. */
 typedef enum {
         FUSEPROV_OPERATION_BLOW = 0x0,
         FUSEPROV_OPERATION_BLOW_RANDOM = 0x1,
 } fuseprov_operation_type_t;
 
-/* Fuse provisioning category
+/* Ordered fuse-provisioning categories.
  *
- * Categories group one or more region types for ordered blowing. Values mirror
- * fuseprov_v3_category_etype in the reference implementation. Any region type
- * without an explicit category falls back to GENERAL, so regions such as
+ * Categories group one or more region types for ordered provisioning. Any
+ * region type without an explicit category falls back to GENERAL, so regions
+ * such as
  * OEM_PK_HASH, ANTI_ROLLBACK, IMAGE_ENCR_KEY and MRC_2_0 are blown as part of
  * the GENERAL pass.
  */
@@ -105,21 +104,21 @@ typedef enum {
         FUSEPROV_CATEGORY_ANTI_ROLLBACK = 0x9,
 } fuseprov_category_t;
 
-/* Map a SEC.DAT region type to its blow category
- * @region_type: region type field from a SEC.DAT fuse entry
- * @return: category the region belongs to; GENERAL for unlisted regions
+/* Map a SEC.DAT region type to its provisioning category.
+ * @param region_type SEC.DAT region type
+ * @return category, or GENERAL for an unlisted region
  */
 fuseprov_category_t fuseprov_get_category_for_region(uint32_t region_type);
 
-/* Check whether a region type belongs to a category
- * @category: category to test against
- * @region_type: region type field from a SEC.DAT fuse entry
- * @return: true if region_type maps to category
+/* Check whether a region type belongs to a provisioning category.
+ * @param category category to test
+ * @param region_type SEC.DAT region type
+ * @return true if the region maps to category
  */
 bool fuseprov_is_region_in_category(fuseprov_category_t category,
                                     uint32_t region_type);
 
-/* SEC.DAT magic numbers and constants */
+/* SEC.DAT format and QFPROM correction constants. */
 #define FUSEPROV_SECDAT_MAGIC1           0x3B7251CA
 #define FUSEPROV_SECDAT_MAGIC2           0x2A126F29
 #define FUSEPROV_SECDAT_V3_REV           3
