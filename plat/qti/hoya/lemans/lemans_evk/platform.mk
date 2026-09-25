@@ -80,6 +80,8 @@ BL2_SOURCES		+=	drivers/io/io_fip.c					\
 include drivers/arm/gic/v3/gicv3.mk
 BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				drivers/delay_timer/delay_timer.c			\
+				drivers/arm/css/scmi/scmi_common.c			\
+				drivers/arm/css/scmi/scmi_clock_proto.c			\
 				plat/common/plat_gicv3.c				\
 				${GICV3_SOURCES}					\
 				plat/common/plat_psci_common.c				\
@@ -96,7 +98,10 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				$(PLAT_PATH)/hoya/common/$(ARCH)/hoya_helpers.S		\
 				$(PLAT_PATH)/hoya/common/hoya_bl31_setup.c		\
 				$(PLAT_PATH)/hoya/common/hoya_gicv3.c		\
-				$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_cb_interface.c
+				$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_cb_interface.c \
+				plat/qti/common/src/ipc_doorbell.c			\
+				plat/qti/common/src/qti_scmi.c			\
+				plat/qti/common/src/qti_clkdom_en.c
 
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
@@ -117,7 +122,6 @@ include drivers/qti/pdc/pdc.mk
 include drivers/qti/pwr_utils/pwr_utils.mk
 include drivers/qti/rpmh/rpmh.mk
 include drivers/qti/clock/clock.mk
-include drivers/qti/cpucp/cpucp.mk
 
 PLAT_INCLUDES   +=      -Iinclude/drivers/qti/sec_core/${CHIPSET} \
 			-Iinclude/drivers/qti/qtimer/${CHIPSET} \

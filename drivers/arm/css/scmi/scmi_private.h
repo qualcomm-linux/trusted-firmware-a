@@ -38,6 +38,28 @@
 #define SCMI_SYS_PWR_STATE_GET_MSG_LEN		4
 #define SCMI_SYS_PWR_STATE_GET_RESP_LEN		12
 
+/*
+ * SCMI clock domain management protocol message and response lengths. It is
+ * calculated as sum of length in bytes of the message header (4) and payload
+ * area (the number of bytes of parameters or return values in the payload).
+ */
+#define SCMI_CLOCK_ATTRIBUTES_MSG_LEN          8
+#define SCMI_CLOCK_ATTRIBUTES_RESP_LEN         32
+
+#define SCMI_CLOCK_DESCRIBE_RATES_MSG_LEN      12
+
+#define SCMI_CLOCK_RATE_SET_MSG_LEN            20
+#define SCMI_CLOCK_RATE_SET_RESP_LEN           8
+
+#define SCMI_CLOCK_RATE_GET_MSG_LEN            8
+#define SCMI_CLOCK_RATE_GET_RESP_LEN           16
+
+#define SCMI_CLOCK_CONFIG_SET_MSG_LEN          16
+#define SCMI_CLOCK_CONFIG_SET_RESP_LEN         8
+
+#define SCMI_CLOCK_CONFIG_GET_MSG_LEN          12
+#define SCMI_CLOCK_CONFIG_GET_RESP_LEN         20
+
 /* SCMI message header format bit field */
 #define SCMI_MSG_ID_SHIFT		0
 #define SCMI_MSG_ID_WIDTH		8
