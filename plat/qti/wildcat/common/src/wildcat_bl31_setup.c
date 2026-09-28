@@ -18,6 +18,7 @@
 #include <drivers/console.h>
 #include <drivers/generic_delay_timer.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
+#include <drivers/qti/clock/clock.h>
 #include <drivers/qti/qtimer/qtimer.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <export/plat/qti/common/plat_params_exp.h>
@@ -332,6 +333,10 @@ void bl31_platform_setup(void)
 	if (qti_watchdog_init() != 0) {
 		ERROR("Watchdog initialization error\n");
 	}
+
+	/* Enable clocks required for TF-A init. */
+	qti_clock_init();
+	qti_clock_init_done();
 
 	bl31qtilib_bl31_platform_setup();
 }
