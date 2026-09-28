@@ -219,6 +219,8 @@ BL31_SOURCES	+=	drivers/qti/watchdog/watchdog.c \
 			$(QTI_WDOG_VER_SRC) \
 			$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
 
+include drivers/qti/pwr_utils/pwr_utils.mk
+
 LIB_QTI_PATH	:=	${QTI_PLAT_PATH}/bl31qtilib/lib/${CHIPSET}
 
 # Override this on the command line to point to the bl31qtilib library

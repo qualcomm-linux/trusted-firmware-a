@@ -18,6 +18,7 @@
 #include <drivers/console.h>
 #include <drivers/generic_delay_timer.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
+#include <drivers/qti/pwr_utils/pwr_utils.h>
 #include <drivers/qti/qtimer/qtimer.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <export/plat/qti/common/plat_params_exp.h>
@@ -332,6 +333,10 @@ void bl31_platform_setup(void)
 	if (qti_watchdog_init() != 0) {
 		ERROR("Watchdog initialization error\n");
 	}
+
+#ifdef QTI_PWR_UTILS_ENABLED
+	qti_pwr_utils_init();
+#endif /* QTI_PWR_UTILS_ENABLED */
 
 	bl31qtilib_bl31_platform_setup();
 }
