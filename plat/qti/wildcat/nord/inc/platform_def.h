@@ -185,4 +185,35 @@
 #define QTI_TFA_TME_MBOX_INTERRUPT	0x17824010
 #define QTI_TFA_TME_MBOX_INTERRUPT_MSK	0x1
 
+#if SPMC_AT_EL3
+
+/*
+ * Number of Secure Partitions supported.
+ * SPMC at EL3, uses this count to configure the maximum number of supported
+ * secure partitions.
+ */
+#define SECURE_PARTITION_COUNT		1
+
+/*
+ * Number of Normal World Partitions supported.
+ * SPMC at EL3, uses this count to configure the maximum number of supported
+ * NWd partitions.
+ */
+#define NS_PARTITION_COUNT		1
+
+/*
+ * Number of Logical Partitions supported.
+ * SPMC at EL3, uses this count to configure the maximum number of supported
+ * logical partitions.
+ */
+#define MAX_EL3_LP_DESCS_COUNT		1
+
+/*
+ * Secure memory region reserved for the SPMC to store transaction
+ * descriptors while memory is shared/lent between OP-TEE and TF-A.
+ */
+#define PLAT_SPMC_SHMEM_DATASTORE_SIZE	(16 * 1024)
+
+#endif /* SPMC_AT_EL3 */
+
 #endif /* PLATFORM_DEF_H */

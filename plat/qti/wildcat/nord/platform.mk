@@ -157,6 +157,17 @@ PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
 
 include lib/coreboot/coreboot.mk
 
+ifeq (${SPMC_AT_EL3},1)
+include lib/libfdt/libfdt.mk
+include common/fdt_wrappers.mk
+BL31_SOURCES					+=	${FDT_WRAPPERS_SOURCES}		\
+				common/uuid.c						\
+				$(QTI_PLAT_PATH)/nord/nord_el3_spmc.c
+
+TOS_FW_CONFIG_DTS			:=	$(QTI_PLAT_PATH)/nord/fdts/nord_tos_fw_manifest.dts
+FDT_SOURCES					+=	${TOS_FW_CONFIG_DTS}
+endif
+
 #### GIC related configuration ####
 # GIC-700 is based on GICv4.1
 GIC_ENABLE_V4_EXTN	:=	1
