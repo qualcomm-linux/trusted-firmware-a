@@ -19,6 +19,7 @@
 #include <drivers/generic_delay_timer.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
 #include <drivers/qti/qtimer/qtimer.h>
+#include <drivers/qti/smem/smem.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <export/plat/qti/common/plat_params_exp.h>
 #include <lib/bakery_lock.h>
@@ -306,6 +307,8 @@ void bl31_platform_setup(void)
 	/* Initialize the GIC driver, CPU and distributor interfaces */
 	plat_qti_gic_driver_init();
 	plat_qti_gic_init();
+
+	qti_smem_init();
 
 	if (qti_chipinfo_init() != CHIPINFO_SUCCESS) {
 		WARN("ChipInfo initialization error\n");
