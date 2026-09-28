@@ -44,4 +44,11 @@
 
 #endif /* SHARED_IMEM_BASE */
 
+/*----------------------------------------------------------------------------*/
+/* SCMI transport configuration */
+/*----------------------------------------------------------------------------*/
+#define PLAT_SCMI_MBX_MEM_BASE                  (0x18509000U)
+#define PLAT_SCMI_DB_REG_ADDR                   (0x17c00008U)
+#define PLAT_SCMI_DB_OSM_IPC_SHIFT              (28U)
+
 #endif /* PLATFORM_DEF_H */
