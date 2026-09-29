@@ -148,7 +148,7 @@
 /* SMEM base address                                                          */
 /*----------------------------------------------------------------------------*/
 #define QTI_SMEM_BASE ULL(0x89B00000)
-#define QTI_SMEM_SIZE ULL(0x00200000)
+#define QTI_SMEM_SIZE ULL(0x00400000)
 
 /*----------------------------------------------------------------------------*/
 /* LC PON register offsets */
