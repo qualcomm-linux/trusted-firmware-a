@@ -39,16 +39,6 @@ static struct clock_source sources[CLOCK_SOURCE_TOTAL];
 static struct clock_group clock_groups[CLOCK_GROUP_TOTAL] = {
 	[CLOCK_GROUP_INIT] = {
 		.clks = (struct clock_desc[]) {
-			/*
-			 * QSPI AHB/CORE: the vote lands and reads back voted=1
-			 * in the vote register, but the CBCR itself never
-			 * reports CLK_OFF=0 and the enable call times out.
-			 * Nord Ride boots via UFS, not QSPI-attached flash, so
-			 * the QSPI block is likely not populated on this board.
-			 * Commented out pending hardware confirmation.
-			 */
-			/* { GCC_QSPI_AHB_CBCR, VOTE_3(QSPI_AHB_CLK_ENA) }, */
-			/* { GCC_QSPI_CORE_CBCR, VOTE_3(QSPI_CORE_CLK_ENA) }, */
 			{ GCC_QUPV3_WRAP3_CORE_CBCR,
 			  VOTE(QUPV3_WRAP3_CORE_CLK_ENA) },
 			{ GCC_QUPV3_WRAP3_M_CBCR,
@@ -77,15 +67,6 @@ static struct clock_group clock_groups[CLOCK_GROUP_TOTAL] = {
 			  SE_VOTE(QUPV3_WRAP1_M_AHB_CLK_ENA) },
 			{ SE_GCC_QUPV3_WRAP1_S_AHB_CBCR,
 			  SE_VOTE(QUPV3_WRAP1_S_AHB_CLK_ENA) },
-			/*
-			 * HPASS_CC_NOC_DEBUG_CBCR: HW_CTL-gated debug/trace NoC
-			 * tap that only ungates on active bus/debug traffic,
-			 * which doesn't exist this early in boot, so the
-			 * blocking CLK_OFF poll always times out. Commented out
-			 * pending a non-blocking enable path for this class of
-			 * clock (raw=0x88000001 enable=1 hw_ctl=0 off=1).
-			 */
-			/* { HPASS_CC_NOC_DEBUG_CBCR }, */
 			{ NE_GCC_AGGRE_NOC_USB3_PRIM_AXI_CBCR },
 			{ NE_GCC_AGGRE_NOC_USB3_SEC_AXI_CBCR },
 			{ NE_GCC_AGGRE_NOC_USB2_AXI_CBCR },
@@ -138,7 +119,16 @@ static struct clock_group clock_groups[CLOCK_GROUP_TOTAL] = {
 			{ NSPSS_3_NSP_SS_CC_NSPNOC_CFG_AHBS_CBCR,   .part = CHIPINFO_PART_NSP, .part_idx = 3 },
 			{ NSPSS_3_NSP_SS_CC_VTCM_BOOT_CBCR,         .part = CHIPINFO_PART_NSP, .part_idx = 3 },
 
-			/* Multimedia clocks. */
+			/*
+			 * Multimedia clocks. NW_GCC_CAMERA_HF/SF_AXI_CBCR and
+			 * NW_GCC_DISP_0/1_HF_AXI_CBCR below are HW_CTL gated
+			 * NoC/AXI fabric bus clocks: they only ungate once
+			 * there is real bus traffic, which coreinit's minimal
+			 * mmnoc bandwidth vote (routes[0], .master =
+			 * ICBID_MASTER_MDP0 / .slave = ICBID_SLAVE_EBI1 in
+			 * drivers/qti/coreinit/nord/coreinit_data.c) now
+			 * supplies.
+			 */
 			{ CAM_CC_CSID_CBCR,               .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
 			{ CAM_CC_CSID_CSIPHY_RX_CBCR,     .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
 			{ CAM_CC_IFE_LITE_AHB_CBCR,       .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
@@ -148,31 +138,13 @@ static struct clock_group clock_groups[CLOCK_GROUP_TOTAL] = {
 			{ CAM_CC_TOP_AHB_CBCR,             .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
 			{ CAM_CC_TOP_FAST_AHB_CBCR,        .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
 			{ CAM_CC_TOP_IFE_LITE_CBCR,        .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
-			/*
-			 * CAMERA_HF/SF_AXI_CBCR: same HW_CTL-gated NoC/AXI
-			 * fabric bus clock behavior as HPASS_CC_NOC_DEBUG above
-			 * - only ungates on real bus traffic, which no camera
-			 * session generates this early in boot. The sibling
-			 * AHB/XO branches on the same camera block enable fine.
-			 * Commented out pending a non-blocking enable path
-			 * (raw=0x88000001 enable=1 hw_ctl=0 off=1).
-			 */
-			/* { NW_GCC_CAMERA_HF_AXI_CBCR,       .part = CHIPINFO_PART_CAMERA, .part_idx = 0 }, */
-			/* { NW_GCC_CAMERA_SF_AXI_CBCR,       .part = CHIPINFO_PART_CAMERA, .part_idx = 0 }, */
+			{ NW_GCC_CAMERA_HF_AXI_CBCR,       .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
+			{ NW_GCC_CAMERA_SF_AXI_CBCR,       .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
 			{ MDSS_0_DISP_CC_MDSS_AHB_CBCR,    .part = CHIPINFO_PART_DISPLAY, .part_idx = 0 },
-			/*
-			 * DISP_0/1_HF_AXI_CBCR: same HW_CTL-gated NoC/AXI fabric
-			 * bus clock behavior as the camera/HPASS entries above -
-			 * only ungates on active display traffic, none of which
-			 * exists this early in boot. Commented out pending a
-			 * non-blocking enable path (raw=0x88000001 enable=1
-			 * hw_ctl=0 off=1).
-			 */
-			/* { NW_GCC_DISP_0_HF_AXI_CBCR,       .part = CHIPINFO_PART_DISPLAY, .part_idx = 0 }, */
+			{ NW_GCC_DISP_0_HF_AXI_CBCR,       .part = CHIPINFO_PART_DISPLAY, .part_idx = 0 },
 			{ MDSS_1_DISP_CC_MDSS_AHB_CBCR,    .part = CHIPINFO_PART_DISPLAY, .part_idx = 1 },
 			{ MDSS_1_DISP_CC_MDSS_NON_GDSC_AHB_CBCR, .part = CHIPINFO_PART_DISPLAY, .part_idx = 1 },
-			/* DISP_1_HF_AXI_CBCR: HW_CTL-gated, see comment above. */
-			/* { NW_GCC_DISP_1_HF_AXI_CBCR,       .part = CHIPINFO_PART_DISPLAY, .part_idx = 1 }, */
+			{ NW_GCC_DISP_1_HF_AXI_CBCR,       .part = CHIPINFO_PART_DISPLAY, .part_idx = 1 },
 			{ 0 }
 		},
 		.pwr_domains = (struct clock_power_domain_desc[]) {

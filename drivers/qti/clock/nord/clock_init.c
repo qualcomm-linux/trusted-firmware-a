@@ -387,18 +387,11 @@ static void clock_disable_gpu1_cx_gdsc(void)
 }
 
 /*
- * GCC/NE_GCC/NW_GCC/SE_GCC_DEBUG_EN are a CDBGPWRUPREQ/CDBGPWRUPACK
- * debug-power handshake: write CDBGPWRUPREQ=1 to request, then wait for
- * hardware to set CDBGPWRUPACK=1 on grant. This is the opposite polarity of
- * the standard CBCR CLK_OFF branch-clock semantics, so it cannot be driven
- * through the generic clock-group path.
- *
- * Validated on real hardware for GCC_DEBUG_EN only (req and ack both latch
- * correctly, raw=0x80000001). NE_GCC/NW_GCC/SE_GCC_DEBUG_EN are commented
- * out below: on hardware the CDBGPWRUPREQ write itself does not stick
- * (register reads back 0x00000000 even after the write), most likely an
- * access-control (XPU) restriction rather than a slow ack - needs further
- * investigation before re-enabling.
+ * GCC_DEBUG_EN is a CDBGPWRUPREQ/CDBGPWRUPACK debug-power handshake: write
+ * CDBGPWRUPREQ=1 to request, then wait for hardware to set CDBGPWRUPACK=1
+ * on grant. This is the opposite polarity of the standard CBCR CLK_OFF
+ * branch-clock semantics, so it cannot be driven through the generic
+ * clock-group path.
  */
 static int clock_wait_qdss_debug_en_ack(uint32_t addr, uint32_t req_bmsk,
 					uint32_t ack_bmsk, const char *name)
@@ -425,21 +418,6 @@ static int clock_enable_qdss_debug_en(void)
 {
 	mmio_clrsetbits_32(GCC_DEBUG_EN, GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
 			   1U << GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
-	/*
-	 * NE_GCC/NW_GCC/SE_GCC_DEBUG_EN: validation on real hardware showed
-	 * the CDBGPWRUPREQ write does not stick (register reads back
-	 * 0x00000000 after the write, so CDBGPWRUPACK never asserts either).
-	 * Most likely an access-control (XPU) restriction on these
-	 * registers. Commented out pending further investigation.
-	 */
-	/*
-	mmio_clrsetbits_32(NE_GCC_DEBUG_EN, NE_GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
-			   1U << NE_GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
-	mmio_clrsetbits_32(NW_GCC_DEBUG_EN, NW_GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
-			   1U << NW_GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
-	mmio_clrsetbits_32(SE_GCC_DEBUG_EN, SE_GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
-			   1U << SE_GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
-	*/
 
 	if (clock_wait_qdss_debug_en_ack(GCC_DEBUG_EN,
 					 GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
@@ -447,22 +425,6 @@ static int clock_enable_qdss_debug_en(void)
 					 "GCC_DEBUG_EN") != 0) {
 		return -1;
 	}
-	/*
-	if ((clock_wait_qdss_debug_en_ack(NE_GCC_DEBUG_EN,
-					  NE_GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
-					  NE_GCC_DEBUG_EN_CDBGPWRUPACK_BMSK,
-					  "NE_GCC_DEBUG_EN") != 0) ||
-	    (clock_wait_qdss_debug_en_ack(NW_GCC_DEBUG_EN,
-					  NW_GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
-					  NW_GCC_DEBUG_EN_CDBGPWRUPACK_BMSK,
-					  "NW_GCC_DEBUG_EN") != 0) ||
-	    (clock_wait_qdss_debug_en_ack(SE_GCC_DEBUG_EN,
-					  SE_GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
-					  SE_GCC_DEBUG_EN_CDBGPWRUPACK_BMSK,
-					  "SE_GCC_DEBUG_EN") != 0)) {
-		return -1;
-	}
-	*/
 
 	return 0;
 }
@@ -471,15 +433,6 @@ static void clock_disable_qdss_debug_en(void)
 {
 	mmio_clrsetbits_32(GCC_DEBUG_EN, GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
 			   0U << GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
-	/* NE_GCC/NW_GCC/SE_GCC_DEBUG_EN: see clock_enable_qdss_debug_en(). */
-	/*
-	mmio_clrsetbits_32(NE_GCC_DEBUG_EN, NE_GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
-			   0U << NE_GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
-	mmio_clrsetbits_32(NW_GCC_DEBUG_EN, NW_GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
-			   0U << NW_GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
-	mmio_clrsetbits_32(SE_GCC_DEBUG_EN, SE_GCC_DEBUG_EN_CDBGPWRUPREQ_BMSK,
-			   0U << SE_GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
-	*/
 }
 
 /*
@@ -583,21 +536,6 @@ static void clock_dump_qdss_status(void)
 	NOTICE("Clock: GCC_DEBUG_EN 0x%x CDBGPWRUPACK=%u raw=0x%08x\n",
 	       GCC_DEBUG_EN,
 	       (val & GCC_DEBUG_EN_CDBGPWRUPACK_BMSK) != 0U, val);
-
-	val = mmio_read_32(NE_GCC_DEBUG_EN);
-	NOTICE("Clock: NE_GCC_DEBUG_EN 0x%x CDBGPWRUPACK=%u raw=0x%08x\n",
-	       NE_GCC_DEBUG_EN,
-	       (val & NE_GCC_DEBUG_EN_CDBGPWRUPACK_BMSK) != 0U, val);
-
-	val = mmio_read_32(NW_GCC_DEBUG_EN);
-	NOTICE("Clock: NW_GCC_DEBUG_EN 0x%x CDBGPWRUPACK=%u raw=0x%08x\n",
-	       NW_GCC_DEBUG_EN,
-	       (val & NW_GCC_DEBUG_EN_CDBGPWRUPACK_BMSK) != 0U, val);
-
-	val = mmio_read_32(SE_GCC_DEBUG_EN);
-	NOTICE("Clock: SE_GCC_DEBUG_EN 0x%x CDBGPWRUPACK=%u raw=0x%08x\n",
-	       SE_GCC_DEBUG_EN,
-	       (val & SE_GCC_DEBUG_EN_CDBGPWRUPACK_BMSK) != 0U, val);
 }
 
 static void clock_dump_source_status(const char *label,
@@ -659,6 +597,7 @@ int clock_init_image(struct clock_drv_ctxt *drv_ctxt)
 		clock_dump_status(drv_ctxt);
 		return -1;
 	}
+
 	if (clock_enable_qdss_debug_en() != 0) {
 		clock_dump_status(drv_ctxt);
 		return -1;
