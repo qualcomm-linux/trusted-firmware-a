@@ -107,6 +107,15 @@ void bl31_plat_arch_setup(void)
 	enable_mmu_el3(0);
 }
 
+/*
+ * Boot-time init that needs the TF-A init-only clocks held. Add future
+ * clock-dependent init calls here rather than bracketing them inline.
+ */
+static void clocked_boot_init(void)
+{
+	qti_accesscontrol_init();
+}
+
 /*******************************************************************************
  * Perform any BL31 platform setup common to ARM standard platforms
  ******************************************************************************/
@@ -133,9 +142,7 @@ void bl31_platform_setup(void)
 	}
 
 	/* xPU static config needs clocks held; bracket its init. */
-	qti_clock_init();
-	qti_accesscontrol_init();
-	qti_clock_init_done();
+	qti_clock_init(clocked_boot_init);
 
 	plat_qti_bl31_setup_post();
 }

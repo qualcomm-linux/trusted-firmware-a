@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026 Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * Copyright (c) 2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -15,7 +15,7 @@
 #include <drivers/delay_timer.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
 #include <drivers/qti/clock/clock.h>
-#include <drivers/qti/clock/clock_bsp.h>
+#include <drivers/qti/clock/clock_cfg.h>
 #include <drivers/qti/clock/clock_driver.h>
 #include <lib/mmio.h>
 #include <lib/utils_def.h>
@@ -240,7 +240,7 @@ static void clock_disable_boot_imem(void)
 
 int clock_init_image(struct clock_drv_ctxt *drv_ctxt)
 {
-	struct clock_source *gpll0 = &drv_ctxt->bsp->sources[CLOCK_SOURCE_GPLL0];
+	struct clock_source *gpll0 = &drv_ctxt->cfg->sources[CLOCK_SOURCE_GPLL0];
 
 	/*
 	 * Disabling IMEM must occur before enabling the init groups, since it
@@ -249,10 +249,10 @@ int clock_init_image(struct clock_drv_ctxt *drv_ctxt)
 	clock_disable_boot_imem();
 
 	/* Enable clocks required for init. */
-	if (clock_enable_clock_group(CLOCK_GROUP_INIT) != 0) {
+	if (clock_group_enable(CLOCK_GROUP_INIT) != 0) {
 		return -1;
 	}
-	if (clock_enable_clock_group(CLOCK_GROUP_QDSS) != 0) {
+	if (clock_group_enable(CLOCK_GROUP_QDSS) != 0) {
 		return -1;
 	}
 
@@ -419,7 +419,7 @@ int clock_init_image(struct clock_drv_ctxt *drv_ctxt)
 	 * DPM (always sourcing from GPLL0) handshakes with the CX ARC during
 	 * CXPC, GPLL0 must be kept on.
 	 */
-	if (clock_enable_source(gpll0) != 0) {
+	if (clock_source_enable(gpll0) != 0) {
 		return -1;
 	}
 
@@ -461,8 +461,8 @@ int clock_post_init_image(struct clock_drv_ctxt *drv_ctxt)
 	/* Restore clocks enabled during init to their original state. */
 	clock_disable_gpu_gx_gdsc();
 	clock_disable_gpu_cx_gdsc();
-	clock_disable_clock_group(CLOCK_GROUP_QDSS);
-	clock_disable_clock_group(CLOCK_GROUP_INIT);
+	clock_group_disable(CLOCK_GROUP_QDSS);
+	clock_group_disable(CLOCK_GROUP_INIT);
 
 	/* Re-enable the QDSS STM clock; needed because of a DS-exit issue. */
 	mmio_setbits_32(GCC_QDSS_STM_CBCR, HAL_CLK_BRANCH_CTRL_REG_CLK_ENABLE_FMSK);
