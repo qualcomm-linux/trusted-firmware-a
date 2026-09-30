@@ -22,7 +22,6 @@
 
 /* GDSCR (power domain) register fields. */
 #define HAL_CLK_GDSCR_SW_COLLAPSE_FMSK		0x00000001U
-#define HAL_CLK_GDSCR_PWR_ON_FMSK		0x80000000U
 
 /*
  * CFG_GDSCR fields — architecturally fixed at GDSCR+4 across all GDSCs.

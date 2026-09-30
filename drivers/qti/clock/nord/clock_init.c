@@ -435,146 +435,6 @@ static void clock_disable_qdss_debug_en(void)
 			   0U << GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
 }
 
-/*
- * Register-state dump used only when clock_init_image() fails: reads back
- * the real HW status bit for every clock/GDSC/QDSS-accessor/PLL touched
- * above, so a boot-log postmortem is possible without physical register
- * access.
- */
-static void clock_dump_clk_desc_status(const char *label,
-				       struct clock_desc *clocks)
-{
-	struct clock_desc *clock;
-
-	if (clocks == NULL) {
-		return;
-	}
-
-	for (clock = clocks; clock->cbcr_addr != 0U; clock++) {
-		uint32_t val = mmio_read_32(clock->cbcr_addr);
-
-		NOTICE("Clock: %s CBCR 0x%lx enable=%u hw_ctl=%u CLK_OFF=%u raw=0x%08x\n",
-		       label, (unsigned long)clock->cbcr_addr,
-		       (val & HAL_CLK_BRANCH_CTRL_REG_CLK_ENABLE_FMSK) != 0U,
-		       (val & HAL_CLK_BRANCH_CTRL_REG_CLK_HW_CTL_FMSK) != 0U,
-		       (val & HAL_CLK_BRANCH_CTRL_REG_CLK_OFF_FMSK) != 0U,
-		       val);
-
-		if (clock->vote_reg.addr != 0U) {
-			uint32_t vote = mmio_read_32(clock->vote_reg.addr);
-
-			NOTICE("Clock: %s CBCR 0x%lx vote_reg=0x%lx voted=%u raw=0x%08x\n",
-			       label, (unsigned long)clock->cbcr_addr,
-			       (unsigned long)clock->vote_reg.addr,
-			       (vote & clock->vote_reg.mask) != 0U, vote);
-		}
-	}
-}
-
-static void clock_dump_power_domain_status(struct clock_power_domain_desc *pds)
-{
-	struct clock_power_domain_desc *pd;
-
-	if (pds == NULL) {
-		return;
-	}
-
-	for (pd = pds; (pd->gdscr_addr != 0U) || (pd->vote_reg.addr != 0U);
-	     pd++) {
-		uint32_t val;
-
-		if (pd->vote_reg.addr != 0U) {
-			val = mmio_read_32(pd->vote_reg.addr);
-			NOTICE("Clock: GDSC vote 0x%lx voted=%u raw=0x%08x\n",
-			       (unsigned long)pd->vote_reg.addr,
-			       (val & pd->vote_reg.mask) != 0U, val);
-			continue;
-		}
-
-		val = mmio_read_32(pd->gdscr_addr);
-		NOTICE("Clock: GDSCR 0x%lx PWR_ON=%u raw=0x%08x\n",
-		       (unsigned long)pd->gdscr_addr,
-		       (val & HAL_CLK_GDSCR_PWR_ON_FMSK) != 0U, val);
-	}
-}
-
-/* GPU GX/CX GDSCRs are sequenced manually above, not via .pwr_domains. */
-static void clock_dump_gpu_gdscr_status(void)
-{
-	uint32_t val;
-
-	val = mmio_read_32(GPU_0_GPUCC_GPU_CC_GX_GDSCR);
-	NOTICE("Clock: GPU_0 GX GDSCR 0x%x PWR_ON=%u raw=0x%08x\n",
-	       GPU_0_GPUCC_GPU_CC_GX_GDSCR,
-	       (val & GPU_0_GPUCC_GPU_CC_GX_GDSCR_PWR_ON_BMSK) != 0U,
-	       val);
-
-	val = mmio_read_32(GPU_0_GPUCC_GPU_CC_CX_GDSCR);
-	NOTICE("Clock: GPU_0 CX GDSCR 0x%x PWR_ON=%u raw=0x%08x\n",
-	       GPU_0_GPUCC_GPU_CC_CX_GDSCR,
-	       (val & GPU_0_GPUCC_GPU_CC_CX_GDSCR_PWR_ON_BMSK) != 0U,
-	       val);
-
-	val = mmio_read_32(GPU_1_GPUCC_GPU_2_CC_GX_GDSCR);
-	NOTICE("Clock: GPU_1 GX GDSCR 0x%x PWR_ON=%u raw=0x%08x\n",
-	       GPU_1_GPUCC_GPU_2_CC_GX_GDSCR,
-	       (val & GPU_1_GPUCC_GPU_2_CC_GX_GDSCR_PWR_ON_BMSK) != 0U,
-	       val);
-
-	val = mmio_read_32(GPU_1_GPUCC_GPU_2_CC_CX_GDSCR);
-	NOTICE("Clock: GPU_1 CX GDSCR 0x%x PWR_ON=%u raw=0x%08x\n",
-	       GPU_1_GPUCC_GPU_2_CC_CX_GDSCR,
-	       (val & GPU_1_GPUCC_GPU_2_CC_CX_GDSCR_PWR_ON_BMSK) != 0U,
-	       val);
-}
-
-static void clock_dump_qdss_status(void)
-{
-	uint32_t val;
-
-	val = mmio_read_32(GCC_DEBUG_EN);
-	NOTICE("Clock: GCC_DEBUG_EN 0x%x CDBGPWRUPACK=%u raw=0x%08x\n",
-	       GCC_DEBUG_EN,
-	       (val & GCC_DEBUG_EN_CDBGPWRUPACK_BMSK) != 0U, val);
-}
-
-static void clock_dump_source_status(const char *label,
-				     struct clock_source *source)
-{
-	uint32_t val;
-
-	if (source->hw_source.mode_addr == 0U) {
-		return;
-	}
-
-	val = mmio_read_32(source->hw_source.mode_addr);
-	NOTICE("Clock: %s PLL_MODE 0x%lx PLL_LOCK_DET=%u raw=0x%08x\n", label,
-	       (unsigned long)source->hw_source.mode_addr,
-	       (val & HAL_CLK_PLL_MODE_PLL_LOCK_DET_BMSK) != 0U, val);
-}
-
-static void clock_dump_status(struct clock_drv_ctxt *drv_ctxt)
-{
-	struct clock_group *init_group =
-		&drv_ctxt->cfg->clock_groups[CLOCK_GROUP_INIT];
-
-	clock_dump_clk_desc_status("INIT", init_group->clks);
-	clock_dump_clk_desc_status("INIT-ACCESS", init_group->access_clks);
-	clock_dump_power_domain_status(init_group->pwr_domains);
-	clock_dump_gpu_gdscr_status();
-
-	clock_dump_qdss_status();
-
-	clock_dump_source_status("GPLL0",
-				 &drv_ctxt->cfg->sources[CLOCK_SOURCE_GPLL0]);
-	clock_dump_source_status("NE_GCC_GPLL0",
-				 &drv_ctxt->cfg->sources[CLOCK_SOURCE_NE_GCC_GPLL0]);
-	clock_dump_source_status("NW_GCC_GPLL0",
-				 &drv_ctxt->cfg->sources[CLOCK_SOURCE_NW_GCC_GPLL0]);
-	clock_dump_source_status("SE_GCC_GPLL0",
-				 &drv_ctxt->cfg->sources[CLOCK_SOURCE_SE_GCC_GPLL0]);
-}
-
 int clock_init_image(struct clock_drv_ctxt *drv_ctxt)
 {
 	struct clock_source *gpll0 = &drv_ctxt->cfg->sources[CLOCK_SOURCE_GPLL0];
@@ -591,15 +451,10 @@ int clock_init_image(struct clock_drv_ctxt *drv_ctxt)
 
 	/* Enable clocks required for init. */
 	if (clock_group_enable(CLOCK_GROUP_INIT) != 0) {
-		/* Dump status now: clock_dump_status() below is otherwise
-		 * unreachable on this path, hiding the raw register state
-		 * behind the timeout that just occurred. */
-		clock_dump_status(drv_ctxt);
 		return -1;
 	}
 
 	if (clock_enable_qdss_debug_en() != 0) {
-		clock_dump_status(drv_ctxt);
 		return -1;
 	}
 
