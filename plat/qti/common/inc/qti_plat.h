@@ -30,6 +30,8 @@ void qti_setup_page_tables(
 int qti_io_setup(void);
 struct image_info *qti_get_image_info(unsigned int image_id);
 
+
+
 void plat_qti_gic_driver_init(void);
 void plat_qti_gic_init(void);
 void plat_qti_gic_cpuif_enable(void);

@@ -328,6 +328,14 @@ void bl31_platform_setup(void)
 	if (ret != 0) {
 		ERROR("QTimer init failed: %d\n", ret);
 	}
+	/*
+	 * Register the architected-counter delay timer ops.  qti_qtimer_init()
+	 * deliberately does not do this (see drivers/qti/qtimer/qtimer.c) - the
+	 * platform owns the call - and it must happen after the qtimer AC
+	 * registers are programmed above.  Until this runs, timer_ops is NULL
+	 * and every udelay()/mdelay()/timeout_init_us() in BL31 asserts.
+	 */
+	generic_delay_timer_init();
 
 	if (qti_watchdog_init() != 0) {
 		ERROR("Watchdog initialization error\n");

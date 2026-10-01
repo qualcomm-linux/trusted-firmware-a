@@ -28,7 +28,6 @@
 
 #include <bl31qtilib_interface.h>
 #include <bl31qtilib_spd_agnostic.h>
-#include <qti_secure_io.h>
 
 /*
  * SIP service - SMC function IDs for SiP Service queries
@@ -153,9 +152,6 @@ static bool qti_check_syscall_availability(u_register_t smc_fid,
 	case QTI_SIP_SVC_CONFIG_HW_FOR_OFFLINE_RAM_DUMP:
 	case QTI_SIP_SVC_SECURE_IO_READ_ID:
 	case QTI_SIP_SVC_SECURE_IO_WRITE_ID:
-		if (is_caller_secure(flags)) {
-			return false;
-		}
 		return true;
 	case QTI_SIP_SVC_GET_SUBSYSTEM_DEBUG_OPTIONS_ID:
 #if QTI_HWTRACE_SUPPORT
@@ -306,28 +302,17 @@ static uintptr_t qti_sip_handler(uint32_t smc_fid, u_register_t x1,
 		}
 	}
 	case QTI_SIP_SVC_SECURE_IO_READ_ID: {
-		uint32_t value;
+		smc_rsp_t response = { 0 };
+		int ret = bl31qtilib_secure_io_read(x2, &response);
 
-		if (is_caller_secure(flags)) {
-			SMC_RET1(handle, QTI_SIP_NOT_SUPPORTED);
+		if (ret != 0) {
+			SMC_RET1(handle, QTI_SIP_CALL_FAILED);
+		} else {
+			SMC_RET2(handle, QTI_SIP_SUCCESS, response.rsp[0]);
 		}
-		if ((x1 == QTI_SIP_SVC_SECURE_IO_READ_PARAM_ID) &&
-		    qti_secure_io_read((uintptr_t)x2, &value)) {
-			SMC_RET2(handle, QTI_SIP_SUCCESS,
-				 value);
-		}
-		SMC_RET1(handle, QTI_SIP_INVALID_PARAM);
 	}
-	case QTI_SIP_SVC_SECURE_IO_WRITE_ID: {
-		if (is_caller_secure(flags)) {
-			SMC_RET1(handle, QTI_SIP_NOT_SUPPORTED);
-		}
-		if ((x1 == QTI_SIP_SVC_SECURE_IO_WRITE_PARAM_ID) &&
-		    qti_secure_io_write((uintptr_t)x2, (uint32_t)x3)) {
-			SMC_RET1(handle, QTI_SIP_SUCCESS);
-		}
-		SMC_RET1(handle, QTI_SIP_INVALID_PARAM);
-	}
+	case QTI_SIP_SVC_SECURE_IO_WRITE_ID:
+		SMC_RET1(handle, bl31qtilib_secure_io_write(x2, x3));
 	case QTI_SIP_SVC_GET_SUBSYSTEM_DEBUG_OPTIONS_ID: {
 		smc_rsp_t response = { 0 };
 		int ret = bl31qtilib_get_subsystem_debug_options(

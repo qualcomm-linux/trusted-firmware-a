@@ -43,26 +43,21 @@
 int qti_ns_va_to_pa(uintptr_t va, unsigned int client_mode, uintptr_t *pa_out);
 
 int qti_mmap_add_dynamic_region(uintptr_t base_pa, size_t size,
-				unsigned int attr);
+                                unsigned int attr);
 int qti_mmap_remove_dynamic_region(uintptr_t base_va, size_t size);
 
-/*
- * Utility functions common to ARM standard platforms.
- * TODO: The below CR is created to handle page table
- * with and without coherent memory.
- * https://orbit/CR/4444422
- */
+/* Utility functions common to ARM standard platforms. */
 #if USE_COHERENT_MEM
 void qti_setup_page_tables(uintptr_t total_base, size_t total_size,
-			   uintptr_t code_start, uintptr_t code_limit,
-			   uintptr_t rodata_start, uintptr_t rodata_limit,
-			   uintptr_t coherent_ram_start,
-			   uintptr_t coherent_ram_limit);
+                           uintptr_t code_start, uintptr_t code_limit,
+                           uintptr_t rodata_start, uintptr_t rodata_limit,
+                           uintptr_t coherent_ram_start,
+                           uintptr_t coherent_ram_limit);
 #else
 void qti_setup_page_tables(uintptr_t total_base, size_t total_size,
-			   uintptr_t code_start, uintptr_t code_limit,
-			   uintptr_t rodata_start, uintptr_t rodata_limit);
-#endif
+                           uintptr_t code_start, uintptr_t code_limit,
+                           uintptr_t rodata_start, uintptr_t rodata_limit);
+#endif /* USE_COHERENT_MEM */
 
 /*
  * Mandatory functions required in ARM standard platforms
@@ -85,6 +80,7 @@ void gic_set_spi_routing(unsigned int id, unsigned int irm, u_register_t mpidr);
 
 void qti_pmic_prepare_reset(void);
 void qti_pmic_prepare_shutdown(void);
+void qti_platform_psci_system_reset(void);
 
 /* Optional functions required in ARM standard platforms */
 unsigned int plat_qcom_core_pos_by_mpidr(u_register_t mpidr);
@@ -136,13 +132,13 @@ void plat_cpuss_config(void);
  * registers starting at base, again with a readback after each write.
  */
 void configure_irq_type(uintptr_t clr_edge_base, uintptr_t set_level_base,
-			const uint32_t *cfg_arr, unsigned int num_words);
+                        const uint32_t *cfg_arr, unsigned int num_words);
 void configure_irq_array(uintptr_t base, const uint32_t *cfg_arr,
-			 unsigned int num_words);
+                         unsigned int num_words);
 
 typedef struct chip_id_info {
-	uint16_t jtag_id;
-	uint16_t chipinfo_id;
+        uint16_t jtag_id;
+        uint16_t chipinfo_id;
 } chip_id_info_t;
 
 #endif /* QTI_PLAT_H */

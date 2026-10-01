@@ -14,6 +14,7 @@
 
 #include <platform_def.h>
 
+
 .section .rodata.gic_reg_name, "aS"
 /* Applicable only to GICv2 and GICv3 with SRE disabled (legacy mode) */
 gicc_regs:

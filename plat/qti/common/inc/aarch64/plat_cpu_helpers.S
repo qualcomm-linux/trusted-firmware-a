@@ -1,26 +1,24 @@
-/*
-* Copyright (c) 2026 Qualcomm Technologies, Inc. and/or its subsidiaries.
-*
-* SPDX-License-Identifier: BSD-3-Clause
-*/
-
-#include <arch.h>
-#include <dsu_def.h>
-
 #include "qti_cpu_id.h"
+
 
 // Special Purpose System Register encodings
 // (which may not be supported by compiler)
+#define CPUPWRCTLR_EL1					S3_0_C15_C2_7
+#define CLUSTERCFR_EL1					S3_0_C15_C3_0
 #define CPUPARTSID_EL1					S3_0_C15_C2_6
+#define CLUSTERIDR_EL1					S3_0_C15_C3_1
 #define CLUSTEREVIDR_EL1				S3_0_C15_C3_2
+#define CLUSTERACTLR_EL1				S3_0_C15_C3_3
 #define CLUSTERECTLR_EL1				S3_0_C15_C3_4
+#define GCR_EL1						S3_0_C1_C0_6
 
 #define CPUPSELR_EL3					S3_6_c15_c8_0
 #define CPUPCR_EL3					S3_6_c15_c8_1
 #define CPUPOR_EL3					S3_6_c15_c8_2
 #define CPUPMR_EL3					S3_6_c15_c8_3
-
 //MPMM Registers
+#define CPUPPMCR_EL3					S3_6_C15_C2_0
+#define CPUMPMMCR_EL3					S3_6_C15_C2_1
 #define CPUMPMMTUNE_EL3					S3_6_C15_C2_6
 
 //CPTR and fields
@@ -45,7 +43,9 @@
 #define CPACR_EL1_SMEN_BITS				2
 
 //ERR<n>CTLR INT Enable Definitions used when accessed using ERXCTLR_EL1
+#define ERRSELR_EL1					S3_0_C5_C3_1
 #define ERRxCTLR_EL1					S3_0_C5_C4_1
+#define ERXMISC0_EL1					S3_0_C5_C5_0
 #define ERRxCTLR_CI_SHFT				13
 #define ERRxCTLR_DUI_SHFT				10
 #define ERRxCTLR_CFI_SHFT				8
@@ -90,14 +90,10 @@
 //MPMM enable register value
 #define MPMM_PINCTRL_EN					1
 #define MPMM_EN						1
-//medium & high bw vector and virus
-#define MPMM_GEAR_0					0
-//high bw vector & virus
-#define MPMM_GEAR_1					1
-//power virus
-#define MPMM_GEAR_2					2
-//do not throttle
-#define MPMM_GEAR_3					3
+#define MPMM_GEAR_0						0	//medium & high bw vector and virus
+#define MPMM_GEAR_1						1	//high bw vector & virus
+#define MPMM_GEAR_2						2	//power virus
+#define MPMM_GEAR_3						3	//do not throttle
 
 //MPMM enable register bit position
 #define MPMM_PINCTRL_SHFT				0
@@ -127,10 +123,12 @@
 #define SCR_EL3_ENTP2_BITS				1
 
 // HAFGRTR_EL2 and fields
+#define HAFGRTR_EL2					S3_4_C3_C1_6
 #define HAFGRTR_EL2_AMEVCNTR0_SHFT		1
 #define HAFGRTR_EL2_AMEVCNTR0_BITS		4
 
 // AMUSERENR_EL0 and fields
+#define AMUSERENR_EL0					S3_3_C13_C2_3
 #define AMUSERENR_EL0_EN_SHFT			0
 #define AMUSERENR_EL0_EN_BITS			1
 
@@ -274,11 +272,8 @@
 	SPR_OP CPTR_EL3, #1, #CPTR_EL3_EZ_SHFT, #CPTR_EL3_EZ_BITS
 	SPR_OP CPTR_EL2, #0, #CPTR_EL2_TZ_SHFT, #CPTR_EL2_TZ_BITS
 	ISB
-	/* select Max vector length of 128 bits */
-	SPR_OP ZCR_EL3, #0, ZCR_LEN_SHFT, #ZCR_LEN_BITS
-
-	/* set it for cases where EL2 is not doing it */
-	SPR_OP ZCR_EL2, #0, ZCR_LEN_SHFT, #ZCR_LEN_BITS
+	SPR_OP ZCR_EL3, #0, ZCR_LEN_SHFT, #ZCR_LEN_BITS	//select Max vector length of 128 bits
+	SPR_OP ZCR_EL2, #0, ZCR_LEN_SHFT, #ZCR_LEN_BITS		//set it for cases where EL2 is not doing it
 	.endm
 
 	.macro ENABLE_SVE_IF_AVAILABLE
@@ -395,9 +390,16 @@
 //------------------------------------------------------------------------------
 // AMU
 //------------------------------------------------------------------------------
+#define AMCR_EL0			S3_3_C13_C2_0
 #define AMCR_HDBG_SHFT			10
 #define AMCR_CG1RZ_SHFT			17
 #define AMCR_CG1RZ_BITS			1
+
+#define AMCNTENCLR0_EL0			S3_3_C13_C2_4
+#define AMCNTENCLR1_EL0			S3_3_C13_C3_0
+#define AMCNTENSET0_EL0			S3_3_C13_C2_5
+#define AMCNTENSET1_EL0			S3_3_C13_C3_1
+
 #define AMEVCNTR0n_EL0(n)		S3_3_C13_C4_##n  // correct with n<=7
 #define AMEVCNTR1n_EL0(n)		S3_3_C13_C12_##n // correct with n<=7
 #define AMEVCNTR0n_EL0_A78(n)		S3_3_C15_C4_##n  // correct with n<=3
@@ -417,7 +419,7 @@
 
 
 	.macro DISABLE_AMCR_AUX_AMU_REG
-	// Disable EL0/EL1/EL2 reads to Auxiliary AMU counters
+	// Disable EL0/EL1/EL2 reads to Auxilliary AMU counters
 	SPR_OP AMCR_EL0, #1, #AMCR_CG1RZ_SHFT, #AMCR_CG1RZ_BITS
 	.endm
 
