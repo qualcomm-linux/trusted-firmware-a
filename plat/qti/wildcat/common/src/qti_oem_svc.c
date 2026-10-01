@@ -22,14 +22,11 @@
 #include <bl31qtilib_interface.h>
 #include <bl31qtilib_spd_agnostic.h>
 
-#include <qti_secboot.h>
-
 #define FUNCID_OEN_NUM_MASK                                                \
         ((FUNCID_OEN_MASK << FUNCID_OEN_SHIFT) |                        \
          (FUNCID_NUM_MASK << FUNCID_NUM_SHIFT))
 
 #define TZ_PSCI_WARM_RESET        (U(0xC3000922) & FUNCID_OEN_NUM_MASK)
-#define TZ_FUSEPROV_BLOW_FUSES        (U(0xC3000923) & FUNCID_OEN_NUM_MASK)
 
 enum {
         QTI_OEM_SVC_SUCCESS = 0,
@@ -49,9 +46,6 @@ static uintptr_t oem_svc_smc_handler(uint32_t smc_fid, u_register_t x1,
         switch (l_smc_fid) {
         case TZ_PSCI_WARM_RESET:
                 SMC_RET1(handle, bl31qtilib_psci_warm_reset());
-        case TZ_FUSEPROV_BLOW_FUSES:
-                /* Provisioning uses the platform-defined authenticated buffer. */
-                SMC_RET1(handle, qti_fuseprov_init());
         default:
                 /* Preserve forwarding of OEM calls not handled by TF-A. */
                 forward_to_spd = true;
