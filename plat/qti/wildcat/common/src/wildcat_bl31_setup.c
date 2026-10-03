@@ -351,9 +351,7 @@ void bl31_platform_setup(void)
 		ERROR("Watchdog initialization error\n");
 	}
 
-#ifdef QTI_PWR_UTILS_ENABLED
 	qti_pwr_utils_init();
-#endif /* QTI_PWR_UTILS_ENABLED */
 
 	/* xPU static config needs clocks held; bracket its init. */
 	qti_clock_init(clocked_boot_init);
