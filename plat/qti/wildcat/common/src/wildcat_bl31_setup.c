@@ -334,9 +334,7 @@ void bl31_platform_setup(void)
 		ERROR("Watchdog initialization error\n");
 	}
 
-#ifdef QTI_PWR_UTILS_ENABLED
 	qti_pwr_utils_init();
-#endif /* QTI_PWR_UTILS_ENABLED */
 
 	bl31qtilib_bl31_platform_setup();
 }
