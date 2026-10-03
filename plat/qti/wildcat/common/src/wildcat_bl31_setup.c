@@ -17,8 +17,12 @@
 #include <drivers/arm/dcc.h>
 #include <drivers/console.h>
 #include <drivers/generic_delay_timer.h>
+#include <drivers/qti/accesscontrol/accesscontrol.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
+#include <drivers/qti/clock/clock.h>
+#include <drivers/qti/pwr_utils/pwr_utils.h>
 #include <drivers/qti/qtimer/qtimer.h>
+#include <drivers/qti/smem/smem.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <export/plat/qti/common/plat_params_exp.h>
 #include <lib/bakery_lock.h>
@@ -287,9 +291,21 @@ void plat_cpuss_config(void)
 {
 }
 
+/*
+ * Boot-time init that needs the TF-A init-only clocks held. Add future
+ * clock-dependent init calls here rather than bracketing them inline.
+ */
+static void clocked_boot_init(void)
+{
+	qti_accesscontrol_init();
+}
+
 void bl31_platform_setup(void)
 {
 	int ret;
+
+	generic_delay_timer_init();
+
 	INFO("Starting %s - %s\n", qti_build_variant, bl31qtilib_build_variant);
 	INFO("QC Image Version %s\n", QC_IMAGE_VERSION_STRING_AUTO_UPDATED);
 	INFO("Image Variant %s\n", IMAGE_VARIANT_STRING_AUTO_UPDATED);
@@ -306,6 +322,8 @@ void bl31_platform_setup(void)
 	/* Initialize the GIC driver, CPU and distributor interfaces */
 	plat_qti_gic_driver_init();
 	plat_qti_gic_init();
+
+	qti_smem_init();
 
 	if (qti_chipinfo_init() != CHIPINFO_SUCCESS) {
 		WARN("ChipInfo initialization error\n");
@@ -332,6 +350,11 @@ void bl31_platform_setup(void)
 	if (qti_watchdog_init() != 0) {
 		ERROR("Watchdog initialization error\n");
 	}
+
+	qti_pwr_utils_init();
+
+	/* xPU static config needs clocks held; bracket its init. */
+	qti_clock_init(clocked_boot_init);
 
 	bl31qtilib_bl31_platform_setup();
 }
