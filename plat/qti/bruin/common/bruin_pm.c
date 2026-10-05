@@ -4,27 +4,35 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <assert.h>
 #include <stdint.h>
 
 #include <common/debug.h>
 #include <drivers/delay_timer.h>
 #include <lib/mmio.h>
 #include <lib/psci/psci.h>
+#include <lib/utils_def.h>
 #include <plat/common/platform.h>
 
 #include <cpucp.h>
 #include <platform_def.h>
 #include <qti_plat.h>
 
-#define APSS_CPU_IPM_REG_BASE		0x0F800000U
-#define APSS_CPU_IPM_REG_OFFSET		0x10000U
-#define APSS_CPU_IPM_REG(core)		(APSS_CPU_IPM_REG_BASE + \
-					 ((core) * APSS_CPU_IPM_REG_OFFSET))
-
 #define CPU_HEAD_SWITCH_CTL(core)	(APSS_CPU_IPM_REG(core) + 0x08U)
 #define CPU_SEQ_FORCE_PWR_CTL_EN(core)	(APSS_CPU_IPM_REG(core) + 0x1cU)
 #define CPU_SEQ_FORCE_PWR_CTL_VAL(core)	(APSS_CPU_IPM_REG(core) + 0x20U)
 #define CPU_PCHANNEL_FSM_CTL(core)	(APSS_CPU_IPM_REG(core) + 0x44U)
+
+static uintptr_t APSS_CPU_IPM_REG(int core_pos)
+{
+	static const uintptr_t cpu_ipm_reg_bases[PLATFORM_CORE_COUNT] =
+		QTI_CPU_IPM_REG_BASES;
+
+	assert(core_pos >= 0);
+	assert((unsigned int)core_pos < ARRAY_SIZE(cpu_ipm_reg_bases));
+
+	return cpu_ipm_reg_bases[core_pos];
+}
 
 /*
  * plat_qti_pwr_psci_init - PSCI backend init hook.
