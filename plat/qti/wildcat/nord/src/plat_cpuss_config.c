@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include <arch_helpers.h>
+
 #include <qti_plat.h>
 
 /* INTU base = HWIO_APSS_HM_BASE(0x17000000) + 0x840000  (NORDV2 SConscript) */
@@ -65,7 +67,18 @@ void plat_irq_config(void)
 			    nord_seca_direct_cfg, NUM_DIRECT_SPI_WORDS);
 }
 
-/* Configures platform CPUSS specific configurations */
+/*
+ * plat_cpuss_config - Platform CPUSS-specific configuration.
+ *
+ * Called from bl31_platform_setup() in wildcat_bl31_setup.c.
+ *
+ * Configures SPI interrupt edge/level types for the nord platform.
+ *
+ * Note: The boot-core CL4 sleep-state reset workaround (previously
+ * apps_reset_sync) has been moved to plat_qti_cpu_boot_setup() in
+ * plat/qti/cpu/ncc/src/bl31_cpu_setup.c, which is called earlier from
+ * bl31_early_platform_setup().
+ */
 void plat_cpuss_config(void)
 {
 	/* SPI interrupt edge/level configuration */

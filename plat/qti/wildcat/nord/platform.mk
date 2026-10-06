@@ -109,6 +109,7 @@ QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 				-I${QTI_PLAT_PATH}/common/inc				\
 				-I${QTI_PLAT_PATH}/common/inc/$(ARCH)			\
 				-I${PLAT_QTI_ROOT}/common/inc/$(ARCH)			\
+				-I${PLAT_QTI_ROOT}/cpu/inc				\
 				-I${QTI_PLAT_PATH}/bl31qtilib/inc			\
 				-I${PLAT_QTI_ROOT}/common/inc				\
 
@@ -184,15 +185,50 @@ $(eval $(call add_define, QTI_NO_SMCC_ARCH_SOC_ID))
 
 CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/qcom_oryon_v1.S
 
+#
+# CPU-specific BL31 setup: select NCC (Oryon) or standard ARM implementation.
+#
+# QTI_NCC_CPU=1  -> plat/qti/cpu/ncc/src/bl31_cpu_setup.c
+#                   Includes EL3 register init + SCMI Reset Domain workaround.
+# QTI_NCC_CPU=0  -> plat/qti/cpu/arm/src/bl31_cpu_setup.c
+#                   Includes EL3 register init only (no NCC workaround).
+#
+QTI_CPU_PATH		:=	plat/qti/cpu
+
+ifeq ($(QTI_NCC_CPU),1)
+$(eval $(call add_define,QTI_NCC_CPU))
+BL31_CPU_SETUP_SRC	:=	$(QTI_CPU_PATH)/ncc/src/bl31_cpu_setup.c
+else
+BL31_CPU_SETUP_SRC	:=	$(QTI_CPU_PATH)/arm/src/bl31_cpu_setup.c
+endif
+
+#
+# SCMI driver sources: ARM CSS SCMI stack + QTI platform doorbell.
+#
+# CPUCP on Nord implements only the Reset Domain protocol (0x16).
+# The Power Domain (0x11) and System Power (0x12) protocols are not
+# supported; skip the System Power version check in scmi_init() to
+# prevent a timeout panic during channel initialisation.
+#
+SCMI_SKIP_SYS_PWR_PROTO_CHECK	:= 1
+$(eval $(call add_define,SCMI_SKIP_SYS_PWR_PROTO_CHECK))
+
+SCMI_SOURCES		:=	drivers/arm/css/scmi/scmi_common.c		\
+				drivers/arm/css/scmi/scmi_reset_domain_proto.c	\
+				$(PLAT_QTI_ROOT)/common/src/qti_scmi_doorbell.c
+
 BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${GIC_SOURCES}					\
 				${TIMER_SOURCES}				\
 				${CPU_SOURCES}					\
+				${BL31_CPU_SETUP_SRC}				\
+				${SCMI_SOURCES}
 
 BL31_SOURCES		+=	${QGIC_DRV_PATH}/qgic_intr_el3.c
 BL31_SOURCES		+=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c
 
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET}
+PLAT_INCLUDES	+=	-Iinclude/drivers/qti/cpucp/${CHIPSET}
 
 QTI_USE_QTIMER		:=	1
 QTI_USE_NCC_QTIMER	:=	1
