@@ -250,4 +250,10 @@ include drivers/qti/mbox/mbox.mk
 
 BL31_SOURCES	+=	$(QTI_PLAT_PATH)/common/src/qti_mbox_plat.c
 
+# NoC bus-rail BCM voting dependency (ICB micro-arbiter) for programming
+# the NoC error registers.
+ICB_NOC_BCM_VOTE	:=	1
+include drivers/qti/icb/icb.mk
+include drivers/qti/coreinit/coreinit.mk
+
 include $(QTI_PLAT_PATH)/common/common.mk

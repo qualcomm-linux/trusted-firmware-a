@@ -18,6 +18,10 @@
 #include <drivers/console.h>
 #include <drivers/generic_delay_timer.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
+#include <drivers/qti/coreinit/coreinit.h>
+#include <drivers/qti/icb/icb_error.h>
+#include <drivers/qti/icb/icbcfg.h>
+#include <drivers/qti/icb/icbuarb.h>
 #include <drivers/qti/qtimer/qtimer.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <export/plat/qti/common/plat_params_exp.h>
@@ -316,6 +320,15 @@ void bl31_platform_setup(void)
 	 * registers EL3 common interrupt handler
 	 */
 	qti_interrupt_svc_init(bl32_image_ep_info.pc != 0UL);
+
+	if (!qti_icbuarb_init()) {
+		WARN("ICB: micro-arbiter initialization error\n");
+	} else {
+		qti_coreinit_init();
+		qti_icb_error_init();
+		qti_icbcfg_init();
+		qti_icbcfg_post_init();
+	}
 
 #ifdef QTI_MBOX
 	ret = qti_mbox_init();
