@@ -13,6 +13,7 @@
 #include <lib/mmio.h>
 #include <lib/spinlock.h>
 #include <plat/common/platform.h>
+#include <drivers/arm/css/scmi.h>
 
 #include <cpu_config.h>
 #include <cpucp.h>
