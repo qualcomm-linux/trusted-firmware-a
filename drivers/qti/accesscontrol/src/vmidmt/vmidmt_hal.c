@@ -47,8 +47,17 @@ static void read_id_registers(struct hal_vmidmt_info *info)
 	info->dev_params.num_stream_id_bits = VMIDMT_INFC(reg, IDR0, NUMSIDB);
 	info->dev_params.entry_count = VMIDMT_INFC(reg, IDR0, NUMSMRG);
 	reg = VMIDMT_IN(info->base_addr, IDR1);
-	info->dev_params.num_ssd_index_bits =
-		VMIDMT_INFC(reg, IDR1, NUMSSDNDXB);
+
+	/*
+	 * The configuration may override the SSD index width, so only take the
+	 * hardware value when it has not supplied one. An instance whose
+	 * IDR1.NUMSSDNDXB reports a wider index than the driver supports relies
+	 * on that override to bound the SSD table.
+	 */
+	if (info->dev_params.num_ssd_index_bits == 0U) {
+		info->dev_params.num_ssd_index_bits =
+			VMIDMT_INFC(reg, IDR1, NUMSSDNDXB);
+	}
 	reg = VMIDMT_IN(info->base_addr, IDR2);
 	info->dev_params.input_addr_size = VMIDMT_INFC(reg, IDR2, IAS);
 	reg = VMIDMT_IN(info->base_addr, IDR5);
@@ -428,10 +437,10 @@ enum hal_vmidmt_status
 vmidmt_hal_init(struct hal_vmidmt_info *info,
 		const struct hal_vmidmt_default_secure_vmid_config *sec_cfg,
 		const struct hal_vmidmt_default_vmid_config *nsec_cfg,
-		char **ver)
+		bool skip_table_init)
 {
 	uint32_t ssd_words = 0;
-	uint32_t ssd_mask_bits = 0;
+	uint32_t total_ssd_bits = 0;
 	uint8_t sec_ext = 0;
 	uint32_t scr1_init = 0;
 	uint32_t rb_val = 0;
@@ -440,6 +449,14 @@ vmidmt_hal_init(struct hal_vmidmt_info *info,
 
 	if (sec_cfg && nsec_cfg)
 		return HAL_VMIDMT_INVALID_PARAM;
+
+	/*
+	 * Take the SSD index width from the configuration if it supplies one,
+	 * before the identity registers are read, so a configured override wins
+	 * over what the hardware reports.
+	 */
+	if (info->dev_params.num_ssd_index_bits != 0U)
+		total_ssd_bits = BIT(info->dev_params.num_ssd_index_bits);
 
 	read_id_registers(info);
 
@@ -509,10 +526,13 @@ vmidmt_hal_init(struct hal_vmidmt_info *info,
 	VMIDMT_OUT(info->base_addr, NSGFSRRESTORE, 0);
 
 	ssd_words = 1;
-	ssd_mask_bits = BIT(info->dev_params.num_ssd_index_bits);
 
-	if (ssd_mask_bits >= VMIDMT_NUM_NSSTATE_BITS) {
-		ssd_words = ssd_mask_bits / VMIDMT_NUM_NSSTATE_BITS;
+	/* No configured override, so fall back to the hardware value. */
+	if (total_ssd_bits == 0U)
+		total_ssd_bits = BIT(info->dev_params.num_ssd_index_bits);
+
+	if (total_ssd_bits >= VMIDMT_NUM_NSSTATE_BITS) {
+		ssd_words = total_ssd_bits / VMIDMT_NUM_NSSTATE_BITS;
 
 		if (!IS_NUM_SSD_VALID(ssd_words)) {
 			st = HAL_VMIDMT_INVALID_HW_VALUE;
@@ -521,10 +541,22 @@ vmidmt_hal_init(struct hal_vmidmt_info *info,
 	}
 
 	for (idx = 0; idx < ssd_words; idx++) {
+		if (skip_table_init)
+			break;
+
 		VMIDMT_OUTI(info->base_addr, SSDRn, idx, 0xFFFFFFFF);
 	}
 
 out:
+	/*
+	 * Programming the table defaults would discard the VMID, SMR and SSD
+	 * state an earlier stage established, so skip them for an instance that
+	 * has already been configured by XBL. The global options above are still
+	 * (re)applied.
+	 */
+	if (skip_table_init)
+		return st;
+
 	for (idx = 0; idx < info->dev_params.entry_count; idx++) {
 		if (info->dev_params.stream_match_support)
 			VMIDMT_OUTI(info->base_addr, SMRn, idx, 0);

@@ -11,17 +11,24 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MSA_DOMAIN QAD0_NS_DOMAIN
-#define SPU_DOMAIN QAD1_NS_DOMAIN
-
-#define XPU_ERR_SEC_CTX 0
-#define XPU_ERR_NON_SEC_CTX 1
-#define XPU3_RGn_GCR0_RG_SEC_SHIFT 0x8
+#include <xpu_common.h>
 
 #define XPU_RG_ALL 0x00ffffff
 #define XPU_UMR_RG (XPU_RG_ALL - 1)
 
+/* Bits in struct xpu_instance::flag. */
 #define XPU_PROTECTION_STATIC 0x1
+#define XPU_INITIALIZED 0x2
+
+/*
+ * Unit type, as reported by IDR0.XPUTYPE and returned by
+ * xpu3_hal_get_xpu_type(). Address-range programming is MPU-only.
+ * Unrelated to the instance identifiers in enum xpu below, despite the shared
+ * XPU_TYPE_ prefix.
+ */
+#define XPU_TYPE_RPU 0x0U
+#define XPU_TYPE_APU 0x1U
+#define XPU_TYPE_MPU 0x2U
 
 enum xpu {
 	XPU_TYPE_NONE,
@@ -107,20 +114,21 @@ enum xpu {
 	XPU_TYPE_LPASS_SSC_Q6_MPU,
 	XPU_TYPE_LPASS_WSA_2CH_MPU,
 	XPU_TYPE_UFS_G4_ICE,
+	/*
+	 * Shikra (Bruin) instances with no counterpart on the targets above.
+	 * Appended here so the existing identifiers keep their values.
+	 */
+	XPU_TYPE_RPM_MSTR_MPU,
+	XPU_TYPE_MAPSS_APU,
+	XPU_TYPE_CAMSS,
+	XPU_TYPE_QPIC_APU,
+	XPU_TYPE_MSS_CRYPTO_KM_APU,
+	XPU_TYPE_SNOC_MS_MPU,
+	XPU_TYPE_MDSS_XPU,
+	XPU_TYPE_LMCU_MPU,
+	XPU_TYPE_DC_NOC_BROADCAST_MPU,
+	XPU_TYPE_MDSP_MPU,
 	XPU_TYPE_COUNT,
-};
-
-enum domain_type {
-	NO_DOMAIN = 0,
-	APPS_NS_DOMAIN = BIT(0),
-	APPS_S_DOMAIN = BIT(0) | BIT(XPU3_RGn_GCR0_RG_SEC_SHIFT),
-	QAD0_NS_DOMAIN = BIT(1),
-	QAD1_NS_DOMAIN = BIT(2),
-};
-
-enum device_type {
-	DEVICE_MODEM = 30,
-	DEVICE_MSS_NAV = 35,
 };
 
 struct rg_domain_ownership {
@@ -153,29 +161,18 @@ struct mpu_ranges {
 	struct xpu_instance *mpus;
 };
 
-struct xpu_err_pos_to_hal_map {
-	uint32_t bit_mask;
-	uint8_t xpu;
-};
-
-struct xpu_intr_reg_dtls {
-	uintptr_t xpu_intr_reg_addr;
-	uintptr_t xpu_intr_reg_mask;
-};
-
 struct xpu_base_addr_info {
 	enum xpu e_xpu;
 	uintptr_t base_addr;
 	char *name;
 };
 
-void xpu_lock_down_assets(struct xpu_instance *xpus, uint8_t xpu_count);
-int xpu_lock_down_assets_dynamic(struct xpu_instance *xpus, uint8_t xpu_count,
-				 uint32_t xpu_id, uint32_t rg_num,
-				 uint32_t perm_r, uint32_t perm_w);
-void xpu_master_mpu_init(struct mpu_ranges *msm_mpu_ranges,
-			 const uint32_t msm_mpu_ranges_count);
-
-void xpu_print_log(void *ctx);
+/*
+ * Unmask the XPU error interrupts in the aggregator. Called once the static
+ * policy is in place. Either register list may be NULL to leave that bank
+ * masked. Implemented in xpu3_isr.c.
+ */
+void xpu3_enable_interrupts(const struct xpu_intr_reg_dtls *nsec,
+			    const struct xpu_intr_reg_dtls *sec);
 
 #endif /* XPU3_H */

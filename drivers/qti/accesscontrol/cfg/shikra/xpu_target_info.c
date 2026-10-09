@@ -1,0 +1,348 @@
+/*
+ * Copyright (c) 2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#include <lib/utils_def.h>
+#include <xpu_target_info.h>
+
+/*
+ * Bit in the XPU error interrupt status registers to the XPU that raised it,
+ * transcribed from the Shikra downstream policy. Bits that are reserved on this
+ * target are mapped to XPU_TYPE_COUNT so the ISR skips them without ending the
+ * scan - the scan stops at the first zero bit_mask.
+ */
+struct xpu_err_pos_to_hal_map xpu_err_pos_to_hal_map
+	[ACC_XPU_ERR_INT_REG_NUM][ACC_XPU_ERR_NUM_PER_REG] = {
+		{
+			{ BIT(0), XPU_TYPE_PMIC_ARB },
+			{ BIT(1), XPU_TYPE_COUNT },
+			{ BIT(2), XPU_TYPE_BAM_BLSP1_DMA },
+			{ BIT(3), XPU_TYPE_RPM_MSTR_MPU },
+			{ BIT(4), XPU_TYPE_COUNT },
+			{ BIT(5), XPU_TYPE_COUNT },
+			{ BIT(6), XPU_TYPE_DCC },
+			{ BIT(7), XPU_TYPE_IMEM_APU },
+			{ BIT(8), XPU_TYPE_MAPSS_APU },
+			{ BIT(9), XPU_TYPE_SEC_CTRL_APU },
+			{ BIT(10), XPU_TYPE_COUNT },
+			{ BIT(11), XPU_TYPE_TCSR_REGS },
+			{ BIT(12), XPU_TYPE_TCSR_MUTEX },
+			{ BIT(13), XPU_TYPE_BOOT_ROM },
+			{ BIT(14), XPU_TYPE_RAMBLUR_PIMEM_MPU },
+			{ BIT(15), XPU_TYPE_MSS_MPU },
+			{ BIT(16), XPU_TYPE_CAMSS },
+			{ BIT(17), XPU_TYPE_CNOC_SNOC_MPU },
+			{ BIT(18), XPU_TYPE_CNOC_SNOC_MS_MPU },
+			{ BIT(19), XPU_TYPE_QM_MPU_CFG },
+			{ BIT(20), XPU_TYPE_CRYPTO0_BAM },
+			{ BIT(21), XPU_TYPE_GCC_RPU },
+			{ BIT(22), XPU_TYPE_RAMBLUR_PIMEM_APU },
+			{ BIT(23), XPU_TYPE_QPIC_APU },
+			{ BIT(24), XPU_TYPE_MSS_CRYPTO_KM_APU },
+			{ BIT(25), XPU_TYPE_COUNT },
+			{ BIT(26), XPU_TYPE_COUNT },
+			{ BIT(27), XPU_TYPE_COUNT },
+			{ BIT(28), XPU_TYPE_COUNT },
+			{ BIT(29), XPU_TYPE_COUNT },
+			{ BIT(30), XPU_TYPE_COUNT },
+			{ BIT(31), XPU_TYPE_COUNT },
+		},
+		{
+			{ BIT(0), XPU_TYPE_IMEM_MPU },
+			{ BIT(1), XPU_TYPE_QPIC_APU },
+			{ BIT(2), XPU_TYPE_SNOC_MS_MPU },
+			{ BIT(3), XPU_TYPE_MSS_NAV_MPU },
+			{ BIT(4), XPU_TYPE_SPDM_APU },
+			{ BIT(5), XPU_TYPE_COUNT },
+			{ BIT(6), XPU_TYPE_COUNT },
+			{ BIT(7), XPU_TYPE_MDSS_XPU },
+			{ BIT(8), XPU_TYPE_HWKM_CFG_KM_APU },
+			{ BIT(9), XPU_TYPE_SDC1_SDCC_ICE_KM_APU },
+			{ BIT(10), XPU_TYPE_CRYPTO0_CRYPTO_KM_APU },
+			{ BIT(11), XPU_TYPE_COUNT },
+			{ BIT(12), XPU_TYPE_BOOT_IMEM_SS_MPU },
+			{ BIT(13), XPU_TYPE_COUNT },
+			{ BIT(14), XPU_TYPE_PKA_APU },
+			{ BIT(15), XPU_TYPE_TLMM },
+			{ BIT(16), XPU_TYPE_SDC1_SDCC_ICE },
+			{ BIT(17), XPU_TYPE_COUNT },
+			{ BIT(18), XPU_TYPE_COUNT },
+			{ BIT(19), XPU_TYPE_COUNT },
+			{ BIT(20), XPU_TYPE_LMCU_MPU },
+			{ BIT(21), XPU_TYPE_BIMC_MPU1 },
+			{ BIT(22), XPU_TYPE_BIMC_MPU0 },
+			{ BIT(23), XPU_TYPE_DC_NOC_SHRM_MPU },
+			{ BIT(24), XPU_TYPE_COUNT },
+			{ BIT(25), XPU_TYPE_COUNT },
+			{ BIT(26), XPU_TYPE_COUNT },
+			{ 0, 0 },
+		},
+	};
+
+const struct xpu_intr_reg_dtls
+	xpu_non_sec_intr_status_reg[ACC_XPU_ERR_INT_REG_NUM] = {
+		{
+			HWIO_TCSR_SS_XPU_NON_SEC_INTR0_ADDR,
+			HWIO_TCSR_SS_XPU_NON_SEC_INTR0_RMSK,
+		},
+		{
+			HWIO_TCSR_SS_XPU_NON_SEC_INTR1_ADDR,
+			HWIO_TCSR_SS_XPU_NON_SEC_INTR1_RMSK,
+		},
+	};
+
+const struct xpu_intr_reg_dtls
+	xpu_sec_intr_status_reg[ACC_XPU_ERR_INT_REG_NUM] = {
+		{
+			HWIO_TCSR_SS_XPU_SEC_INTR0_ADDR,
+			HWIO_TCSR_SS_XPU_SEC_INTR0_RMSK,
+		},
+		{
+			HWIO_TCSR_SS_XPU_SEC_INTR1_ADDR,
+			HWIO_TCSR_SS_XPU_SEC_INTR1_RMSK,
+		},
+	};
+
+const struct xpu_intr_reg_dtls
+	xpu_non_sec_intr_en_reg[ACC_XPU_ERR_INT_REG_NUM] = {
+		{
+			HWIO_TCSR_SS_XPU_NON_SEC_INTR0_ENABLE_ADDR,
+			HWIO_TCSR_SS_XPU_NON_SEC_INTR0_ENABLE_RMSK,
+		},
+		{
+			HWIO_TCSR_SS_XPU_NON_SEC_INTR1_ENABLE_ADDR,
+			HWIO_TCSR_SS_XPU_NON_SEC_INTR1_ENABLE_RMSK,
+		},
+	};
+
+const struct xpu_intr_reg_dtls
+	xpu_sec_intr_en_reg[ACC_XPU_ERR_INT_REG_NUM] = {
+		{
+			HWIO_TCSR_SS_XPU_SEC_INTR0_ENABLE_ADDR,
+			HWIO_TCSR_SS_XPU_SEC_INTR0_ENABLE_RMSK,
+		},
+		{
+			HWIO_TCSR_SS_XPU_SEC_INTR1_ENABLE_ADDR,
+			HWIO_TCSR_SS_XPU_SEC_INTR1_ENABLE_RMSK,
+		},
+	};
+
+/*
+ * Every XPU that can raise an error interrupt on Shikra, so the ISR can name
+ * the offender. Being listed here does not mean the instance is programmed;
+ * msm_xpu_cfg in xpu_static_config.c decides that.
+ */
+struct xpu_base_addr_info g_xpu_base_addr_array[] = {
+	{
+		XPU_TYPE_PMIC_ARB,
+		XPU_ADDR_TYPE(PMIC_ARB_XPU3_GCR0),
+		"PMIC_ARB",
+	},
+	{
+		XPU_TYPE_BAM_BLSP1_DMA,
+		XPU_ADDR_TYPE(QUPV3_0_XPU3_GCR0),
+		"BAM_BLSP1_DMA",
+	},
+	{
+		XPU_TYPE_RPM_MSTR_MPU,
+		XPU_ADDR_TYPE(RPM_MSTR_MPU_XPU3_GCR0),
+		"RPM_MSTR_MPU",
+	},
+	{
+		XPU_TYPE_DCC,
+		XPU_ADDR_TYPE(QDSS_DCC_DCC_XPU3_GCR0),
+		"DCC",
+	},
+	{
+		XPU_TYPE_IMEM_APU,
+		XPU_ADDR_TYPE(OCIMEM_APU_XPU3_GCR0),
+		"IMEM_APU",
+	},
+	{
+		XPU_TYPE_IMEM_MPU,
+		XPU_ADDR_TYPE(OCIMEM_MPU_XPU3_GCR0),
+		"IMEM_MPU",
+	},
+	{
+		XPU_TYPE_MAPSS_APU,
+		XPU_ADDR_TYPE(MAPSS_APU_XPU3_GCR0),
+		"MAPSS_APU",
+	},
+	{
+		XPU_TYPE_SEC_CTRL_APU,
+		XPU_ADDR_TYPE(SEC_CTRL_APU_XPU3_GCR0),
+		"SEC_CTRL_APU",
+	},
+	{
+		XPU_TYPE_TCSR_REGS,
+		XPU_ADDR_TYPE(TCSR_REGS_XPU3_GCR0),
+		"TCSR_REGS",
+	},
+	{
+		XPU_TYPE_TCSR_MUTEX,
+		XPU_ADDR_TYPE(TCSR_MUTEX_XPU3_GCR0),
+		"TCSR_MUTEX",
+	},
+	{
+		XPU_TYPE_BOOT_ROM,
+		XPU_ADDR_TYPE(BOOT_ROM_XPU3_GCR0),
+		"BOOT_ROM",
+	},
+	{
+		XPU_TYPE_RAMBLUR_PIMEM_MPU,
+		XPU_ADDR_TYPE(RAMBLUR_PIMEM_MPU_XPU3_GCR0),
+		"RAMBLUR_PIMEM_MPU",
+	},
+	{
+		XPU_TYPE_RAMBLUR_PIMEM_APU,
+		XPU_ADDR_TYPE(RAMBLUR_PIMEM_APU_XPU3_GCR0),
+		"RAMBLUR_PIMEM_APU",
+	},
+	{
+		XPU_TYPE_MSS_MPU,
+		XPU_ADDR_TYPE(MSS_APU_XPU3_GCR0),
+		"MSS_MPU",
+	},
+	{
+		XPU_TYPE_CAMSS,
+		XPU_ADDR_TYPE(CAMSS_A_XPU3_GCR0),
+		"CAMSS",
+	},
+	{
+		XPU_TYPE_CNOC_SNOC_MPU,
+		XPU_ADDR_TYPE(CNOC_SNOC_QDSS_MPU_XPU3_GCR0),
+		"CNOC_SNOC_QDSS_MPU",
+	},
+	{
+		XPU_TYPE_CNOC_SNOC_MS_MPU,
+		XPU_ADDR_TYPE(CNOC_SNOC_MS_MPU_XPU3_GCR0),
+		"CNOC_SNOC_MS_MPU",
+	},
+	{
+		XPU_TYPE_QM_MPU_CFG,
+		XPU_ADDR_TYPE(QM_MPU_CFG_XPU3_GCR0),
+		"QM_MPU_CFG",
+	},
+	{
+		XPU_TYPE_CRYPTO0_BAM,
+		XPU_ADDR_TYPE(CRYPTO0_CRYPTO_BAM_XPU3_GCR0),
+		"CRYPTO0_BAM",
+	},
+	{
+		XPU_TYPE_CRYPTO0_CRYPTO_KM_APU,
+		XPU_ADDR_TYPE(CRYPTO0_CRYPTO_KM_XPU3_GCR0),
+		"CRYPTO0_CRYPTO_KM_APU",
+	},
+	{
+		XPU_TYPE_GCC_RPU,
+		XPU_ADDR_TYPE(GCC_RPU_XPU3_GCR0),
+		"GCC_RPU",
+	},
+	{
+		XPU_TYPE_QPIC_APU,
+		XPU_ADDR_TYPE(QPIC_QPIC_XPU3_GCR0),
+		"QPIC_APU",
+	},
+	{
+		XPU_TYPE_MSS_CRYPTO_KM_APU,
+		XPU_ADDR_TYPE(MSS_CRYPTO_KM_XPU3_GCR0),
+		"MSS_CRYPTO_KM_APU",
+	},
+	{
+		XPU_TYPE_SNOC_MS_MPU,
+		XPU_ADDR_TYPE(SNOC_AGGRE_MS_MPU_XPU3_GCR0),
+		"SNOC_MS_MPU",
+	},
+	{
+		XPU_TYPE_MSS_NAV_MPU,
+		XPU_ADDR_TYPE(SNOC_MSS_NAV_MS_MPU_XPU3_GCR0),
+		"MSS_NAV_MPU",
+	},
+	{
+		XPU_TYPE_SPDM_APU,
+		XPU_ADDR_TYPE(QDSS_SPDM_XPU3_GCR0),
+		"SPDM_APU",
+	},
+	{
+		XPU_TYPE_MDSS_XPU,
+		XPU_ADDR_TYPE(MDSS_XPU_XPU3_GCR0),
+		"MDSS_XPU",
+	},
+	{
+		XPU_TYPE_HWKM_CFG_KM_APU,
+		XPU_ADDR_TYPE(HWKM_MASTER_CFG_KM_XPU3_GCR0),
+		"HWKM_CFG_KM_APU",
+	},
+	{
+		XPU_TYPE_SDC1_SDCC_ICE,
+		XPU_ADDR_TYPE(PERIPH_SS_SDC1_SDCC_ICE_XPU3_GCR0),
+		"PERIPH_SS",
+	},
+	{
+		XPU_TYPE_SDC1_SDCC_ICE_KM_APU,
+		XPU_ADDR_TYPE(PERIPH_SS_SDC1_SDCC_ICE_KM_XPU3_GCR0),
+		"PERIPH_SS_KM",
+	},
+	{
+		XPU_TYPE_BOOT_IMEM_SS_MPU,
+		XPU_ADDR_TYPE(SNOC_BOOTIMEM_MS_MPU_XPU3_GCR0),
+		"BOOT_IMEM_SS_MPU",
+	},
+	{
+		XPU_TYPE_PKA_APU,
+		XPU_ADDR_TYPE(PKA_WRAPPER_XPU3_GCR0),
+		"PKA_APU",
+	},
+	{
+		XPU_TYPE_TLMM,
+		XPU_ADDR_TYPE(TLMM_XPU_XPU3_GCR0),
+		"TLMM_XPU",
+	},
+	{
+		XPU_TYPE_LMCU_MPU,
+		XPU_ADDR_TYPE(MCU_RVCP_SLV_XPU3_GCR0),
+		"LMCU_MPU",
+	},
+	{
+		XPU_TYPE_BIMC_MPU0,
+		XPU_ADDR_TYPE(LLCC0_LLCC_MPU_XPU3_GCR0),
+		"BIMC_MPU0",
+	},
+	{
+		XPU_TYPE_BIMC_MPU1,
+		XPU_ADDR_TYPE(LLCC1_LLCC_MPU_XPU3_GCR0),
+		"BIMC_MPU1",
+	},
+	{
+		XPU_TYPE_LLCC_BROADCAST_MPU,
+		XPU_ADDR_TYPE(LLC_BROADCAST_LLCC_MPU_XPU3_GCR0),
+		"LLCC_BROADCAST_MPU",
+	},
+	{
+		XPU_TYPE_DC_NOC_SHRM_MPU,
+		XPU_ADDR_TYPE(DC_NOC_QHM_SHRM_MPU_XPU3_GCR0),
+		"DC_NOC_QHM_SHRM_MPU",
+	},
+	{
+		XPU_TYPE_DC_NOC_NON_BROADCAST_MPU,
+		XPU_ADDR_TYPE(DC_NOC_QHS_NON_BROADCAST_MPU_XPU3_GCR0),
+		"DC_NOC_NON_BROADCAST_MPU",
+	},
+	{
+		XPU_TYPE_APSS_GIC_WRAPPER_MS_MPU,
+		XPU_ADDR_TYPE(APSS_GIC_NOC_EPSS_MPU_XPU3_GCR0),
+		"APSS_GIC_MS_MPU",
+	},
+};
+
+uint32_t g_xpu_base_addr_array_count = ARRAY_SIZE(g_xpu_base_addr_array);
+
+void xpu_configure_tz(void)
+{
+	/*
+	 * Shikra needs no target-specific XPU fixup here. The IPA GSI window
+	 * that lemans opens does not exist on this SoC.
+	 */
+}

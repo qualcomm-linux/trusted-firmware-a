@@ -353,22 +353,36 @@ struct hal_vmidmt_int_vmidmt_dev_params {
 	uint8_t stream_match_support;
 };
 
+/*
+ * Per-instance base address and probed device parameters.
+ *
+ * This is a wire format shared with the access-control config image producer
+ * (downstream ACVmidMTInfo), so field order, widths and padding must match it
+ * exactly; see the CASSERTs in vmidmt_internal.h. The instance id is carried in
+ * the first member rather than by a wrapping struct.
+ *
+ * dev_params and is_initialised are written by the driver as instances are
+ * brought up, so this table is not read-only.
+ */
 struct hal_vmidmt_info {
+	uint64_t vmidmt; /* Instance id; an enum hal_vmidmt_instance value */
 	uint64_t base_addr;
 	struct hal_vmidmt_int_vmidmt_dev_params dev_params;
+	bool is_initialised;
 };
 
-struct hal_vmidmt_port_map {
-	uint8_t port;
-	struct hal_vmidmt_info vmidmt_info;
-};
-
-/* Initialize VMIDMT */
+/*
+ * Initialize VMIDMT.
+ *
+ * skip_table_init suppresses programming the SSD, SMR, S2VR and AS2VR table
+ * defaults, for an instance an earlier boot stage has already configured; the
+ * global options are applied either way.
+ */
 enum hal_vmidmt_status
 vmidmt_hal_init(struct hal_vmidmt_info *info,
 		const struct hal_vmidmt_default_secure_vmid_config *secure_def,
 		const struct hal_vmidmt_default_vmid_config *defcfg,
-		char **err_str);
+		bool skip_table_init);
 
 /* Enable or disable client interface. */
 enum hal_vmidmt_status
