@@ -12,11 +12,6 @@
 #include <lemans_def.h>
 
 #define ACC_XPU_ERR_INT_REG_NUM 3
-#define ACC_XPU_ERR_NUM_PER_REG 32
-
-#define XPU_ADDR_TYPE(hwiosym) HWIO_##hwiosym##_ADDR
-
-#define TCSR_TCSR_REGS_REG_BASE (QTI_CORE_TOP_CSR_BASE + 0x000c0000)
 
 #define HWIO_TCSR_XPU3_NON_SEC_IRQ_STATUS_REG_0_ADDR \
 	(TCSR_TCSR_REGS_REG_BASE + 0x00002000)
@@ -158,6 +153,9 @@ extern const uint32_t msm_mpu_ranges_count;
 
 extern struct xpu_base_addr_info g_xpu_base_addr_array[];
 extern uint32_t g_xpu_base_addr_array_count;
+
+extern const struct xpu_addr_mask xpu_addr_mask_table[];
+extern const uint32_t             xpu_addr_mask_count;
 
 void xpu_configure_tz(void);
 

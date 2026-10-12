@@ -218,6 +218,16 @@
 
 #define VMIDMT_ACR_BPRCNSH_BMSK 0x40000000
 #define VMIDMT_ACR_BPRCNSH_SHFT 0x1e
+/*
+ * The BPRCISH and BPRCOSH masks and shifts disagree: the masks name bits 25 and
+ * 24 while the shifts name bits 29 and 28. The shifts are the correct pair, as
+ * they fall inside RMSK 0x70000013; the masks are wrong in the generated
+ * downstream header and are reproduced here unchanged for fidelity.
+ *
+ * Consequence: use VMIDMT_SHFT() for these two fields only, as the HAL does.
+ * A VMIDMT_OUTF() on either would mask bit 25/24 while shifting to bit 29/28
+ * and so write nothing at all.
+ */
 #define VMIDMT_ACR_BPRCISH_BMSK 0x02000000
 #define VMIDMT_ACR_BPRCISH_SHFT 0x1d
 #define VMIDMT_ACR_BPRCOSH_BMSK 0x01000000
@@ -312,6 +322,12 @@
 #define VMIDMT_IDR5_IN(b) in_dword_masked(VMIDMT_IDR5_ADDR(b), VMIDMT_IDR5_RMSK)
 #define VMIDMT_IDR5_INM(b, m) in_dword_masked(VMIDMT_IDR5_ADDR(b), (m))
 
+/*
+ * NUMMSDRB occupies bits 16-23, so the shift is 0x10. The generated downstream
+ * header states 0x1c, which contradicts its own mask; the value below is the
+ * consistent one. Nothing reads this field today, so the correction is inert,
+ * but do not "restore" 0x1c from downstream.
+ */
 #define VMIDMT_IDR5_NUMMSDRB_BMSK 0x00ff0000
 #define VMIDMT_IDR5_NUMMSDRB_SHFT 0x10
 #define VMIDMT_IDR5_MSAE_BMSK 0x00000200

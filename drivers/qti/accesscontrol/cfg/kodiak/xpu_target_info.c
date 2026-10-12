@@ -10,34 +10,35 @@
 
 struct xpu_err_pos_to_hal_map xpu_err_pos_to_hal_map
 	[ACC_XPU_ERR_INT_REG_NUM][ACC_XPU_ERR_NUM_PER_REG] = {
-		{
-			{ BIT(1), XPU_TYPE_AOSS_CNOC_MPU },
-			{ BIT(9), XPU_TYPE_SEC_CTRL_APU },
-			{ BIT(10), XPU_TYPE_WPSS_MPU },
-			{ BIT(16), XPU_TYPE_AOSS_MPU },
-			{ BIT(18), XPU_TYPE_CNOC_GEMNOC_MPU },
-			{ BIT(25), XPU_TYPE_LLCC_BROADCAST_MPU },
-			{ BIT(26), XPU_TYPE_BIMC_MPU0 },
-			{ BIT(27), XPU_TYPE_BIMC_MPU1 },
-			{ BIT(30), XPU_TYPE_BOOT_ROM },
-			{ BIT(31), XPU_TYPE_DC_NOC_NON_BROADCAST_MPU },
-			{ 0, 0 },
-		},
-		{
-			{ BIT(0), XPU_TYPE_IMEM_MPU },
-			{ BIT(1), XPU_TYPE_ANOC1_MPU },
-			{ BIT(2), XPU_TYPE_ANOC2_MPU },
-			{ BIT(3), XPU_TYPE_MSS_MPU },
-			{ BIT(6), XPU_TYPE_CNOC2_SS_MPU },
-			{ BIT(10), XPU_TYPE_MSS_Q6_MPU },
-			{ BIT(11), XPU_TYPE_IPA_0_GSI_TOP },
-			{ BIT(13), XPU_TYPE_DC_NOC_SHRM_MPU },
-			{ BIT(14), XPU_TYPE_PKA_APU },
-			{ BIT(16), XPU_TYPE_IPC_MPU },
-			{ BIT(30), XPU_TYPE_MSS_NAV_MPU },
-			{ 0, 0 },
-		},
-	};
+	{
+		{ BIT(1), XPU_TYPE_AOSS_CNOC_MPU },
+		{ BIT(9), XPU_TYPE_SEC_CTRL_APU },
+		{ BIT(10), XPU_TYPE_WPSS_MPU },
+		{ BIT(14), XPU_TYPE_RAMBLUR_PIMEM_MPU },
+		{ BIT(16), XPU_TYPE_AOSS_MPU },
+		{ BIT(18), XPU_TYPE_CNOC_GEMNOC_MPU },
+		{ BIT(25), XPU_TYPE_LLCC_BROADCAST_MPU },
+		{ BIT(26), XPU_TYPE_BIMC_MPU0 },
+		{ BIT(27), XPU_TYPE_BIMC_MPU1 },
+		{ BIT(30), XPU_TYPE_BOOT_ROM },
+		{ BIT(31), XPU_TYPE_DC_NOC_NON_BROADCAST_MPU },
+		{ 0, 0 },
+	},
+	{
+		{ BIT(0), XPU_TYPE_IMEM_MPU },
+		{ BIT(1), XPU_TYPE_ANOC1_MPU },
+		{ BIT(2), XPU_TYPE_ANOC2_MPU },
+		{ BIT(3), XPU_TYPE_MSS_MPU },
+		{ BIT(6), XPU_TYPE_CNOC2_SS_MPU },
+		{ BIT(10), XPU_TYPE_MSS_Q6_MPU },
+		{ BIT(11), XPU_TYPE_IPA_0_GSI_TOP },
+		{ BIT(13), XPU_TYPE_DC_NOC_SHRM_MPU },
+		{ BIT(14), XPU_TYPE_PKA_APU },
+		{ BIT(16), XPU_TYPE_IPC_MPU },
+		{ BIT(30), XPU_TYPE_MSS_NAV_MPU },
+		{ 0, 0 },
+	},
+};
 
 const struct xpu_intr_reg_dtls
 	xpu_non_sec_intr_status_reg[ACC_XPU_ERR_INT_REG_NUM] = {
@@ -111,6 +112,11 @@ struct xpu_base_addr_info g_xpu_base_addr_array[] = {
 		XPU_TYPE_IMEM_MPU,
 		XPU_ADDR_TYPE(OCIMEM_MPU_XPU3_GCR0),
 		"IMEM_MPU",
+	},
+	{
+		XPU_TYPE_RAMBLUR_PIMEM_MPU,
+		XPU_ADDR_TYPE(RAMBLUR_PIMEM_MPU_XPU3_GCR0),
+		"RAMBLUR_PIMEM_MPU",
 	},
 	{
 		XPU_TYPE_BOOT_ROM,
@@ -195,6 +201,9 @@ struct xpu_base_addr_info g_xpu_base_addr_array[] = {
 };
 
 uint32_t g_xpu_base_addr_array_count = ARRAY_SIZE(g_xpu_base_addr_array);
+
+const struct xpu_addr_mask xpu_addr_mask_table[] = {};
+const uint32_t xpu_addr_mask_count = 0U;
 
 void xpu_configure_tz(void)
 {
