@@ -175,15 +175,7 @@
 /* PS HOLD register */
 /*----------------------------------------------------------------------------*/
 #define QTI_PS_HOLD_REG				0x0440B000
-/*----------------------------------------------------------------------------*/
-/* RPM message RAM address space (Bruin power management) */
-/* Aliased as QTI_AOP_CMD_DB_BASE/SIZE for use in common/src/qti_common.c   */
-/*----------------------------------------------------------------------------*/
-#define RPM_BASE				0x04600000
-#define RPM_SS_MSG_RAM_BASE			0x045F0000
-#define RPM_SS_MSG_RAM_SIZE			0x00010000
-#define QTI_AOP_CMD_DB_BASE			RPM_SS_MSG_RAM_BASE
-#define QTI_AOP_CMD_DB_SIZE			RPM_SS_MSG_RAM_SIZE
+
 /*----------------------------------------------------------------------------*/
 /* SOC hw version register */
 /*----------------------------------------------------------------------------*/

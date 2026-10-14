@@ -8,10 +8,6 @@
 
 #include <shikra_def.h>
 
-#define MAX_IO_HANDLES			U(2)
-#define MAX_IO_DEVICES			U(2)
-#define MAX_IO_BLOCK_DEVICES		U(1)
-
 #define BL31_BASE			0xA1300000
 #define BL31_SIZE			0x000C8000	/* 800KB */
 #define BL31_LIMIT			(BL31_BASE + BL31_SIZE)

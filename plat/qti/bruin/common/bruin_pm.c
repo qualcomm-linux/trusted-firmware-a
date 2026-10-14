@@ -12,7 +12,6 @@
 #include <lib/psci/psci.h>
 #include <plat/common/platform.h>
 
-#include <cpucp.h>
 #include <platform_def.h>
 #include <qti_plat.h>
 
@@ -103,12 +102,6 @@ void plat_qti_pwr_domain_on_finish(int core_pos, const uint8_t *states)
 	(void)states;
 
 	plat_qti_gic_pcpu_init();
-	/* 
-	 * TODO:
-	 * Stubbed function cpucp_clkdom_init 
-	 * as part of initial enablement.
-	 * cpucp_clkdom_init(); 
-	 */
 }
 
 /*

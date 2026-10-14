@@ -6,8 +6,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <lib/utils_def.h>
+
 #include <drivers/qti/sec_core/sec_core.h>
+#include <lib/utils_def.h>
 #include <sec_core_defs.h>
 
 #define APSS_ALIAS_APC_SECURE(n)					\

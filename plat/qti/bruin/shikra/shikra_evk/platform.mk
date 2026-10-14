@@ -9,11 +9,6 @@
 PLAT_PATH				:=	plat/qti
 CHIPSET					:=	shikra
 
-# U-Boot SPL is the first-stage loader; TF-A BL2 is not used.
-# SPD=opteed: OP-TEE OS is the secure-world image (BL32).
-# Entry points for BL32 and BL33 are passed by U-Boot SPL at runtime.
-SPD					:=	opteed
-
 # Turn On Separate code & data.
 SEPARATE_CODE_AND_RODATA		:=	1
 USE_COHERENT_MEM			:=	0
@@ -69,8 +64,7 @@ PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 				-I${PLAT_PATH}/bruin/${CHIPSET}/inc			\
 				-I${PLAT_PATH}/bruin/${CHIPSET}/${PLAT}/inc		\
 				-I${PLAT_PATH}/common/inc				\
-				-I${PLAT_PATH}/common/inc/$(ARCH)			\
-				-I${PLAT_PATH}/hoya/qtiseclib/inc
+				-I${PLAT_PATH}/common/inc/$(ARCH)
 
 include lib/xlat_tables_v2/xlat_tables.mk
 PLAT_BL_COMMON_SOURCES	+=	common/desc_image_load.c				\
@@ -93,34 +87,26 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				$(PLAT_PATH)/common/src/pm_ps_hold.c			\
 				$(PLAT_PATH)/common/src/qti_bl31_setup.c		\
 				$(PLAT_PATH)/common/src/qti_gic_v3.c			\
+				$(PLAT_PATH)/common/src/qti_gicv3_platform.c		\
 				$(PLAT_PATH)/common/src/qti_interrupt_svc.c		\
 				$(PLAT_PATH)/common/src/qti_syscall.c			\
-				$(PLAT_PATH)/bruin/common/bruin_topology.c		\
 				$(PLAT_PATH)/common/src/qti_pm.c			\
 				$(PLAT_PATH)/common/src/spmi_arb.c			\
-				$(PLAT_PATH)/hoya/common/$(ARCH)/hoya_helpers.S		\
-				$(PLAT_PATH)/hoya/common/hoya_bl31_setup.c		\
-				$(PLAT_PATH)/hoya/common/hoya_gicv3.c			\
-				$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_cb_interface.c \
-				$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_interface_stub.c \
+				$(PLAT_PATH)/bruin/common/$(ARCH)/bruin_helpers.S	\
+				$(PLAT_PATH)/bruin/common/bruin_bl31_setup.c		\
+				$(PLAT_PATH)/bruin/common/bruin_topology.c		\
 				$(PLAT_PATH)/bruin/common/bruin_pm.c
-
-# chipinfo + smem: QTI_SMEM_BASE/SIZE are defined in shikra_def.h — no target-specific
-# config needed; enable as real drivers.
-# accesscontrol, smmu, cpucp: not yet configured for shikra — framework stubs.
-# Drivers team to enable once chip-specific config is ready.
 
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
 
 PLAT_INCLUDES   +=	-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 			-Iinclude/drivers/qti/accesscontrol			\
-			-Iinclude/drivers/qti/cpucp				\
-			-Iinclude/drivers/qti/qtimer/${CHIPSET}			\
-			-Iinclude/drivers/qti/watchdog/${CHIPSET}
+			-Iinclude/drivers/qti/qtimer/bruin			\
+			-Iinclude/drivers/qti/watchdog/bruin
 
 BL31_SOURCES	+=	drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
 			drivers/qti/accesscontrol/access_control_stub.c		\
-			drivers/qti/qtimer/qtimer.c			\
+			drivers/qti/qtimer/qtimer.c				\
 			drivers/qti/watchdog/watchdog.c
