@@ -116,8 +116,8 @@ include drivers/qti/chipinfo/chipinfo.mk
 PLAT_INCLUDES   +=	-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 			-Iinclude/drivers/qti/accesscontrol			\
 			-Iinclude/drivers/qti/cpucp				\
-			-Iinclude/drivers/qti/qtimer/${CHIPSET}			\
-			-Iinclude/drivers/qti/watchdog/${CHIPSET}
+			-Iinclude/drivers/qti/qtimer/bruin			\
+			-Iinclude/drivers/qti/watchdog/bruin
 
 BL31_SOURCES	+=	drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
