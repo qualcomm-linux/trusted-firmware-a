@@ -62,6 +62,11 @@ int tme_sha_digest(tme_hash_alg_id_t        in_hash_alg,
 			break;
 		}
 
+		if (response.output_len > sizeof(response.output)) {
+			ret = -ENOMEM;
+			break;
+		}
+
 		*out_digest_len = memscpy(out_digest, *out_digest_len,
 					  response.output, response.output_len);
 

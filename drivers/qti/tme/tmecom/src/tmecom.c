@@ -593,7 +593,12 @@ int tmecom_client_send_message_sync(void     *client_ptr,
 			sizeof(tmecom_msg_hdr_t);
 		size_t         req_payload_size = req_size - sizeof(tmecom_msg_hdr_t);
 
-		rsp_payload_capacity = sizeof(rsp->enc_rsp_buf);
+		if (*resp_size < sizeof(tmecom_msg_hdr_t)) {
+			break;
+		}
+
+		rsp_payload_capacity = MIN(*resp_size - sizeof(tmecom_msg_hdr_t),
+					   sizeof(rsp->enc_rsp_buf));
 
 		rc = tmecom_send_recv(req_payload, req_payload_size,
 						rsp->enc_rsp_buf, &rsp_payload_capacity);
