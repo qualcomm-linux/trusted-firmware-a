@@ -114,6 +114,7 @@ QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 				-I${PLAT_QTI_ROOT}/cpu/inc				\
 				-I${QTI_PLAT_PATH}/bl31qtilib/inc			\
 				-I${PLAT_QTI_ROOT}/common/inc				\
+				-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 
 QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 				$(PLAT_QTI_ROOT)/common/src/$(ARCH)/qti_uart_console.S	\
@@ -136,7 +137,9 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 				$(PLAT_QTI_ROOT)/common/src/spmi_arb.c			\
 				$(QTI_PLAT_PATH)/bl31qtilib/src/bl31qtilib_cb_interface.c	\
 				$(QTI_PLAT_PATH)/common/src/qti_plat_helpers.c \
-				drivers/qti/crypto/rng.c
+				drivers/qti/crypto/rng.c \
+				drivers/qti/sec_core/sec_core.c 			\
+				drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c 		\
 
 
 # Ensure Widevine is not being used
