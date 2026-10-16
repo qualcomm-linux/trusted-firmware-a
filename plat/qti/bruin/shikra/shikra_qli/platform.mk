@@ -80,6 +80,7 @@ PLAT_BL_COMMON_SOURCES	+=	common/desc_image_load.c				\
 				lib/bl_aux_params/bl_aux_params.c			\
 				plat/common/aarch64/crash_console_helpers.S		\
 				$(PLAT_PATH)/common/src/$(ARCH)/qti_uart_console.S	\
+				$(PLAT_PATH)/bruin/common/aarch64/bruin11_cluster_init.S	\
 				$(PLAT_PATH)/common/src/qti_stack_protector.c		\
 				$(PLAT_PATH)/common/src/qti_common.c			\
 				${XLAT_TABLES_LIB_SRCS}
