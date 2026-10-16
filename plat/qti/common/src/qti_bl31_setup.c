@@ -43,6 +43,10 @@ __attribute__((__weak__)) void plat_cluster_init(void)
 {
 }
 
+__attribute__((__weak__)) void plat_qti_bl31_setup_pre(void)
+{
+}
+
 #ifdef TFA_BL31_RING_LOG_BASE
 #include <qti_ringbuf_console.h>
 
@@ -133,6 +137,8 @@ static void clocked_boot_init(void)
  ******************************************************************************/
 void bl31_platform_setup(void)
 {
+	plat_qti_bl31_setup_pre();
+	
 	qti_msm_xpu_bypass();
 	generic_delay_timer_init();
 

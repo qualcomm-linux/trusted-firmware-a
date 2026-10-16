@@ -97,10 +97,11 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				$(PLAT_PATH)/common/src/qti_interrupt_svc.c		\
 				$(PLAT_PATH)/common/src/qti_syscall.c			\
 				$(PLAT_PATH)/bruin/common/bruin_topology.c		\
+				$(PLAT_PATH)/bruin/common/bruin_common.c		\
 				$(PLAT_PATH)/common/src/qti_pm.c			\
 				$(PLAT_PATH)/common/src/spmi_arb.c			\
 				$(PLAT_PATH)/hoya/common/$(ARCH)/hoya_helpers.S		\
-				$(PLAT_PATH)/hoya/common/hoya_bl31_setup.c		\
+				$(PLAT_PATH)/bruin/common/bruin_bl31_setup.c		\
 				$(PLAT_PATH)/hoya/common/hoya_gicv3.c			\
 				$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_cb_interface.c \
 				$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_interface_stub.c \
@@ -124,4 +125,5 @@ BL31_SOURCES	+=	drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
 			drivers/qti/accesscontrol/access_control_stub.c		\
 			drivers/qti/qtimer/qtimer.c			\
-			drivers/qti/watchdog/watchdog.c
+			drivers/qti/watchdog/watchdog.c			\
+			$(PLAT_PATH)/bruin/${CHIPSET}/${PLAT}/src/plat_cpuss_config.c

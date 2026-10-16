@@ -6,6 +6,8 @@
 
 #include <stdint.h>
 
+#include <platform_def.h>
+
 /*
  * APSS_SHARED_SPI_CONFIG_n register format (APSS_SPI_CONFIG_BASE + 4*n):
  *   bit=1 → level-triggered (hardware default for all SPIs)

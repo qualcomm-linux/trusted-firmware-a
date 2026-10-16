@@ -6,6 +6,8 @@
 
 #include <lib/mmio.h>
 
+#include <platform_def.h>
+
 extern const uint32_t bruin_spi_cfg[APSS_SPI_NUM_WORDS];
 
 /*
