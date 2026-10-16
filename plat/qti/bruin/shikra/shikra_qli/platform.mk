@@ -126,4 +126,5 @@ BL31_SOURCES	+=	drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/accesscontrol/access_control_stub.c		\
 			drivers/qti/qtimer/qtimer.c			\
 			drivers/qti/watchdog/watchdog.c			\
-			$(PLAT_PATH)/bruin/${CHIPSET}/${PLAT}/src/plat_cpuss_config.c
+			$(PLAT_PATH)/bruin/${CHIPSET}/${PLAT}/src/plat_cpuss_config.c		\
+			$(PLAT_PATH)/bruin/common/bruin11_cpuss_init.c

@@ -14,6 +14,7 @@
 uint32_t g_qti_bl31_cold_booted;
 
 extern void plat_cpuss_early_config(void);
+extern void plat_cpuss_late_config(void);
 
 void plat_qti_bl31_setup_pre(void)
 {
@@ -22,6 +23,7 @@ void plat_qti_bl31_setup_pre(void)
 
 void plat_qti_bl31_setup_post(void)
 {
+	plat_cpuss_late_config();
 	qtiseclib_bl31_platform_setup();
 
 	/* set boot state to cold boot complete. */
