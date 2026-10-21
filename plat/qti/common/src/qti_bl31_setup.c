@@ -21,6 +21,7 @@
 #include <drivers/qti/icb/icb_error.h>
 #include <drivers/qti/icb/icbcfg.h>
 #include <drivers/qti/icb/icbuarb.h>
+#include <drivers/qti/ipcc/ipcc.h>
 #include <drivers/qti/pdc/pdc.h>
 #include <drivers/qti/pwr_utils/pwr_utils.h>
 #include <drivers/qti/qtimer/qtimer.h>
@@ -159,6 +160,8 @@ void bl31_platform_setup(void)
 
 	qti_clock_init(clocked_boot_init);
 	qti_rpmh_deinit();
+
+	qti_ipcc_init();
 
 	plat_qti_bl31_setup_post();
 }

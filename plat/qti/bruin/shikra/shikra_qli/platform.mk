@@ -110,6 +110,9 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 # accesscontrol, smmu, cpucp: not yet configured for shikra — framework stubs.
 # Drivers team to enable once chip-specific config is ready.
 
+# IPCC
+include drivers/qti/ipcc/ipcc.mk
+
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
 
