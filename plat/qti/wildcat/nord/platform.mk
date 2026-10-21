@@ -165,6 +165,8 @@ include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
 include drivers/qti/cpucp/cpucp.mk
 include drivers/qti/qgic/qgic.mk
+include drivers/qti/hwmutex/hwmutex.mk
+
 PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
 				plat/common/aarch64/crash_console_helpers.S    \
 				common/desc_image_load.c			\
