@@ -150,12 +150,6 @@
 #define QTI_SMEM_BASE ULL(0x89B00000)
 #define QTI_SMEM_SIZE ULL(0x00200000)
 
-/*----------------------------------------------------------------------------*/
-/* LC PON register offsets */
-/*----------------------------------------------------------------------------*/
-#define PON_PS_HOLD_RESET_CTL 0x852
-#define PON_PS_HOLD_RESET_CTL2 0x853
-
 /*
  * The Qualcomm QGIC2 implementation seems to have PIDR0-4 and PIDR4-7
  * erroneously swapped for some reason. PIDR2 is actually at 0xFD8.
