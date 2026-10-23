@@ -3,8 +3,10 @@
 #
 # Make for Hamoa QTI platform.
 
+PLAT_QTI_ROOT	:= plat/qti
 QTI_PLAT_PATH	:= plat/qti/wildcat
 QTI_COMMON_PATH	:= plat/qti/common
+QTI_CPU_PATH	:= plat/qti/cpu
 CHIPSET		:= hamoa
 PLATFORM	:= hamoa
 
@@ -111,6 +113,7 @@ QTI_EXTERNAL_INCLUDES :=					\
 	-I${QTI_PLAT_PATH}/bl31qtilib/inc			\
 	-I${QTI_COMMON_PATH}/inc				\
 	-I${QTI_COMMON_PATH}/inc/$(ARCH)			\
+	-I${QTI_CPU_PATH}/inc					\
 
 QTI_BL31_SOURCES :=						\
 	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
@@ -135,6 +138,7 @@ QTI_BL31_SOURCES :=						\
 	$(QTI_COMMON_PATH)/src/spmi_arb.c			\
 	$(QTI_PLAT_PATH)/bl31qtilib/src/bl31qtilib_cb_interface.c \
 	$(QTI_PLAT_PATH)/common/src/qti_plat_helpers.c
+
 
 # Ensure Widevine is not being used
 ifeq ($(CROS_WIDEVINE_SMC),0)
@@ -186,13 +190,22 @@ $(eval $(call add_define, QTI_NO_SMCC_ARCH_SOC_ID))
 
 CPU_SOURCES := $(QTI_PLAT_PATH)/common/src/aarch64/qcom_oryon_v1.S
 
+ifeq ($(QTI_NCC_CPU),1)
+$(eval $(call add_define,QTI_NCC_CPU))
+BL31_CPU_SETUP_SRC	:=	$(QTI_CPU_PATH)/ncc/src/bl31_cpu_setup.c
+else
+BL31_CPU_SETUP_SRC	:=	$(QTI_CPU_PATH)/arm/src/bl31_cpu_setup.c
+endif
+
 BL31_SOURCES +=			\
 	${QTI_BL31_SOURCES}	\
 	${GIC_SOURCES}		\
 	${TIMER_SOURCES}	\
-	${CPU_SOURCES}
+	${CPU_SOURCES}		\
+	${BL31_CPU_SETUP_SRC}	\
 
 BL31_SOURCES += ${QGIC_DRV_PATH}/qgic_intr_el3.c
+BL31_SOURCES +=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c
 
 PLAT_INCLUDES += -Iinclude/drivers/qti/qtimer/${CHIPSET}
 

@@ -22,5 +22,7 @@ extern const struct sec_core_cfg_s qti_sec_core_cfg[];
 extern const size_t qti_sec_core_cfg_count;
 extern const uintptr_t qti_sec_core_rvbaraddr_lo;
 extern const uintptr_t qti_sec_core_rvbaraddr_hi;
+extern const unsigned int qti_sec_core_rvbaraddr_lo_shift;
+extern const unsigned int qti_sec_core_rvbaraddr_hi_shift;
 
 #endif /* SEC_CORE_H */

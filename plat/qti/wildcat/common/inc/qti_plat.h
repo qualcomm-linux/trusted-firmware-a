@@ -21,6 +21,8 @@
 #define QTI_INVALID_CPU_ID      ((uint32_t)-1)
 #define QTI_INVALID_MPID_ID     ((uint32_t)-1)
 
+#define QTI_LOCAL_PSTATE_WIDTH		4
+
 /*
  * Utility functions common to QTI platforms
  */
@@ -86,6 +88,13 @@ void gic_set_spi_routing(unsigned int id, unsigned int irm, u_register_t mpidr);
 void qti_pmic_prepare_reset(void);
 void qti_pmic_prepare_shutdown(void);
 
+int plat_qti_pwr_domain_on(u_register_t mpidr, int core_pos);
+void plat_qti_pwr_domain_on_finish(int core_pos, const uint8_t *states);
+void plat_qti_pwr_domain_off(const uint8_t *states);
+void plat_qti_pwr_domain_suspend(const uint8_t *states);
+void plat_qti_pwr_domain_suspend_finish(const uint8_t *states);
+int  plat_qti_pwr_psci_init(uintptr_t warmboot_entry);
+
 /* Optional functions required in ARM standard platforms */
 unsigned int plat_qcom_core_pos_by_mpidr(u_register_t mpidr);
 unsigned int find_cluster_id(void);
@@ -139,6 +148,11 @@ void configure_irq_type(uintptr_t clr_edge_base, uintptr_t set_level_base,
 			const uint32_t *cfg_arr, unsigned int num_words);
 void configure_irq_array(uintptr_t base, const uint32_t *cfg_arr,
 			 unsigned int num_words);
+
+const unsigned int *plat_qti_pm_idle_states(void);
+
+int qti_ncc_cpu_reset_sync(uint64_t mpidr);
+
 
 typedef struct chip_id_info {
 	uint16_t jtag_id;
