@@ -38,6 +38,15 @@
 #include <qti_interrupt_svc.h>
 #include <qti_plat.h>
 #include <qti_uart_console.h>
+
+__attribute__((__weak__)) void plat_cluster_init(void)
+{
+}
+
+__attribute__((__weak__)) void plat_qti_bl31_setup_pre(void)
+{
+}
+
 #ifdef TFA_BL31_RING_LOG_BASE
 #include <qti_ringbuf_console.h>
 
@@ -102,6 +111,7 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
  ******************************************************************************/
 void bl31_plat_arch_setup(void)
 {
+	plat_cluster_init();
 	qti_setup_page_tables(
 			      BL31_START,
 			      BL31_END-BL31_START,
@@ -127,6 +137,8 @@ static void clocked_boot_init(void)
  ******************************************************************************/
 void bl31_platform_setup(void)
 {
+	plat_qti_bl31_setup_pre();
+	
 	qti_msm_xpu_bypass();
 	generic_delay_timer_init();
 
