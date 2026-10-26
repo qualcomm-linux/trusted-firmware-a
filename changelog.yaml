@@ -584,6 +584,9 @@ subsections:
           - title: Arduino VENTUNO Q
             scope: monza
 
+          - title: IPQ52xx
+            scope: ipq52xx
+
       - title: Raspberry Pi
         scope: rpi
 

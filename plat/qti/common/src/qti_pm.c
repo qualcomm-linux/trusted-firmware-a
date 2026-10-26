@@ -16,6 +16,7 @@
 #include <platform.h>
 #include <platform_def.h>
 #include <qti_cpu.h>
+#include <drivers/arm/gicv2.h>
 #include <qti_plat.h>
 
 #define QTI_LOCAL_PSTATE_MASK		((1 << QTI_LOCAL_PSTATE_WIDTH) - 1)
@@ -28,6 +29,13 @@
 
 /* QTI_CORE_PWRDN_EN_MASK happens to be same across all CPUs */
 #define QTI_CORE_PWRDN_EN_MASK		1
+
+#pragma weak qti_system_off
+#pragma weak qti_system_reset
+
+/* Forward declarations for weak symbols */
+__dead2 void qti_system_off(void);
+__dead2 void qti_system_reset(void);
 
 /* cpu power control happens to be same across all CPUs */
 DEFINE_RENAME_SYSREG_RW_FUNCS(cpu_pwrctrl_val, S3_0_C15_C2_7)
@@ -211,6 +219,12 @@ __dead2 void qti_system_reset(void)
 	assert_ps_hold();
 }
 
+void qti_domain_power_down_wfi(const psci_power_state_t *target_state)
+{
+	/* For now just do WFI - add any target specific handling if needed */
+	wfi();
+}
+
 void qti_get_sys_suspend_power_state(psci_power_state_t *req_state)
 {
 	int i;
@@ -261,6 +275,7 @@ const plat_psci_ops_t plat_qti_psci_pm_ops = {
 	.pwr_domain_off = qti_node_power_off,
 	.pwr_domain_suspend = qti_node_suspend,
 	.pwr_domain_suspend_finish = qti_node_suspend_finish,
+	.pwr_domain_pwr_down = qti_domain_power_down_wfi,
 	.system_off = qti_system_off,
 	.system_reset = qti_system_reset,
 	.get_node_hw_state = NULL,

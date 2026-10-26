@@ -11,6 +11,8 @@
 #include <lib/cassert.h>
 #include <lib/utils_def.h>
 
+#include <platform_def.h>
+
 #define CONSOLE_RINGBUF_T_VERSION	(U(0) * U(4))
 #define CONSOLE_RINGBUF_T_MAGIC		(U(1) * U(4))
 #define CONSOLE_RINGBUF_T_BUF_SIZE	(U(3) * U(4))
@@ -20,7 +22,10 @@
 
 #ifndef __ASSEMBLER__
 
-#define TFA_BUFFER_REGION_SIZE	0x1000  /* 4k bytes */
+/* Platforms may override the region size in platform_def.h */
+#ifndef TFA_BUFFER_REGION_SIZE
+#define TFA_BUFFER_REGION_SIZE	U(0x1000)  /* 4k bytes */
+#endif
 #define PLAT_QTI_RING_BUF_SIZE	\
 	(TFA_BUFFER_REGION_SIZE - CONSOLE_RINGBUF_T_LOG_BUF)
 #define DIAG_VERSION		1          /* Structure version */

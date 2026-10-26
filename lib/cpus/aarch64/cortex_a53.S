@@ -15,6 +15,10 @@
 #include <plat_macros.S>
 #include <lib/cpus/errata.h>
 
+.globl cortex_a53_reset_func
+.globl cortex_a53_core_pwr_dwn
+.globl cortex_a53_cluster_pwr_dwn
+
 cpu_reset_prologue cortex_a53
 
 	/* ---------------------------------------------

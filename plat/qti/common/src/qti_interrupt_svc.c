@@ -12,7 +12,7 @@
 #include <common/debug.h>
 #include <lib/spinlock.h>
 #include <lib/utils_def.h>
-
+#include <drivers/arm/gicv2.h>
 #include <platform.h>
 #include <qti_interrupt_svc.h>
 #include <qti_plat.h>

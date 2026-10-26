@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 #include <common/bl_common.h>
-#include <drivers/arm/gicv3.h>
+#include <common/interrupt_props.h>
 #include <lib/cassert.h>
 #include <lib/el3_runtime/cpu_data.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
