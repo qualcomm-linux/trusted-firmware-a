@@ -94,15 +94,19 @@ int plat_qti_pwr_domain_on(u_register_t mpidr, int core_pos)
 	return PSCI_E_SUCCESS;
 }
 
+extern void plat_cluster_init_wrapper(void);
+
 /*
  * plat_qti_pwr_domain_on_finish - per-core setup once it has come online.
+ * plat_cluster_init_wrapper() is called here so that the first CPU in each
+ * cluster to come online initializes the DSU cluster registers.
  */
 void plat_qti_pwr_domain_on_finish(int core_pos, const uint8_t *states)
 {
 	(void)core_pos;
 	(void)states;
 
-	plat_qti_gic_pcpu_init();
+	plat_cluster_init_wrapper();
 	/* 
 	 * TODO:
 	 * Stubbed function cpucp_clkdom_init 
