@@ -7,7 +7,7 @@
 #define QTI_ICB_ERROR_H
 
 /* Initialise the QTI NoC error handler. Call once from BL31 platform setup. */
-#ifdef QTI_ICB_ENABLED
+#ifdef QTI_ICB_NOCERR_ENABLED
 void qti_icb_error_init(void);
 #else
 static inline void qti_icb_error_init(void) {}

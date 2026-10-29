@@ -227,10 +227,10 @@
 #define PLAT_INT_ID_XPU_SEC			0x194
 #define PLAT_INT_ID_XPU_NON_SEC			0x195
 
-#define PLAT_INT_ID_SYSTEM_NOC_ERROR		0xF9
-#define PLAT_INT_ID_CONFIG_NOC_ERROR		0xFA
-#define PLAT_INT_ID_MEM_NOC_ERROR		0xFC
-#define PLAT_INT_ID_DC_NOC_ERROR		0x11D
+#define PLAT_INT_ID_SYSTEM_NOC_ERROR		0x119
+#define PLAT_INT_ID_CONFIG_NOC_ERROR		0x11A
+#define PLAT_INT_ID_MEM_NOC_ERROR		0x13D
+#define PLAT_INT_ID_DC_NOC_ERROR		0x11C
 
 /*----------------------------------------------------------------------------*/
 #endif /* SHIKRA_DEF_H */
