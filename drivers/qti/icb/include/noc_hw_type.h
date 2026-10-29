@@ -69,7 +69,7 @@ static struct noc_sideband_hw qnoc_sb_4_0_2l = {
 };
 
 /* NOC Point-Of-Coherency HW Register Offsets - with errloguser */
-static struct noc_poc_hw qnoc_poc_1_0 = {
+static struct noc_poc_hw __attribute__((unused)) qnoc_poc_1_0 = {
 	.swid_low        = 0x00,
 	.swid_high       = 0x04,
 	.errset_low      = 0x08,

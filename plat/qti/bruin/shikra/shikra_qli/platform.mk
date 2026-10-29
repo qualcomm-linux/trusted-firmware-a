@@ -113,6 +113,13 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
 
+# ICB micro-arbiter (QTI_ICB_ENABLED) is not enabled for shikra yet: the
+# BCM-vote topology back-end (icbuarb_target.c / u_data.c) has not been
+# authored for this chipset.
+QTI_ICB_NOCERR_ENABLED	:=	1
+QTI_ICB_CONFIG_ENABLED	:=	1
+include drivers/qti/icb/icb.mk
+
 PLAT_INCLUDES   +=	-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 			-Iinclude/drivers/qti/accesscontrol			\
 			-Iinclude/drivers/qti/cpucp				\
