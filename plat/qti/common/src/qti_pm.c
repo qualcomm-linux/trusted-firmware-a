@@ -10,6 +10,7 @@
 #include <bl31/bl31.h>
 #include <common/debug.h>
 #include <drivers/delay_timer.h>
+#include <drivers/qti/qtipmlib/qtipmlib.h>
 #include <drivers/qti/sec_core/sec_core.h>
 #include <lib/mmio.h>
 #include <lib/psci/psci.h>
@@ -29,9 +30,62 @@
 /* QTI_CORE_PWRDN_EN_MASK happens to be same across all CPUs */
 #define QTI_CORE_PWRDN_EN_MASK		1
 
+#define QTI_PCU_MODE_RET		1
+#define QTI_PCU_CPU_MODE_OFF		3
+#define QTI_PCU_MODE_DEEPOFF		4
+
 /* cpu power control happens to be same across all CPUs */
 DEFINE_RENAME_SYSREG_RW_FUNCS(cpu_pwrctrl_val, S3_0_C15_C2_7)
 
+static int qti_pcu_cpu_mode(plat_local_state_t state)
+{
+	if (state == QTI_LOCAL_STATE_RET) {
+		return QTI_PCU_MODE_RET;
+	}
+	if (state == QTI_LOCAL_STATE_OFF) {
+		return QTI_PCU_CPU_MODE_OFF;
+	}
+	if (state == QTI_LOCAL_STATE_DEEPOFF) {
+		return QTI_PCU_MODE_DEEPOFF;
+	}
+
+	return -1;
+}
+
+static int qti_pcu_l3_mode(plat_local_state_t state)
+{
+	if (state == QTI_LOCAL_STATE_RET) {
+		return QTI_PCU_MODE_RET;
+	}
+	if ((state == QTI_LOCAL_STATE_OFF) ||
+	    (state == QTI_LOCAL_STATE_DEEPOFF)) {
+		return QTI_PCU_MODE_DEEPOFF;
+	}
+
+	return -1;
+}
+
+static void qti_pcu_config_lpm(const psci_power_state_t *target_state)
+{
+	unsigned int core_pos = plat_my_core_pos();
+	int mode_id;
+
+	if (core_pos < QTIPMLIB_LPM_L3) {
+		mode_id = qti_pcu_cpu_mode(
+			target_state->pwr_domain_state[QTI_PWR_LVL0]);
+		if (mode_id >= 0) {
+			(void)qtipmlib_config_lpm(
+				(enum qtipmlib_lpm_node_id)core_pos,
+				mode_id);
+		}
+	}
+
+	mode_id = qti_pcu_l3_mode(
+		target_state->pwr_domain_state[QTI_PWR_LVL1]);
+	if (mode_id >= 0) {
+		(void)qtipmlib_config_lpm(QTIPMLIB_LPM_L3, mode_id);
+	}
+}
 
 /*******************************************************************************
  * QTI standard platform handler called to check the validity of the power
@@ -162,6 +216,7 @@ static void qti_cpu_standby(plat_local_state_t cpu_state)
 
 static void qti_node_power_off(const psci_power_state_t *target_state)
 {
+	qti_pcu_config_lpm(target_state);
 	plat_qti_pwr_domain_off((const uint8_t *)target_state->pwr_domain_state);
 	if (is_cpu_off(target_state)) {
 		plat_qti_gic_cpuif_disable();
@@ -171,6 +226,7 @@ static void qti_node_power_off(const psci_power_state_t *target_state)
 
 static void qti_node_suspend(const psci_power_state_t *target_state)
 {
+	qti_pcu_config_lpm(target_state);
 	plat_qti_pwr_domain_suspend((const uint8_t *)target_state->pwr_domain_state);
 	if (is_cpu_off(target_state)) {
 		plat_qti_gic_cpuif_disable();

@@ -17,17 +17,20 @@
 #include <drivers/qti/chipinfo/chipinfo.h>
 #include <drivers/qti/clock/clock.h>
 #include <drivers/qti/cmd_db/cmd_db.h>
+#include <drivers/qti/cprh/cprh.h>
 #include <drivers/qti/coreinit/coreinit.h>
 #include <drivers/qti/icb/icb_error.h>
 #include <drivers/qti/icb/icbcfg.h>
 #include <drivers/qti/icb/icbuarb.h>
 #include <drivers/qti/pdc/pdc.h>
 #include <drivers/qti/pwr_utils/pwr_utils.h>
+#include <drivers/qti/qtipmlib/qtipmlib.h>
 #include <drivers/qti/qtimer/qtimer.h>
 #include <drivers/qti/rpmh/rpmh.h>
 #include <drivers/qti/sec_core/sec_core.h>
 #include <drivers/qti/smem/smem.h>
 #include <drivers/qti/smmu/smmu.h>
+#include <drivers/qti/vpp/vpp.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <lib/bl_aux_params/bl_aux_params.h>
 #include <lib/coreboot.h>
@@ -120,6 +123,9 @@ void bl31_plat_arch_setup(void)
 static void clocked_boot_init(void)
 {
 	qti_accesscontrol_init();
+	qti_vpp_init();
+	qti_cprh_init();
+	qti_qtipmlib_init();
 }
 
 /*******************************************************************************
