@@ -89,8 +89,8 @@ void qti_watchdog_set_target(qti_watchdog_cpu_state_t state)
 {
 	static struct {
 		struct {
-			uint8_t interruptible;
-			uint8_t on;
+			uint64_t interruptible;
+			uint64_t on;
 		} state;
 		uint8_t watchdog;
 		spinlock_t lock;
@@ -105,44 +105,44 @@ void qti_watchdog_set_target(qti_watchdog_cpu_state_t state)
 	spin_lock(&cpu.lock);
 	switch (state) {
 	case QTI_WATCHDOG_CPU_WAKEUP:
-		cpu.state.interruptible |= (1 << core);
-		cpu.state.on |= (1 << core);
+		cpu.state.interruptible |= UINT64_C(1) << core;
+		cpu.state.on |= UINT64_C(1) << core;
 
 		/* wdog currently in sleep, move it to this core */
-		if (!(cpu.state.on & (1 << cpu.watchdog))) {
+		if (!(cpu.state.on & (UINT64_C(1) << cpu.watchdog))) {
 			tgt = core;
 		}
 		break;
 	case QTI_WATCHDOG_CPU_HOTPLUG:
-		cpu.state.interruptible &= ~(1 << core);
+		cpu.state.interruptible &= ~(UINT64_C(1) << core);
 		if (cpu.watchdog != core) {
-			cpu.state.on &= ~(1 << core);
+			cpu.state.on &= ~(UINT64_C(1) << core);
 			break;
 		}
 
 		/* if more than one cpu online */
-		if (cpu.state.on & (cpu.state.on - 1)) {
-			cpu.state.on &= ~(1 << core);
-			tgt = __builtin_ctz((uintptr_t)cpu.state.on);
+		if (cpu.state.on & (cpu.state.on - UINT64_C(1))) {
+			cpu.state.on &= ~(UINT64_C(1) << core);
+			tgt = __builtin_ctzll((unsigned long long)cpu.state.on);
 		} else {
-			assert(cpu.state.interruptible != 0);
-			cpu.state.on &= ~(1 << core);
-			tgt = __builtin_ctz((uintptr_t)cpu.state.interruptible);
+			assert(cpu.state.interruptible != 0U);
+			cpu.state.on &= ~(UINT64_C(1) << core);
+			tgt = __builtin_ctzll((unsigned long long)cpu.state.interruptible);
 		}
 		break;
 	case QTI_WATCHDOG_CPU_SUSPEND:
 		if (cpu.watchdog != core) {
-			cpu.state.on &= ~(1 << core);
+			cpu.state.on &= ~(UINT64_C(1) << core);
 			break;
 		}
 
 		/* if more than one cpu online */
-		if (cpu.state.on & (cpu.state.on - 1)) {
-			cpu.state.on &= ~(1 << core);
-			tgt = __builtin_ctz((uintptr_t)cpu.state.on);
+		if (cpu.state.on & (cpu.state.on - UINT64_C(1))) {
+			cpu.state.on &= ~(UINT64_C(1) << core);
+			tgt = __builtin_ctzll((unsigned long long)cpu.state.on);
 		} else {
 			assert(core == cpu.watchdog);
-			cpu.state.on &= ~(1 << core);
+			cpu.state.on &= ~(UINT64_C(1) << core);
 		}
 		break;
 	default:
@@ -174,4 +174,3 @@ int qti_watchdog_init(void)
 
 	return 0;
 }
-
