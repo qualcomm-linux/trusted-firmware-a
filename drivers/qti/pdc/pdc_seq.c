@@ -14,28 +14,33 @@
 extern struct pdc_seq *g_pdc_seqs;
 extern uint32_t g_pdc_seq_count;
 
-static enum pdc_seq_result pdc_seq_internal_cfg(struct pdc_seq *seq)
+/*
+ * The selected pdc_regs.h exposes the sequence-programming API for its
+ * hardware. Keep each backend behind this private interface.
+ */
+#if defined(PDC_SEQ_BRANCH_MASK_WRITE)
+static enum pdc_seq_result pdc_seq_program_modes(struct pdc_seq *seq)
 {
-	uint32_t i;
-	const struct pdc_seq_cfg *cfg = seq->cfg;
+	size_t i;
+	uint32_t branch_mask = 0U;
 
-	for (i = 0U; i < cfg->br_count; i++) {
-		PDC_SEQ_BR_ADDR_WRITE(seq->addr, i, cfg->br_addr[i]);
+	for (i = 0U; i < seq->mode_count; i++) {
+		if (seq->modes[i].length != 0U) {
+			return PDC_SEQ_INVALID_PARAM;
+		}
+
+		branch_mask |= seq->modes[i].branch_mask;
 	}
 
-	for (i = 0U; i < cfg->delay_count; i++) {
-		PDC_SEQ_DELAY_WRITE(seq->addr, i, cfg->delay[i]);
-	}
-
-	if (PDC_PARAM_PROFILING_UNIT(seq->addr) != PDC_TS_COUNT) {
-		return PDC_SEQ_INVALID_PARAM;
+	if (seq->mode_count > 0U) {
+		PDC_SEQ_BRANCH_MASK_WRITE(seq->rsc_addr, branch_mask);
 	}
 
 	return PDC_SEQ_SUCCESS;
 }
-
-static uint16_t __pdc_seq_copy_cmd_seq(uint8_t *pdc_base, uint16_t start_addr,
-				       uint8_t *cmds, uint16_t length)
+#else
+static uint16_t pdc_seq_copy_cmds(uint8_t *pdc_base, uint16_t start_addr,
+				  uint8_t *cmds, uint16_t length)
 {
 	const uint16_t cmds_per_reg = 4U;
 	uint32_t max_cmds;
@@ -86,12 +91,11 @@ static uint16_t __pdc_seq_copy_cmd_seq(uint8_t *pdc_base, uint16_t start_addr,
 	return cmds_copied;
 }
 
-static enum pdc_seq_result pdc_seq_copy_cmd_seq(struct pdc_seq *seq)
+static enum pdc_seq_result pdc_seq_program_modes(struct pdc_seq *seq)
 {
 	uint32_t i;
 	uint32_t j;
 	uint32_t copied;
-	enum pdc_seq_result result = PDC_SEQ_SUCCESS;
 	struct pdc_seq_mode *curr;
 	const struct pdc_seq_mode *ref = NULL;
 
@@ -110,10 +114,10 @@ static enum pdc_seq_result pdc_seq_copy_cmd_seq(struct pdc_seq *seq)
 		}
 
 		if (j == i) {
-			copied = __pdc_seq_copy_cmd_seq(seq->addr,
-							seq->copied_cmds,
-							curr->cmds,
-							curr->length);
+			copied = pdc_seq_copy_cmds(seq->addr,
+						   seq->copied_cmds,
+						   curr->cmds,
+						   curr->length);
 			if (copied == 0U) {
 				return PDC_SEQ_NO_MEM;
 			}
@@ -125,7 +129,28 @@ static enum pdc_seq_result pdc_seq_copy_cmd_seq(struct pdc_seq *seq)
 		}
 	}
 
-	return result;
+	return PDC_SEQ_SUCCESS;
+}
+#endif
+
+static enum pdc_seq_result pdc_seq_internal_cfg(struct pdc_seq *seq)
+{
+	uint32_t i;
+	const struct pdc_seq_cfg *cfg = seq->cfg;
+
+	for (i = 0U; i < cfg->br_count; i++) {
+		PDC_SEQ_BR_ADDR_WRITE(seq->addr, i, cfg->br_addr[i]);
+	}
+
+	for (i = 0U; i < cfg->delay_count; i++) {
+		PDC_SEQ_DELAY_WRITE(seq->addr, i, cfg->delay[i]);
+	}
+
+	if (PDC_PARAM_PROFILING_UNIT(seq->addr) != PDC_TS_COUNT) {
+		return PDC_SEQ_INVALID_PARAM;
+	}
+
+	return PDC_SEQ_SUCCESS;
 }
 
 static enum pdc_seq_result pdc_seq_init(struct pdc_seq *seq)
@@ -145,7 +170,7 @@ static enum pdc_seq_result pdc_seq_init(struct pdc_seq *seq)
 		return result;
 	}
 
-	return pdc_seq_copy_cmd_seq(seq);
+	return pdc_seq_program_modes(seq);
 }
 
 void pdc_seq_sys_init(void)
@@ -157,7 +182,7 @@ void pdc_seq_sys_init(void)
 		seq = &g_pdc_seqs[i];
 
 		if (pdc_seq_init(seq) != PDC_SEQ_SUCCESS) {
-			ERROR("PDC sequence init failed");
+			ERROR("PDC: sequence %u init failed\n", i);
 			return;
 		}
 
