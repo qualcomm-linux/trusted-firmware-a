@@ -39,6 +39,12 @@ struct pdc_tcs_config {
 	struct pdc_tcs_resource_data	data;
 };
 
+#if PDC_ENABLE_TCS
 void pdc_tcs_initialize(void);
+#else
+static inline void pdc_tcs_initialize(void)
+{
+}
+#endif
 
 #endif /* PDC_TCS_H */
