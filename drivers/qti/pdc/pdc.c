@@ -26,6 +26,10 @@ static void pdc_set_owner(uint32_t pdc_bit_num, uint32_t num_int,
 {
 	uint32_t bit_num = pdc_bit_num;
 
+	if (owner == PDC_DRV_INVALID) {
+		return;
+	}
+
 	if (pin_type == PDC_GPIO) {
 		bit_num += num_int;
 	}

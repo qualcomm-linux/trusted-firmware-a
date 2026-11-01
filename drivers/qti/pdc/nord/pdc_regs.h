@@ -7,6 +7,8 @@
 #ifndef PDC_REGS_H
 #define PDC_REGS_H
 
+#include <assert.h>
+
 #include <lib/mmio.h>
 
 #include <platform_def.h>
@@ -61,6 +63,87 @@
 		(void)(v); \
 		(void)(val); \
 	} while (0)
+
+/* --------------------------------------------------------------------------
+ * IRQ ownership
+ *
+ * Nord uses packed ownership registers. Each bit in IRQ_OWNER_BANKb /
+ * IRQ_OWNER_LASTBANK selects either DRV0 or the single non-zero owner stored
+ * in IRQ_NONZERO_DRV_CFG.
+ * --------------------------------------------------------------------------
+ */
+#define PDC_IRQ_OWNER_BANK_OFF(b)	(0x4600U + 0x4U * (uint32_t)(b))
+#define PDC_IRQ_OWNER_LASTBANK_OFF	0x4614U
+#define PDC_IRQ_NONZERO_DRV_CFG_OFF	0x4640U
+#define PDC_IRQ_OWNER_BANK_BITS		32U
+#define PDC_IRQ_OWNER_BANK_MAX		4U
+#define PDC_IRQ_OWNER_DRV_BMSK		0x3U
+#define PDC_IRQ_OWNER_DRV_MAX		2U
+
+#define PDC_IRQ_OWNER_BANK_READ(b) \
+	mmio_read_32(PDC_REG(PDC_BASE, PDC_IRQ_OWNER_BANK_OFF(b)))
+
+#define PDC_IRQ_OWNER_BANK_WRITE(b, val) \
+	mmio_write_32(PDC_REG(PDC_BASE, PDC_IRQ_OWNER_BANK_OFF(b)), \
+		      (uint32_t)(val))
+
+#define PDC_IRQ_OWNER_LASTBANK_READ() \
+	mmio_read_32(PDC_REG(PDC_BASE, PDC_IRQ_OWNER_LASTBANK_OFF))
+
+#define PDC_IRQ_OWNER_LASTBANK_WRITE(val) \
+	mmio_write_32(PDC_REG(PDC_BASE, PDC_IRQ_OWNER_LASTBANK_OFF), \
+		      (uint32_t)(val))
+
+#define PDC_IRQ_NONZERO_DRV_CFG_READ() \
+	(mmio_read_32(PDC_REG(PDC_BASE, PDC_IRQ_NONZERO_DRV_CFG_OFF)) & \
+	 PDC_IRQ_OWNER_DRV_BMSK)
+
+#define PDC_IRQ_NONZERO_DRV_CFG_WRITE(val) \
+	mmio_write_32(PDC_REG(PDC_BASE, PDC_IRQ_NONZERO_DRV_CFG_OFF), \
+		      (uint32_t)(val) & PDC_IRQ_OWNER_DRV_BMSK)
+
+static inline void pdc_irq_owner_write(uint32_t irq, uint32_t owner)
+{
+	uint32_t bank = irq / PDC_IRQ_OWNER_BANK_BITS;
+	uint32_t mask = 1U << (irq % PDC_IRQ_OWNER_BANK_BITS);
+	uint32_t current_owner = PDC_IRQ_NONZERO_DRV_CFG_READ();
+	uint32_t current_value;
+
+	if (owner > PDC_IRQ_OWNER_DRV_MAX) {
+		assert(owner <= PDC_IRQ_OWNER_DRV_MAX);
+		return;
+	}
+
+	if (owner != 0U) {
+		if ((current_owner != 0U) && (current_owner != owner)) {
+			assert(current_owner == owner);
+			return;
+		}
+
+		if (current_owner == 0U) {
+			PDC_IRQ_NONZERO_DRV_CFG_WRITE(owner);
+		}
+	}
+
+	if (bank <= PDC_IRQ_OWNER_BANK_MAX) {
+		current_value = PDC_IRQ_OWNER_BANK_READ(bank);
+		if (owner == 0U) {
+			PDC_IRQ_OWNER_BANK_WRITE(bank, current_value & ~mask);
+		} else {
+			PDC_IRQ_OWNER_BANK_WRITE(bank, current_value | mask);
+		}
+	} else {
+		current_value = PDC_IRQ_OWNER_LASTBANK_READ();
+		if (owner == 0U) {
+			PDC_IRQ_OWNER_LASTBANK_WRITE(current_value & ~mask);
+		} else {
+			PDC_IRQ_OWNER_LASTBANK_WRITE(current_value | mask);
+		}
+	}
+}
+
+#define PDC_IRQ_OWNER_WRITE(i, val) \
+	pdc_irq_owner_write((uint32_t)(i), (uint32_t)(val))
 
 /* --------------------------------------------------------------------------
  * HIDDEN_TCS_CMD2_DATA_DRV0  (rsc_base + 0x48)
