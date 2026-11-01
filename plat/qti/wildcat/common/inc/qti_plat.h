@@ -141,6 +141,7 @@ void configure_irq_array(uintptr_t base, const uint32_t *cfg_arr,
 			 unsigned int num_words);
 
 int qti_ncc_cpu_reset_sync(uint64_t mpidr);
+void plat_qti_set_cpupwrctlr_val(void);
 typedef struct chip_id_info {
 	uint16_t jtag_id;
 	uint16_t chipinfo_id;
