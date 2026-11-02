@@ -16,7 +16,7 @@
 	.globl	plat_qti_core_pos_by_mpidr
 	.globl	plat_reset_handler
 	.globl	plat_panic_handler
-	.extern	bl31qtilib_panic
+	.extern	qti_panic
 	.extern  sysdbg_reset_check
 	.extern  sysdbg_entry_handler
 
@@ -59,7 +59,7 @@ endfunc plat_qti_core_pos_by_mpidr
 func plat_panic_handler
 	msr	spsel, #0
 	bl	plat_set_my_stack
-	no_ret	bl31qtilib_panic
+	no_ret	qti_panic
 endfunc plat_panic_handler
 	/* -----------------------------------------------------
 	 *  unsigned int plat_my_core_pos(void)
