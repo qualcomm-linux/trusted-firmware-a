@@ -26,6 +26,8 @@
 #include <platform.h>
 
 #include <bl31qtilib_interface.h>
+
+void __dead2 bl31qtilib_panic(void);
 #include <platform_def.h>
 #include <qti_interrupt_svc.h>
 #include <qti_ringbuf_console.h>
@@ -36,6 +38,11 @@
 #include <wildcat_xbl_params.h>
 
 static struct boot_tfabl31_interface *sbl_tfabl31_interface;
+
+void __dead2 qti_panic(void)
+{
+	bl31qtilib_panic();
+}
 
 /*
  * Placeholder variables for copying the arguments that have been passed to
