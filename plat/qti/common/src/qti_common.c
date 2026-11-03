@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include <common/debug.h>
+#include <lib/mmio.h>
 #include <lib/smccc.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
 #include <services/arm_arch_svc.h>
@@ -157,6 +158,30 @@ void qti_setup_page_tables(uintptr_t total_base, size_t total_size,
 
 	/* Create the page tables to reflect the above mappings */
 	init_xlat_tables();
+}
+
+void configure_irq_type(uintptr_t clr_edge_base, uintptr_t set_level_base,
+			const uint32_t *cfg_arr, unsigned int num_words)
+{
+	unsigned int i;
+
+	for (i = 0U; i < num_words; i++) {
+		mmio_write_32(clr_edge_base + 4U * i, cfg_arr[i]);
+		mmio_read_32(clr_edge_base + 4U * i);
+		mmio_write_32(set_level_base + 4U * i, ~cfg_arr[i]);
+		mmio_read_32(set_level_base + 4U * i);
+	}
+}
+
+void configure_irq_array(uintptr_t base, const uint32_t *cfg_arr,
+			 unsigned int num_words)
+{
+	unsigned int i;
+
+	for (i = 0U; i < num_words; i++) {
+		mmio_write_32(base + 4U * i, cfg_arr[i]);
+		mmio_read_32(base + 4U * i);
+	}
 }
 
 static inline void qti_align_mem_region(uintptr_t addr, size_t size,
