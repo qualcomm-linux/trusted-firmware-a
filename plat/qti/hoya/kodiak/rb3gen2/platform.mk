@@ -102,6 +102,10 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 QTISECLIB_PATH ?=
 
 ifeq ($(QTISECLIB_PATH),)
+QTI_WATCHDOG_ENABLE := 1
+QTI_WDOG_DEFS := hoya
+QTI_WDOG_VARIANT := apsslegacywdog
+QTI_WDOG_PLATFORM_SRC := plat/qti/hoya/common/src/qti_watchdog_platform.c
 # if No lib then use stub implementation for qtiseclib interface
 $(warning QTISECLIB_PATH is not provided while building, using stub implementation. \
 		Please refer to documentation for more details \
@@ -111,23 +115,22 @@ include drivers/qti/accesscontrol/access_control.mk
 include drivers/qti/smmu/smmu.mk
 
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/sec_core/${CHIPSET} \
-			-Iinclude/drivers/qti/qtimer/hoya \
-			-Iinclude/drivers/qti/watchdog/hoya
+			-Iinclude/drivers/qti/qtimer/hoya
 
 BL31_SOURCES	+=	plat/qti/hoya/qtiseclib/src/qtiseclib_interface_stub.c	\
 			drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
-			drivers/qti/qtimer/qtimer.c				\
-			drivers/qti/watchdog/watchdog.c
+			drivers/qti/qtimer/qtimer.c
 else
 $(eval $(call add_define,QTISECLIB_PATH))
 $(eval $(call add_define,QTI_XPU_BYPASS))
 # use library provided by QTISECLIB_PATH
 BL31_SOURCES	+=	drivers/qti/sec_core/sec_core_stub.c			\
 			drivers/qti/qtimer/qtimer_stub.c			\
-			drivers/qti/watchdog/watchdog_stub.c			\
 			drivers/qti/accesscontrol/access_control_qtiseclib.c		\
 			drivers/qti/accesscontrol/xpu.c
 LDFLAGS += -L $(dir $(QTISECLIB_PATH))
 LDLIBS += -l$(patsubst lib%.a,%,$(notdir $(QTISECLIB_PATH)))
 endif
+
+include drivers/qti/watchdog/watchdog.mk

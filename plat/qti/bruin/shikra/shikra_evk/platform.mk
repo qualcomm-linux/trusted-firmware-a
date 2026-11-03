@@ -79,6 +79,11 @@ PLAT_BL_COMMON_SOURCES	+=	common/desc_image_load.c				\
 				${XLAT_TABLES_LIB_SRCS}
 
 include drivers/arm/gic/v3/gicv3.mk
+QTI_WATCHDOG_ENABLE := 1
+QTI_WDOG_DEFS := bruin
+QTI_WDOG_VARIANT := apsslegacywdog
+QTI_WDOG_PLATFORM_SRC := $(PLAT_PATH)/hoya/common/src/qti_watchdog_platform.c
+
 BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				drivers/delay_timer/delay_timer.c			\
 				plat/common/plat_gicv3.c				\
@@ -110,5 +115,6 @@ PLAT_INCLUDES   +=	-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 BL31_SOURCES	+=	drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
 			drivers/qti/accesscontrol/access_control_stub.c		\
-			drivers/qti/qtimer/qtimer.c				\
-			drivers/qti/watchdog/watchdog.c
+			drivers/qti/qtimer/qtimer.c
+
+include drivers/qti/watchdog/watchdog.mk

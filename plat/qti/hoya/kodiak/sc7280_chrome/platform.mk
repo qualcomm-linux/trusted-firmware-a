@@ -130,8 +130,7 @@ QTISECLIB_PATH ?=
 # QTISECLIB drivers
 BL31_SOURCES	+=		drivers/qti/accesscontrol/access_control_qtiseclib.c \
 				drivers/qti/sec_core/sec_core_stub.c \
-				drivers/qti/qtimer/qtimer_stub.c \
-				drivers/qti/watchdog/watchdog_stub.c
+				drivers/qti/qtimer/qtimer_stub.c
 
 ifeq ($(QTISECLIB_PATH),)
 # if No lib then use stub implementation for qtiseclib interface
@@ -144,3 +143,5 @@ else
 LDFLAGS += -L $(dir $(QTISECLIB_PATH))
 LDLIBS += -l$(patsubst lib%.a,%,$(notdir $(QTISECLIB_PATH)))
 endif
+
+include drivers/qti/watchdog/watchdog.mk
