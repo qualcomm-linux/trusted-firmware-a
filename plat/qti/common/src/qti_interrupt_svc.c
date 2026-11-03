@@ -162,6 +162,16 @@ void qti_unregister_intr_type_el3(unsigned int intr)
 	(void)qti_interrupt_svc_unregister_common(intr);
 }
 
+void qti_disable_intr_type_el3(unsigned int intr)
+{
+	plat_ic_disable_interrupt(intr);
+}
+
+void qti_enable_intr_type_el3(unsigned int intr)
+{
+	plat_ic_enable_interrupt(intr);
+}
+
 void qti_interrupt_svc_dispatch(uint32_t id, void *handle)
 {
 	struct qti_isr *p = isr_table.entry;

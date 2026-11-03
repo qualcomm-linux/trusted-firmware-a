@@ -20,6 +20,8 @@ int qti_interrupt_svc_unregister(uint32_t id);
 int qti_register_intr_type_el3(unsigned int intr,
 				void *(*handler)(void *callback_ctx), void *ctx);
 void qti_unregister_intr_type_el3(unsigned int intr);
+void qti_disable_intr_type_el3(unsigned int intr);
+void qti_enable_intr_type_el3(unsigned int intr);
 
 int qti_interrupt_svc_init(bool have_sel1);
 void qti_interrupt_svc_dispatch(uint32_t id, void *handle);
