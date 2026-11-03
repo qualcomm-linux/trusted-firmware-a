@@ -19,6 +19,11 @@ void plat_cpuss_early_config(void)
 	/* Empty - placeholder for future use */
 }
 
+void plat_cpuss_late_config(void)
+{
+	/* Empty - placeholder for future use */
+}
+
 void plat_cluster_init_wrapper(void)
 {
 	/* Empty - placeholder for future use */

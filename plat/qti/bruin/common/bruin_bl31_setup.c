@@ -13,5 +13,5 @@ void plat_qti_bl31_setup_pre(void)
 
 void plat_qti_bl31_setup_post(void)
 {
-	/* Empty - placeholder for future use */
+	plat_cpuss_late_config();
 }

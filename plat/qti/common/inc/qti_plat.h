@@ -63,6 +63,7 @@ void plat_qti_invoke_unhandled_isr(uint32_t id, void *handle);
 
 /* CPUSS platform functions */
 void plat_cpuss_early_config(void);
+void plat_cpuss_late_config(void);
 void plat_cluster_init_wrapper(void);
 
 /*
