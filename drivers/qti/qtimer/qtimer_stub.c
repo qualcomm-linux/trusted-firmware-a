@@ -7,8 +7,9 @@
 #include <common/debug.h>
 #include <drivers/qti/qtimer/qtimer.h>
 
-void qti_qtimer_init(void)
+int qti_qtimer_init(void)
 {
+	return 0;
 }
 
 uint64_t qti_qtimer_get_raw(void)

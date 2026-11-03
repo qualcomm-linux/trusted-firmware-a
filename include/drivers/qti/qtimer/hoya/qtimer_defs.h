@@ -13,4 +13,8 @@
 
 #define QTIMER_NBR_FRAMES		7
 
+/* kodiak is non-NCC: only the CP15/QTMR frame-2 secure interrupts exist. */
+#define TIMER_SEC_CP15_INT_ID		29
+#define TIMER_SEC_QTMR_INT_ID		42
+
 #endif /* QTIMER_DEFS_H */

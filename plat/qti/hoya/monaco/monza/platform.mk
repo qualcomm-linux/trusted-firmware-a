@@ -104,6 +104,7 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				drivers/qti/accesscontrol/access_control_stub.c		\
 				drivers/qti/sec_core/sec_core.c				\
 				drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
+				$(PLAT_PATH)/common/src/qti_qtimer_platform.c		\
 				drivers/qti/qtimer/qtimer.c
 
 include drivers/qti/smem/smem.mk
