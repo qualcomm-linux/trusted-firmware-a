@@ -128,7 +128,6 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/wildcat_helpers.S	\
 				$(QTI_COMMON_PATH)/src/spmi_arb.c			\
 				$(QTI_PLAT_PATH)/common/src/wildcat_plat_helpers.c \
 				$(QTI_PLAT_PATH)/common/src/wildcat_bl31_setup.c \
-				drivers/qti/qtimer/qtimer_stub.c \
 				drivers/qti/accesscontrol/access_control_stub.c \
 				drivers/qti/sec_core/sec_core_stub.c \
 				drivers/qti/crypto/rng.c
@@ -141,6 +140,10 @@ PLAT_INCLUDES		+=	-I${QTI_COMMON_PATH}/inc/$(ARCH)
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
+PLAT_INCLUDES += -Iinclude/drivers/qti/qtimer/${CHIPSET}
+
+QTI_USE_NCC_QTIMER	:=	1
+$(eval $(call add_define,QTI_USE_NCC_QTIMER))
 PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
 				plat/common/aarch64/crash_console_helpers.S    \
 				common/desc_image_load.c			\
@@ -179,6 +182,10 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${GIC_SOURCES}					\
 				${TIMER_SOURCES}				\
 				${CPU_SOURCES}					\
+
+BL31_SOURCES += drivers/qti/qtimer/qtimer.c \
+			drivers/qti/qtimer/qtimer_ncc.c \
+			$(PLAT_QTI_ROOT)/common/src/qti_qtimer_platform.c
 
 
 QTI_WATCHDOG_ENABLE := 1

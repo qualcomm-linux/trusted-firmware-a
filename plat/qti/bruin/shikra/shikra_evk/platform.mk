@@ -115,6 +115,7 @@ PLAT_INCLUDES   +=	-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 BL31_SOURCES	+=	drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
 			drivers/qti/accesscontrol/access_control_stub.c		\
+			$(PLAT_PATH)/common/src/qti_qtimer_platform.c	\
 			drivers/qti/qtimer/qtimer.c
 
 include drivers/qti/watchdog/watchdog.mk

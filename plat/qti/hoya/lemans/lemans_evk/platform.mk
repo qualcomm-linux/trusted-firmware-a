@@ -124,6 +124,9 @@ include drivers/qti/cpucp/cpucp.mk
 include drivers/qti/icb/icb.mk
 include drivers/qti/coreinit/coreinit.mk
 
+QTI_USE_NCC_QTIMER	:=	0
+$(eval $(call add_define,QTI_USE_NCC_QTIMER))
+
 PLAT_INCLUDES   +=      -Iinclude/drivers/qti/sec_core/${CHIPSET} \
 			-Iinclude/drivers/qti/qtimer/hoya
 
@@ -131,6 +134,7 @@ BL31_SOURCES	+=	$(PLAT_PATH)/hoya/common/hoya_pm.c \
 			$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_interface_stub.c \
 			drivers/qti/sec_core/sec_core.c \
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c \
+			$(PLAT_PATH)/common/src/qti_qtimer_platform.c	\
 			drivers/qti/qtimer/qtimer.c
 
 else
