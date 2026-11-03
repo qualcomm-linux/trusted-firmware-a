@@ -117,6 +117,7 @@ PLAT_INCLUDES	+=	-Iinclude/drivers/qti/sec_core/${CHIPSET} \
 BL31_SOURCES	+=	plat/qti/hoya/qtiseclib/src/qtiseclib_interface_stub.c	\
 			drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
+			$(PLAT_PATH)/common/src/qti_qtimer_platform.c	\
 			drivers/qti/qtimer/qtimer.c				\
 			drivers/qti/watchdog/watchdog.c\
 			drivers/qti/watchdog/apsslegacywdog/watchdog_ver.c\
