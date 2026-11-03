@@ -34,6 +34,12 @@ void plat_qti_gic_cpuif_disable(void);
 void plat_qti_gic_pcpu_init(void);
 const interrupt_prop_t *plat_qti_get_interrupt_props(unsigned int *num_props);
 
+void plat_cpuss_config(void);
+void configure_irq_type(uintptr_t clr_edge_base, uintptr_t set_level_base,
+			const uint32_t *cfg_arr, unsigned int num_words);
+void configure_irq_array(uintptr_t base, const uint32_t *cfg_arr,
+			 unsigned int num_words);
+
 unsigned int plat_qti_core_pos_by_mpidr(u_register_t mpidr);
 unsigned int plat_qti_my_cluster_pos(void);
 
