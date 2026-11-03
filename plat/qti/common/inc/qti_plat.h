@@ -60,6 +60,8 @@ int  plat_qti_pwr_psci_init(uintptr_t warmboot_entry);
 void plat_qti_bl31_setup_post(void);
 void plat_qti_invoke_unhandled_isr(uint32_t id, void *handle);
 
+void plat_cluster_init_wrapper(void);
+
 /*
  * Composite PSCI power-state encoding helpers, shared by the common PSCI layer
  * and the per-platform PM backends that define plat_qti_pm_idle_states(). The
