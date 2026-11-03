@@ -7,6 +7,7 @@
 #define PLATFORM_DEF_H
 
 #include <shikra_def.h>
+#include <cpuss_regs.h>
 
 #define MAX_XLAT_TABLES			12
 

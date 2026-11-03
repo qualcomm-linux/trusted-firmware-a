@@ -147,6 +147,8 @@ void plat_qti_cpu_boot_cluster_reset(void)
  ******************************************************************************/
 void bl31_platform_setup(void)
 {
+	plat_qti_bl31_setup_pre();
+
 	qti_msm_xpu_bypass();
 	generic_delay_timer_init();
 
