@@ -129,7 +129,6 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/wildcat_helpers.S	\
 				$(QTI_PLAT_PATH)/common/src/wildcat_plat_helpers.c \
 				$(QTI_PLAT_PATH)/common/src/wildcat_bl31_setup.c \
 				drivers/qti/qtimer/qtimer_stub.c \
-				drivers/qti/watchdog/watchdog_stub.c \
 				drivers/qti/accesscontrol/access_control_stub.c \
 				drivers/qti/sec_core/sec_core_stub.c \
 				drivers/qti/crypto/rng.c
@@ -182,4 +181,11 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${CPU_SOURCES}					\
 
 
+QTI_WATCHDOG_ENABLE := 1
+QTI_WDOG_DEFS := nord
+QTI_WDOG_VARIANT ?= windowed
+QTI_WDOG_PLATFORM_SRC := $(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
+
 include $(QTI_PLAT_PATH)/common/wildcat_common.mk
+
+include drivers/qti/watchdog/watchdog.mk

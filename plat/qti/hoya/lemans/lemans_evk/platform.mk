@@ -106,6 +106,10 @@ include drivers/qti/chipinfo/chipinfo.mk
 QTISECLIB_PATH ?=
 
 ifeq ($(QTISECLIB_PATH),)
+QTI_WATCHDOG_ENABLE := 1
+QTI_WDOG_DEFS := hoya
+QTI_WDOG_VARIANT := apsslegacywdog
+QTI_WDOG_PLATFORM_SRC := $(PLAT_PATH)/hoya/common/src/qti_watchdog_platform.c
 
 QTI_CLOCK_RAIL_VOTE := 1
 
@@ -121,23 +125,21 @@ include drivers/qti/icb/icb.mk
 include drivers/qti/coreinit/coreinit.mk
 
 PLAT_INCLUDES   +=      -Iinclude/drivers/qti/sec_core/${CHIPSET} \
-			-Iinclude/drivers/qti/qtimer/hoya \
-			-Iinclude/drivers/qti/watchdog/hoya
+			-Iinclude/drivers/qti/qtimer/hoya
 
 BL31_SOURCES	+=	$(PLAT_PATH)/hoya/common/hoya_pm.c \
 			$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_interface_stub.c \
 			drivers/qti/sec_core/sec_core.c \
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c \
-			drivers/qti/qtimer/qtimer.c \
-			drivers/qti/watchdog/watchdog.c
+			drivers/qti/qtimer/qtimer.c
+
 else
 $(eval $(call add_define,QTISECLIB_PATH))
 # use library provided by QTISECLIB_PATH
 BL31_SOURCES	+=	$(PLAT_PATH)/hoya/common/qtiseclib_pm.c \
 			drivers/qti/sec_core/sec_core_stub.c \
 			drivers/qti/accesscontrol/access_control_stub.c \
-			drivers/qti/qtimer/qtimer_stub.c \
-			drivers/qti/watchdog/watchdog_stub.c
+			drivers/qti/qtimer/qtimer_stub.c
 
 LDFLAGS += -L $(dir $(QTISECLIB_PATH))
 LDLIBS += -l$(patsubst lib%.a,%,$(notdir $(QTISECLIB_PATH)))
@@ -162,3 +164,5 @@ BL31_SOURCES += plat/common/plat_spmd_manifest.c \
 else
 BL31_SOURCES		+=	$(PLAT_PATH)/common/src/qti_interrupt_svc_el3.c
 endif
+
+include drivers/qti/watchdog/watchdog.mk

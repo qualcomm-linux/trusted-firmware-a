@@ -75,6 +75,8 @@ BL2_SOURCES		+=	drivers/io/io_fip.c					\
 				$(PLAT_PATH)/common/src/qti_io_storage.c
 
 include drivers/arm/gic/v3/gicv3.mk
+QTI_WATCHDOG_ENABLE := 1
+
 BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				drivers/delay_timer/delay_timer.c			\
 				plat/common/plat_gicv3.c				\
@@ -109,3 +111,5 @@ include drivers/qti/cpucp/cpucp.mk
 include drivers/qti/smmu/smmu.mk
 
 include drivers/qti/pdc/pdc.mk
+
+include drivers/qti/watchdog/watchdog.mk
