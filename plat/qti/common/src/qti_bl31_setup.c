@@ -110,7 +110,9 @@ void bl31_plat_arch_setup(void)
 			      BL_CODE_BASE,
 			      BL_CODE_END,
 			      BL_RO_DATA_BASE,
-			      BL_RO_DATA_END
+			      BL_RO_DATA_END,
+			      0U,
+			      0U
 			     );
 	enable_mmu_el3(0);
 }
@@ -124,6 +126,12 @@ static void clocked_boot_init(void)
 	qti_accesscontrol_init();
 }
 
+#pragma weak plat_cpuss_config
+
+void plat_cpuss_config(void)
+{
+}
+
 /*******************************************************************************
  * Perform any BL31 platform setup common to ARM standard platforms
  ******************************************************************************/
@@ -132,6 +140,7 @@ void bl31_platform_setup(void)
 	qti_msm_xpu_bypass();
 	generic_delay_timer_init();
 
+	plat_cpuss_config();
 	plat_qti_gic_driver_init();
 	plat_qti_gic_init();
 	qti_rpmh_init();
