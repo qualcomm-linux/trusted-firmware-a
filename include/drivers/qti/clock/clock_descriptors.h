@@ -7,8 +7,8 @@
  * driver.
  */
 
-#ifndef CLOCK_TYPES_H
-#define CLOCK_TYPES_H
+#ifndef QTI_CLOCK_DESCRIPTORS_H
+#define QTI_CLOCK_DESCRIPTORS_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -54,10 +54,10 @@ struct clock_source_desc {
 };
 
 /* Clock (CBCR) descriptor. */
-struct clock_clk_desc {
+struct clock_desc {
 	uintptr_t			cbcr_addr;
 	struct clock_register_mask	vote_reg;
-	bool				tfa_enabled; /* runtime — never set in BSP data */
+	bool				tfa_enabled;
 	enum chipinfo_part		part;        /* CHIPINFO_PART_UNKNOWN = always enabled */
 	uint32_t			part_idx;    /* 0 for first/only instance */
 };
@@ -66,9 +66,9 @@ struct clock_clk_desc {
 struct clock_power_domain_desc {
 	uintptr_t			gdscr_addr; /* SW_COLLAPSE GDSCR; CFG_GDSCR is at +4 */
 	struct clock_register_mask	vote_reg;   /* if set, vote-based enable (GDS_HW) */
-	bool				tfa_enabled; /* runtime — never set in BSP data */
+	bool				tfa_enabled;
 	enum chipinfo_part		part;
 	uint32_t			part_idx;
 };
 
-#endif /* CLOCK_TYPES_H */
+#endif /* QTI_CLOCK_DESCRIPTORS_H */
