@@ -15,12 +15,15 @@
 #include <arch_features.h>
 #include <arch_helpers.h>
 #include <common/debug.h>
+#include <lib/spinlock.h>
 #include <lib/utils.h>
 #include <lib/utils_def.h>
 #include <lib/xlat_tables/xlat_tables_defs.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
 
 #include "xlat_tables_private.h"
+
+/* Dynamic-map serialization is held in each xlat_ctx_t. */
 
 /* Helper function that cleans the data cache only if it is enabled. */
 static inline __attribute__((unused)) void xlat_clean_dcache_range(uintptr_t addr, size_t size)
@@ -991,7 +994,21 @@ void mmap_add_ctx(xlat_ctx_t *ctx, const mmap_region_t *mm)
 
 #if defined(PLAT_XLAT_TABLES_DYNAMIC) && PLAT_XLAT_TABLES_DYNAMIC
 
+static int mmap_add_dynamic_region_ctx_locked(xlat_ctx_t *ctx,
+					      mmap_region_t *mm);
+static int mmap_remove_dynamic_region_ctx_locked(xlat_ctx_t *ctx,
+						  uintptr_t base_va, size_t size);
+
 int mmap_add_dynamic_region_ctx(xlat_ctx_t *ctx, mmap_region_t *mm)
+{
+	spin_lock(&ctx->mmap_lock);
+	int ret = mmap_add_dynamic_region_ctx_locked(ctx, mm);
+	spin_unlock(&ctx->mmap_lock);
+	return ret;
+}
+
+static int mmap_add_dynamic_region_ctx_locked(xlat_ctx_t *ctx,
+					      mmap_region_t *mm)
 {
 	mmap_region_t *mm_cursor = ctx->mmap;
 	const mmap_region_t *mm_last = mm_cursor + ctx->mmap_num;
@@ -1101,19 +1118,28 @@ int mmap_add_dynamic_region_ctx(xlat_ctx_t *ctx, mmap_region_t *mm)
 
 int mmap_add_dynamic_region_alloc_va_ctx(xlat_ctx_t *ctx, mmap_region_t *mm)
 {
+	int ret;
+
+	spin_lock(&ctx->mmap_lock);
 	mm->base_va = ctx->max_va + 1UL;
 
-	if (mm->size == 0U)
-		return 0;
+	if (mm->size == 0U) {
+		ret = 0;
+		goto out;
+	}
 
 	mmap_alloc_va_align_ctx(ctx, mm);
 
 	/* Detect overflows. More checks are done in mmap_add_region_check(). */
 	if (mm->base_va < ctx->max_va) {
-		return -ENOMEM;
+		ret = -ENOMEM;
+		goto out;
 	}
 
-	return mmap_add_dynamic_region_ctx(ctx, mm);
+	ret = mmap_add_dynamic_region_ctx_locked(ctx, mm);
+out:
+	spin_unlock(&ctx->mmap_lock);
+	return ret;
 }
 
 /*
@@ -1127,6 +1153,15 @@ int mmap_add_dynamic_region_alloc_va_ctx(xlat_ctx_t *ctx, mmap_region_t *mm)
  */
 int mmap_remove_dynamic_region_ctx(xlat_ctx_t *ctx, uintptr_t base_va,
 				   size_t size)
+{
+	spin_lock(&ctx->mmap_lock);
+	int ret = mmap_remove_dynamic_region_ctx_locked(ctx, base_va, size);
+	spin_unlock(&ctx->mmap_lock);
+	return ret;
+}
+
+static int mmap_remove_dynamic_region_ctx_locked(xlat_ctx_t *ctx,
+						  uintptr_t base_va, size_t size)
 {
 	mmap_region_t *mm = ctx->mmap;
 	const mmap_region_t *mm_last = mm + ctx->mmap_num;
@@ -1208,6 +1243,7 @@ void xlat_setup_dynamic_ctx(xlat_ctx_t *ctx, unsigned long long pa_max,
 
 	ctx->mmap = mmap;
 	ctx->mmap_num = mmap_num;
+	ctx->mmap_lock.lock = 0U;
 	memset(ctx->mmap, 0, sizeof(struct mmap_region) * mmap_num);
 
 	ctx->tables = (void *) tables;
