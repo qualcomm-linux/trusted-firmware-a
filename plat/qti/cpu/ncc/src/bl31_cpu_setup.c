@@ -17,8 +17,11 @@
  */
 
 #include <arch_helpers.h>
+#include <bl31/bl31.h>
 #include <common/debug.h>
+#include <lib/mmio.h>
 #include <qti_plat.h>
+#include "cpucp_shared.h"
 
 /*
  * qti_el3_sys_regs_init - Initialise EL3 system registers for NCC CPUs.
@@ -41,7 +44,6 @@ void qti_el3_sys_regs_init(void)
 	write_icc_igrpen0_el1(1U);
 }
 
-
 /*
  * Stubbed out as cpu boot setup is handled in CPUCP for NCC chipsets
  * Called from plat_reset_handler() for every CPU (boot core and secondaries).
@@ -51,6 +53,27 @@ void plat_qti_cpu_boot_setup(void)
 {
 	return;
 }
+
+void apsec_set_warmboot_cookie(uint64_t entrypoint) {
+
+    volatile apsec_boot_cookie_t *cookie = (apsec_boot_cookie_t *)APSEC_CPUCP_BOOT_COOKIE_BASE;
+
+    /* Ensure any previous magic is wiped out first */
+    cookie->magic = APSEC_BOOT_COOKIE_INVALID;
+
+    /* Write the actual target RVBAR address */
+    cookie->rvbar_addr = entrypoint;
+
+    /* Data Synchronization Barrier ensures the address hits memory before the magic tag */
+    __asm__ volatile("dsb sy" ::: "memory");
+
+    /* Write the magic token to signal to SCP that the data is ready and valid */
+    cookie->magic = APSEC_BOOT_COOKIE_MAGIC;
+
+    /* Final barrier to ensure SCP sees the valid magic before a doorbell/interrupt is fired */
+    __asm__ volatile("dsb sy" ::: "memory");
+}
+
 /*
  * plat_qti_cpu_boot_cluster_reset - NCC boot-core CL4 sleep-state workaround.
  *
@@ -61,6 +84,8 @@ void plat_qti_cpu_boot_setup(void)
 void plat_qti_cpu_boot_cluster_reset(void)
 {
 	int ret;
+
+	apsec_set_warmboot_cookie((uint64_t) bl31_warm_entrypoint);
 
 	ret = qti_ncc_cpu_reset_sync(read_mpidr());
 	if (ret != 0) {
