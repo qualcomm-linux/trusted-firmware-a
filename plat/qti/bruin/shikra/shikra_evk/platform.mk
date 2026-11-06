@@ -111,4 +111,7 @@ BL31_SOURCES	+=	drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
 			drivers/qti/accesscontrol/access_control_stub.c		\
 			drivers/qti/qtimer/qtimer.c				\
-			drivers/qti/watchdog/watchdog.c
+			drivers/qti/watchdog/watchdog.c				\
+			drivers/qti/watchdog/apsslegacywdog/watchdog_ver.c	\
+			$(PLAT_PATH)/bruin/common/src/qti_watchdog_platform.c	\
+			$(PLAT_PATH)/common/src/qti_qtimer_platform.c
