@@ -58,7 +58,6 @@ QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/hoya/inc				\
 QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_kryo6_silver.S	\
 				$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_kryo6_gold.S	\
 				$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_uart_console.S	\
-				$(QTI_PLAT_PATH)/common/src/pm_ps_hold.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_stack_protector.c	\
 				$(QTI_PLAT_PATH)/common/src/qti_common.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_bl31_setup.c		\
@@ -70,7 +69,6 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_kryo6_silver.S	\
 				$(QTI_PLAT_PATH)/common/src/qti_sip_platform.c	\
 				$(QTI_PLAT_PATH)/common/src/qti_topology.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_pm.c			\
-				$(QTI_PLAT_PATH)/common/src/spmi_arb.c			\
 				$(QTI_PLAT_PATH)/hoya/common/$(ARCH)/hoya_helpers.S	\
 				$(QTI_PLAT_PATH)/hoya/common/hoya_bl31_setup.c		\
 				$(QTI_PLAT_PATH)/hoya/common/qtiseclib_pm.c		\
@@ -82,6 +80,8 @@ PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 
 PLAT_INCLUDES		+=	${QTI_EXTERNAL_INCLUDES}
 
+QTI_PMIC_ARB_VERSION	:=	pmicarb5
+include drivers/qti/pmic/pmic.mk
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/chipinfo/chipinfo.mk
 include drivers/qti/smem/smem.mk
