@@ -149,7 +149,7 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 # used for NCC targets.)
 #
 QTI_BL31_SOURCES	+=	$(PLAT_QTI_ROOT)/common/src/qti_pm.c		\
-				$(PLAT_QTI_ROOT)/common/src/pm_ps_hold.c
+				#$(PLAT_QTI_ROOT)/common/src/pm_ps_hold.c
 
 
 # Ensure Widevine is not being used

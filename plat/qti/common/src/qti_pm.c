@@ -170,9 +170,12 @@ static void qti_node_suspend_finish(const psci_power_state_t *target_state)
 	}
 }
 
+#define PS_HOLD_SETTLE_DELAY_MS		10U
+
 static __dead2 void assert_ps_hold(void)
 {
 #ifdef QTI_PS_HOLD_REG
+	mdelay(PS_HOLD_SETTLE_DELAY_MS);
 	mmio_write_32(QTI_PS_HOLD_REG, 0);
 	mdelay(1000);
 #endif
