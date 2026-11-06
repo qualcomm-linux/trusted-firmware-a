@@ -28,6 +28,10 @@ void qti_watchdog_set_target(qti_watchdog_cpu_state_t state)
 	(void)state;
 }
 
+void qti_watchdog_set_target(qti_watchdog_cpu_state_t state)
+{
+}
+
 void qti_watchdog_start(uint32_t bark, uint32_t bite)
 {
 	(void)bark;

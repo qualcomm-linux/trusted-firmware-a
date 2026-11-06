@@ -11,6 +11,7 @@
 #include <common/debug.h>
 #include <drivers/delay_timer.h>
 #include <drivers/qti/sec_core/sec_core.h>
+#include <drivers/qti/watchdog/watchdog.h>
 #include <lib/mmio.h>
 #include <lib/psci/psci.h>
 #include <platform.h>
@@ -134,6 +135,7 @@ static void qti_cpu_power_on_finish(const psci_power_state_t *target_state)
 
 	if (is_cpu_off(target_state)) {
 		plat_qti_gic_cpuif_enable();
+		qti_watchdog_set_target(QTI_WATCHDOG_CPU_WAKEUP);
 	}
 }
 
@@ -164,6 +166,8 @@ static void qti_node_power_off(const psci_power_state_t *target_state)
 {
 	plat_qti_pwr_domain_off((const uint8_t *)target_state->pwr_domain_state);
 	if (is_cpu_off(target_state)) {
+		/* Move the bark interrupt before this CPU can no longer service it. */
+		qti_watchdog_set_target(QTI_WATCHDOG_CPU_HOTPLUG);
 		plat_qti_gic_cpuif_disable();
 		qti_set_cpupwrctlr_val();
 	}
@@ -173,6 +177,8 @@ static void qti_node_suspend(const psci_power_state_t *target_state)
 {
 	plat_qti_pwr_domain_suspend((const uint8_t *)target_state->pwr_domain_state);
 	if (is_cpu_off(target_state)) {
+		/* Move the bark interrupt before this CPU disables its GIC interface. */
+		qti_watchdog_set_target(QTI_WATCHDOG_CPU_SUSPEND);
 		plat_qti_gic_cpuif_disable();
 		qti_set_cpupwrctlr_val();
 	}
@@ -185,6 +191,7 @@ static void qti_node_suspend_finish(const psci_power_state_t *target_state)
 	plat_qti_pwr_domain_suspend_finish(pwr_states);
 	if (is_cpu_off(target_state)) {
 		plat_qti_gic_cpuif_enable();
+		qti_watchdog_set_target(QTI_WATCHDOG_CPU_WAKEUP);
 	}
 }
 
