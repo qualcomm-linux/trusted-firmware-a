@@ -597,6 +597,9 @@ subsections:
               - title: Hamoa
                 scope: hamoa
 
+              - title: Nord
+                scope: nord
+
       - title: Raspberry Pi
         scope: rpi
 
