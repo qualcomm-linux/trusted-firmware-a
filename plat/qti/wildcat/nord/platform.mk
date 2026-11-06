@@ -210,6 +210,9 @@ include drivers/qti/rpmh/rpmh.mk
 # NoC bus-rail BCM voting dependency (ICB micro-arbiter) for programming
 # the NoC error registers.
 ICB_NOC_BCM_VOTE	:=	1
+QTI_ICB_NOCERR_ENABLED	:=	1
+QTI_ICB_CONFIG_ENABLED	:=	1
+QTI_ICB_UARB_ENABLED	:=	1
 include drivers/qti/icb/icb.mk
 include drivers/qti/coreinit/coreinit.mk
 

@@ -117,6 +117,10 @@ include drivers/qti/pwr_utils/pwr_utils.mk
 include drivers/qti/rpmh/rpmh.mk
 include drivers/qti/clock/clock.mk
 include drivers/qti/cpucp/cpucp.mk
+
+QTI_ICB_NOCERR_ENABLED	:=	1
+QTI_ICB_CONFIG_ENABLED	:=	1
+QTI_ICB_UARB_ENABLED	:=	1
 include drivers/qti/icb/icb.mk
 include drivers/qti/coreinit/coreinit.mk
 
