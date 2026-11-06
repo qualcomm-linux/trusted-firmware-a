@@ -208,4 +208,9 @@ BL31_SOURCES += drivers/qti/watchdog/watchdog.c \
 include drivers/qti/cmd_db/cmd_db.mk
 include drivers/qti/pwr_utils/pwr_utils.mk
 
+# Clock driver with RPMh rail voting (CX/MX levels during init).
+include drivers/qti/rpmh/rpmh.mk
+QTI_CLOCK_RAIL_VOTE	:=	1
+include drivers/qti/clock/clock.mk
+
 include $(QTI_PLAT_PATH)/common/wildcat_common.mk
