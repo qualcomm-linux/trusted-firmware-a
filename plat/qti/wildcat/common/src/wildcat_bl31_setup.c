@@ -308,6 +308,7 @@ void bl31_platform_setup(void)
 	if (ret != 0) {
 		ERROR("QTimer init failed: %d\n", ret);
 	}
+	generic_delay_timer_init();
 
 	if (qti_watchdog_init() != 0) {
 		ERROR("Watchdog initialization error\n");
