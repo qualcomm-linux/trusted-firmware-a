@@ -204,4 +204,13 @@ BL31_SOURCES += drivers/qti/watchdog/watchdog.c \
 			$(QTI_WDOG_VER_SRC) \
 			$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
 
+# pwr_utils resolves rail vlvl<->hlvl tables from the RPMh command DB.
+include drivers/qti/cmd_db/cmd_db.mk
+include drivers/qti/pwr_utils/pwr_utils.mk
+
+# Clock driver with RPMh rail voting (CX/MX levels during init).
+include drivers/qti/rpmh/rpmh.mk
+QTI_CLOCK_RAIL_VOTE	:=	1
+include drivers/qti/clock/clock.mk
+
 include $(QTI_PLAT_PATH)/common/wildcat_common.mk
