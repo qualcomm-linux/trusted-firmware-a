@@ -62,7 +62,8 @@
 /*----------------------------------------------------------------------------*/
 #define UART_BASE_ADDR 0x00884000 /* QUPV3_2_SE1 */
 #define PLAT_QTI_UART_BASE UART_BASE_ADDR
-#define QTI_PMIC_ARB_BASE U(0x0C400000)
+#define QTI_PMIC_ARB_BASE U(0x0B000000)
+#define SPMI_ARB_NUM_CHANNELS 1024U
 #define GENI4_CFG 0x0
 #define GENI4_IMAGE_REGS 0x100
 #define GENI4_DATA 0x600
@@ -156,12 +157,6 @@
 /*----------------------------------------------------------------------------*/
 #define QTI_SMEM_BASE ULL(0x89B00000)
 #define QTI_SMEM_SIZE ULL(0x00200000)
-
-/*----------------------------------------------------------------------------*/
-/* LC PON register offsets */
-/*----------------------------------------------------------------------------*/
-#define PON_PS_HOLD_RESET_CTL 0x852
-#define PON_PS_HOLD_RESET_CTL2 0x853
 
 /*
  * The Qualcomm QGIC2 implementation seems to have PIDR0-4 and PIDR4-7
