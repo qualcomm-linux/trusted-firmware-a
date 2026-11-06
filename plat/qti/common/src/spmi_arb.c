@@ -11,21 +11,23 @@
 #include <platform_def.h>
 #include <spmi_arb.h>
 
-/* Arbiter core and channel registers, at fixed offsets from QTI_PMIC_ARB_BASE */
-#define REG_ARB_CORE		(QTI_PMIC_ARB_BASE + 0x40000U)
-#define REG_ARB_CHNL(apid)	(QTI_PMIC_ARB_BASE + 0x200000U + 0x10000U * apid)
-
-#define REG_APID_MAP(apid)	(REG_ARB_CORE + 0x900U + sizeof(uint32_t) * apid)
-#define NUM_APID		((0x1100U - 0x900U) / sizeof(uint32_t))
+/*
+ * APID table base, per-channel register base/stride and owner-check support
+ * differ across PMIC arbiter hardware versions. Each platform defines
+ * SPMI_ARB_APID_MAP_BASE, SPMI_ARB_CHNL_BASE, SPMI_ARB_CHNL_STRIDE and
+ * SPMI_ARB_NUM_APID in its platform_def.h/<arch>_def.h.
+ */
+#define REG_APID_MAP(apid)	((uint32_t)(SPMI_ARB_APID_MAP_BASE + sizeof(uint32_t) * apid))
+#define NUM_APID		SPMI_ARB_NUM_APID
 
 #define PPID_MASK		(0xfffU << 8)
 
-#define REG_ARB_CMD(apid)	(REG_ARB_CHNL(apid) + 0x0U)
+#define REG_ARB_CMD(apid)	((uint32_t)(SPMI_ARB_CHNL_BASE + SPMI_ARB_CHNL_STRIDE * apid))
 /* These are opcodes specific to this SPMI arbitrator, *not* SPMI commands. */
 #define OPC_EXT_WRITEL		0
 #define OPC_EXT_READL		1
 
-#define REG_ARB_STATUS(apid)	(REG_ARB_CHNL(apid) + 0x8U)
+#define REG_ARB_STATUS(apid)	((uint32_t)(SPMI_ARB_CHNL_BASE + 0x8U + SPMI_ARB_CHNL_STRIDE * apid))
 #define ARB_STATUS_DONE		BIT(0)
 #define ARB_STATUS_FAILURE	BIT(1)
 #define ARB_STATUS_DENIED	BIT(2)
@@ -34,22 +36,65 @@
 /* Fake status to report driver errors. */
 #define ARB_FAKE_STATUS_TIMEOUT	BIT(8)
 
-#define REG_ARB_RDATA0(apid)	(REG_ARB_CHNL(apid) + 0x18U)
-#define REG_ARB_WDATA0(apid)	(REG_ARB_CHNL(apid) + 0x10U)
+#define REG_ARB_RDATA0(apid)	((uint32_t)(SPMI_ARB_CHNL_BASE + 0x18U + SPMI_ARB_CHNL_STRIDE * apid))
+#define REG_ARB_WDATA0(apid)	((uint32_t)(SPMI_ARB_CHNL_BASE + 0x10U + SPMI_ARB_CHNL_STRIDE * apid))
 
+/*
+ * Platforms whose arbiter exposes a per-APID owner-EE table (currently
+ * Nord) define SPMI_ARB_HAS_OWNER_CHECK plus SPMI_ARB_OWNER_MAP_BASE,
+ * SPMI_ARB_OWNER_STRIDE and SPMI_ARB_OWNER_EE in platform_def.h, so that
+ * addr_to_apid() can skip APIDs owned by another execution environment.
+ */
+#ifdef SPMI_ARB_HAS_OWNER_CHECK
+#define REG_APID_OWNER(apid)	((uint32_t)(SPMI_ARB_OWNER_MAP_BASE + SPMI_ARB_OWNER_STRIDE * apid))
+#define OWNER_FIELD_MASK	0xfU
+
+static int addr_to_apid(uint32_t addr)
+{
+	unsigned int i;
+	int fallback_apid = -1;
+
+	for (i = 0U; i < NUM_APID; i++) {
+		uint32_t reg = mmio_read_32(REG_APID_MAP(i));
+
+		if ((reg == 0U) || ((addr & PPID_MASK) != (reg & PPID_MASK))) {
+			continue;
+		}
+
+		uint32_t owner = mmio_read_32(REG_APID_OWNER(i)) & OWNER_FIELD_MASK;
+
+		if (owner == (uint32_t)SPMI_ARB_OWNER_EE) {
+			return (int)i;
+		}
+		if (fallback_apid < 0) {
+			fallback_apid = (int)i;
+		}
+	}
+
+	if (fallback_apid >= 0) {
+		WARN("SPMI_ARB: no apid for addr=0x%x owned by this EE=%u; falling back to apid=%d owned by another EE -- HW will likely deny the access\n",
+		     addr, (unsigned int)SPMI_ARB_OWNER_EE, fallback_apid);
+		return fallback_apid;
+	}
+
+	return -1;
+}
+#else
 static int addr_to_apid(uint32_t addr)
 {
 	unsigned int i;
 
 	for (i = 0U; i < NUM_APID; i++) {
 		uint32_t reg = mmio_read_32(REG_APID_MAP(i));
+
 		if ((reg != 0U) && ((addr & PPID_MASK) == (reg & PPID_MASK))) {
-			return i;
+			return (int)i;
 		}
 	}
 
 	return -1;
 }
+#endif /* SPMI_ARB_HAS_OWNER_CHECK */
 
 static int wait_for_done(uint16_t apid)
 {
