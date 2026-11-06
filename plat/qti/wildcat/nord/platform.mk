@@ -131,6 +131,14 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/wildcat_helpers.S	\
 				drivers/qti/accesscontrol/access_control_stub.c \
 				drivers/qti/sec_core/sec_core_stub.c \
 				drivers/qti/crypto/rng.c
+#
+# PSCI ops wrapper: use the common qti_pm.c which calls plat_qti_pwr_*
+# hooks implemented in plat/qti/cpu/ncc/src/qcom_ncc_psci.c.
+# (plat/qti/wildcat/common/src/qti_pm.c uses bl31qtilib_* and is NOT
+# used for NCC targets.)
+#
+QTI_BL31_SOURCES	+=	$(PLAT_QTI_ROOT)/common/src/qti_pm.c		\
+				#$(PLAT_QTI_ROOT)/common/src/pm_ps_hold.c
 
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 
