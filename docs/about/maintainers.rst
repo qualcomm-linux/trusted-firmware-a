@@ -803,6 +803,12 @@ QTI power drivers
 :|F|: include/drivers/qti/pwr_utils/
 :|F|: include/drivers/qti/rpmh/
 
+QTI PMIC driver
+^^^^^^^^^^^^^^^
+:|M|: Mohammad Salman <mosalman@qti.qualcomm.com>
+:|F|: drivers/qti/pmic/
+:|F|: include/drivers/qti/pmic/
+
 QTI MSM8916 platform port
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 :|M|: Stephan Gerhold <stephan@gerhold.net>
