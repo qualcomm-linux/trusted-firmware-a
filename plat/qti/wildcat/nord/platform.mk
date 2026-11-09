@@ -161,6 +161,7 @@ PLAT_INCLUDES += -Iinclude/drivers/qti/qtimer/${CHIPSET}
 QTI_USE_NCC_QTIMER	:=	1
 $(eval $(call add_define,QTI_USE_NCC_QTIMER))
 include drivers/qti/cpucp/cpucp.mk
+include drivers/qti/hwmutex/hwmutex.mk
 
 PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
 				plat/common/aarch64/crash_console_helpers.S    \

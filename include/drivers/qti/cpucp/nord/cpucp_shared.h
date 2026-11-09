@@ -13,6 +13,11 @@
 
 #include "cpucp_hwio.h"
 
+enum core_lpm_status {
+	CORE_NOT_IN_LPM,
+	CORE_IN_LPM = 255
+};
+
 #define CPUCP_IPC_SEC_BUF_BASE		APSEC_CPUCP_SCMI_IPC_BASE
 #define CPUCP_IPC_SEC_BUF_SIZE		APSEC_CPUCP_SCMI_IPC_SIZE
 

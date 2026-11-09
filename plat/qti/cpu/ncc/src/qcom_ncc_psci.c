@@ -37,6 +37,7 @@
 #include <qti_plat.h>
 
 #include <drivers/arm/gicv3.h>
+#include <hwm_lock.h>
 #include <lib/spinlock.h>
 #include <ncc_cpu_power.h>
 #include <ncc_hwio.h>
