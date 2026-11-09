@@ -110,6 +110,7 @@ QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 				-I${PLAT_QTI_ROOT}/common/inc/$(ARCH)			\
 				-I${PLAT_QTI_ROOT}/cpu/inc				\
 				-I${PLAT_QTI_ROOT}/common/inc				\
+				-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 
 QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/wildcat_helpers.S	\
 				$(PLAT_QTI_ROOT)/common/src/$(ARCH)/qti_uart_console.S	\
@@ -134,7 +135,8 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/wildcat_helpers.S	\
 				$(QTI_PLAT_PATH)/common/src/wildcat_bl31_setup.c \
 				$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c \
 				drivers/qti/accesscontrol/access_control_stub.c \
-				drivers/qti/sec_core/sec_core_stub.c \
+				drivers/qti/sec_core/sec_core.c 			\
+				drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c 		\
 				drivers/qti/crypto/rng.c
 
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
