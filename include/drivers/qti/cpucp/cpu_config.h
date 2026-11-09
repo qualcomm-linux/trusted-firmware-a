@@ -16,5 +16,4 @@ struct clkdom_cpumask {
 
 extern struct clkdom_cpumask clkdom_cpumasks[CD_MAX];
 extern unsigned int clkdom_init_status[CD_MAX];
-
 #endif /* QTI_CPUCP_CPU_CONFIG_H */

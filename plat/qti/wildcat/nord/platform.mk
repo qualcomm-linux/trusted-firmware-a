@@ -11,6 +11,8 @@ PLATFORM		:=	nord
 
 ARM_ARCH_MAJOR := 9
 
+QTI_NCC_CPU		:= 1
+
 # Turn On Separate code & data.
 SEPARATE_CODE_AND_RODATA	:=	1
 USE_COHERENT_MEM		:=	1
@@ -105,6 +107,9 @@ QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 				-I${QTI_COMMON_PATH}/inc/$(ARCH)			\
 				-I${QTI_COMMON_PATH}/inc				\
 				-I${QTI_PLAT_PATH}/common/inc				\
+				-I${PLAT_QTI_ROOT}/common/inc/$(ARCH)			\
+				-I${PLAT_QTI_ROOT}/cpu/inc				\
+				-I${PLAT_QTI_ROOT}/common/inc				\
 
 QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/wildcat_helpers.S	\
 				$(PLAT_QTI_ROOT)/common/src/$(ARCH)/qti_uart_console.S	\
@@ -144,6 +149,8 @@ PLAT_INCLUDES += -Iinclude/drivers/qti/qtimer/${CHIPSET}
 
 QTI_USE_NCC_QTIMER	:=	1
 $(eval $(call add_define,QTI_USE_NCC_QTIMER))
+include drivers/qti/cpucp/cpucp.mk
+
 PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
 				plat/common/aarch64/crash_console_helpers.S    \
 				common/desc_image_load.c			\
@@ -170,18 +177,40 @@ GIC_SOURCES		:=	plat/common/plat_gicv3.c			\
 TIMER_SOURCES		:=	drivers/delay_timer/generic_delay_timer.c	\
 				drivers/delay_timer/delay_timer.c		\
 
-QTI_NCC_CPU		:= 1
-
 #Disable SMCCC_ARCH_SOC_ID support to ensure legacy Linux kernel socinfo
 #driver can expose older soc_id format
 $(eval $(call add_define, QTI_NO_SMCC_ARCH_SOC_ID))
 
 CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/qcom_oryon_v1.S
 
+#
+# CPU-specific BL31 setup: select NCC (Oryon).
+#
+QTI_CPU_PATH		:=	plat/qti/cpu
+
+BL31_CPU_SETUP_SRC	:=	$(QTI_CPU_PATH)/ncc/src/bl31_cpu_setup.c
+
+#
+# SCMI driver sources: ARM CSS SCMI stack.
+#
+# CPUCP on Nord implements only the Reset Domain protocol (0x16).
+# The Power Domain (0x11) and System Power (0x12) protocols are not
+# supported; skip the System Power version check in scmi_init() to
+# prevent a timeout panic during channel initialisation.
+#
+SCMI_SKIP_SYS_PWR_PROTO_CHECK	:= 1
+$(eval $(call add_define,SCMI_SKIP_SYS_PWR_PROTO_CHECK))
+
+SCMI_SOURCES		:=	drivers/arm/css/scmi/scmi_common.c		\
+				drivers/arm/css/scmi/scmi_pwr_dmn_proto.c	\
+				drivers/arm/css/scmi/scmi_reset_domain_proto.c
+
 BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${GIC_SOURCES}					\
 				${TIMER_SOURCES}				\
 				${CPU_SOURCES}					\
+				${BL31_CPU_SETUP_SRC}				\
+				${SCMI_SOURCES}
 
 BL31_SOURCES += drivers/qti/qtimer/qtimer.c \
 			drivers/qti/qtimer/qtimer_ncc.c \
@@ -205,3 +234,5 @@ BL31_SOURCES += drivers/qti/watchdog/watchdog.c \
 			$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
 
 include $(QTI_PLAT_PATH)/common/wildcat_common.mk
+
+PLAT_INCLUDES	+=	-Iinclude/drivers/qti/cpucp/${CHIPSET}
