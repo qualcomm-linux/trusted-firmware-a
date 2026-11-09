@@ -15,9 +15,15 @@ PLAT_INCLUDES += \
 	-Iinclude/drivers/qti/cpucp/$(CHIPSET)		\
 	-Idrivers/arm/css/scmi
 
+ifeq (${QTI_NCC_CPU},1)
+BL31_SOURCES += \
+	$(CPUCP_DRV_PATH)/cpucp_scmi.c			\
+	$(CPUCP_DRV_PATH)/$(CHIPSET)/cpucp_config.c
+else
 BL31_SOURCES += \
 	$(CPUCP_DRV_PATH)/cpucp.c			\
 	$(CPUCP_DRV_PATH)/$(CHIPSET)/cpu_config.c	\
 	$(CPUCP_DRV_PATH)/$(CHIPSET)/cpucp_config.c	\
 	$(CPUCP_DRV_PATH)/hoya/cpucp_start.c		\
 	drivers/arm/css/scmi/scmi_common.c
+endif

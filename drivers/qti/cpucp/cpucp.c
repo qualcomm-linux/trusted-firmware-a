@@ -6,7 +6,6 @@
 
 #include <assert.h>
 #include <stdint.h>
-
 #include <cpu_config.h>
 #include <cpucp.h>
 #include <cpucp_hwio.h>

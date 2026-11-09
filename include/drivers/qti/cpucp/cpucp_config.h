@@ -12,6 +12,7 @@
 
 #include <cpucp_hwio.h>
 #include <cpucp_shared.h>
+#include <drivers/arm/css/scmi.h>
 
 #define SHARED(member)	(CPUCP_SHARED_DATA_BASE + \
 			 offsetof(struct cpucp_shared_data, member))
@@ -91,5 +92,8 @@ void cpucp_fill_soc_info(void);
 /* Shared register/fuse helpers implemented by the common start sequence. */
 uint32_t cpucp_read_bits(uintptr_t reg, unsigned int lsb, unsigned int width);
 uint32_t cpucp_soft_sku_lval(uint32_t enabled, uint32_t lval);
+
+/* Platform specific SCMI protocols init handler */
+int plat_cpu_scmi_protocol_init(scmi_channel_t *ch);
 
 #endif /* QTI_CPUCP_CONFIG_H */

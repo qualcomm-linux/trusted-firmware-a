@@ -17,6 +17,7 @@
 /* Supported SCMI Protocol Versions */
 #define SCMI_AP_CORE_PROTO_VER			MAKE_SCMI_VERSION(3, 0)
 #define SCMI_PWR_DMN_PROTO_VER			MAKE_SCMI_VERSION(3, 0)
+#define SCMI_RESET_DOMAIN_PROTO_VER		MAKE_SCMI_VERSION(3, 0)
 #define SCMI_SYS_PWR_PROTO_VER			MAKE_SCMI_VERSION(3, 0)
 
 #define GET_SCMI_MAJOR_VER(ver)			(((ver) >> 16) & 0xffff)
@@ -40,6 +41,7 @@
 #define SCMI_BASE_PROTO_ID			0x10
 #define SCMI_PWR_DMN_PROTO_ID			0x11
 #define SCMI_SYS_PWR_PROTO_ID			0x12
+#define SCMI_RESET_DOMAIN_PROTO_ID		0x16
 /* The AP core protocol is a CSS platform-specific extension */
 #define SCMI_AP_CORE_PROTO_ID			0x90
 
@@ -71,6 +73,44 @@
 /* SCMI AP core protocol message IDs */
 #define SCMI_AP_CORE_RESET_ADDR_SET_MSG		0x3
 #define SCMI_AP_CORE_RESET_ADDR_GET_MSG		0x4
+
+/* SCMI Reset Domain Management protocol message IDs (SCMI spec §4.7) */
+#define SCMI_RESET_DOMAIN_ATTRIBUTES_MSG	0x3
+#define SCMI_RESET_DOMAIN_RESET_MSG		0x4
+
+/*
+ * Attribute bits returned by RESET_DOMAIN_ATTRIBUTES (SCMI spec §4.7.2.2):
+ *   Bit[31]: async_support  - 1 = asynchronous reset is supported
+ *   Bit[30]: notify_support - 1 = reset notifications are supported
+ *   Bits[29:0]: reserved (SBZ)
+ */
+#define SCMI_RESET_ATTR_ASYNC_SUPPORT		(1U << 31)
+#define SCMI_RESET_ATTR_NOTIFY_SUPPORT		(1U << 30)
+
+/*
+ * Reset flags (SCMI spec DEN0056F §3.8.2.6 RESET command):
+ *   Bit[0]: Autonomous Reset action
+ *             0 = explicit reset (caller asserts/de-asserts the signal)
+ *             1 = autonomous reset (platform drives the full sequence)
+ *   Bit[1]: Explicit signal (ignored when Bit[0] = 1)
+ *             0 = de-assert reset signal
+ *             1 = assert reset signal
+ *   Bit[2]: Async flag (only valid when Bit[0] = 1)
+ *             0 = synchronous
+ *             1 = asynchronous
+ */
+#define SCMI_RESET_FLAG_SYNC			0U
+#define SCMI_RESET_FLAG_AUTONOMOUS		(1U << 0)
+#define SCMI_RESET_FLAG_ASSERT_SIGNAL		(1U << 1)
+#define SCMI_RESET_FLAG_ASYNC			(1U << 2)
+
+/*
+ * Reset state (SCMI spec §4.7.2.3):
+ *   Bit 31: IMPL_RESET - 0 = architecture-defined, 1 = implementation-defined
+ *   Bits 30:0: architecture-specific reset state value
+ */
+#define SCMI_RESET_STATE_ARCH			0U
+#define SCMI_RESET_STATE_IMPL			(1U << 31)
 
 /* Helper macros for system power management protocol commands */
 
@@ -196,6 +236,16 @@ int scmi_sys_pwr_state_get(void *p, uint32_t *system_state);
 int scmi_ap_core_init(scmi_channel_t *ch);
 int scmi_ap_core_set_reset_addr(void *p, uint64_t reset_addr, uint32_t attr);
 int scmi_ap_core_get_reset_addr(void *p, uint64_t *reset_addr, uint32_t *attr);
+
+/*
+ * Reset Domain Management protocol commands (SCMI spec §4.7).
+ * Refer to the SCMI specification for more details on these commands.
+ */
+int scmi_reset_domain_init(scmi_channel_t *ch);
+int scmi_reset_domain_attributes(void *p, uint32_t domain_id,
+				 uint32_t *attributes, uint32_t *latency);
+int scmi_reset_domain_request(void *p, uint32_t domain_id,
+			      uint32_t flags, uint32_t reset_state);
 
 /* API to get the platform specific SCMI channel information. */
 scmi_channel_plat_info_t *plat_css_get_scmi_info(unsigned int channel_id);

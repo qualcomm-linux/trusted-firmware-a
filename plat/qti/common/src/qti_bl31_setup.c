@@ -37,6 +37,7 @@
 
 #include <platform_def.h>
 #include <qti_interrupt_svc.h>
+#include <qti_cpu.h>
 #include <qti_plat.h>
 #ifdef TFA_BL31_RING_LOG_BASE
 #include <qti_ringbuf_console.h>
@@ -95,6 +96,7 @@ void bl31_early_platform_setup(u_register_t from_bl2,
 void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
 				u_register_t arg2, u_register_t arg3)
 {
+
 	bl31_early_platform_setup(arg0, arg1);
 }
 
@@ -132,6 +134,12 @@ void plat_cpuss_config(void)
 {
 }
 
+#pragma weak plat_qti_cpu_boot_cluster_reset
+
+void plat_qti_cpu_boot_cluster_reset(void)
+{
+}
+
 /*******************************************************************************
  * Perform any BL31 platform setup common to ARM standard platforms
  ******************************************************************************/
@@ -143,6 +151,7 @@ void bl31_platform_setup(void)
 	plat_cpuss_config();
 	plat_qti_gic_driver_init();
 	plat_qti_gic_init();
+	plat_qti_cpu_boot_cluster_reset();
 	qti_rpmh_init();
 	qti_cmd_db_init();
 	qti_pwr_utils_init();
