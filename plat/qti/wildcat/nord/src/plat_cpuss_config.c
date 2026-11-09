@@ -6,8 +6,11 @@
 
 #include <stdint.h>
 #include <arch_helpers.h>
+#include <lib/mmio.h>
+#include <common/debug.h>
 #include <qti_plat.h>
 #include <drivers/arm/css/scmi.h>
+#include "cpucp_shared.h"
 
 /*
  * Reset state encoding for the NCC CL4 workaround:
