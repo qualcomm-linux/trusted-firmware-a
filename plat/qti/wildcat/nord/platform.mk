@@ -109,6 +109,7 @@ QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 				-I${QTI_PLAT_PATH}/common/inc				\
 				-I${PLAT_QTI_ROOT}/common/inc/$(ARCH)			\
 				-I${PLAT_QTI_ROOT}/cpu/inc				\
+				-I${PLAT_QTI_ROOT}/cpu/ncc/include			\
 				-I${PLAT_QTI_ROOT}/common/inc				\
 				-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 
@@ -128,7 +129,6 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/wildcat_helpers.S	\
 				$(QTI_COMMON_PATH)/src/qti_syscall.c			\
 				$(QTI_COMMON_PATH)/src/qti_sip_platform.c	\
 				$(QTI_PLAT_PATH)/common/src/wildcat_topology.c	\
-				$(QTI_PLAT_PATH)/common/src/wildcat_pm.c \
 				$(QTI_PLAT_PATH)/common/src/wildcat_rng.c		\
 				$(QTI_COMMON_PATH)/src/spmi_arb.c			\
 				$(QTI_PLAT_PATH)/common/src/wildcat_plat_helpers.c \
@@ -138,6 +138,15 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/wildcat_helpers.S	\
 				drivers/qti/sec_core/sec_core.c 			\
 				drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c 		\
 				drivers/qti/crypto/rng.c
+#
+# PSCI ops wrapper: use the common qti_pm.c which calls plat_qti_pwr_*
+# hooks implemented in plat/qti/cpu/ncc/src/qcom_ncc_psci.c.
+# (plat/qti/wildcat/common/src/qti_pm.c uses bl31qtilib_* and is NOT
+# used for NCC targets.)
+#
+QTI_BL31_SOURCES	+=	$(PLAT_QTI_ROOT)/common/src/qti_pm.c		\
+				$(PLAT_QTI_ROOT)/common/src/pm_ps_hold.c
+
 
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 
@@ -190,7 +199,10 @@ CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/qcom_oryon_v1.S
 #
 QTI_CPU_PATH		:=	plat/qti/cpu
 
+BL31_SOURCES		+=	$(QTI_CPU_PATH)/common/src/qti_cpu_helpers.c
 BL31_CPU_SETUP_SRC	:=	$(QTI_CPU_PATH)/ncc/src/bl31_cpu_setup.c
+# NCC PSCI platform hooks (plat_qti_pwr_* back-end for qti_pm.c)
+BL31_SOURCES		+=	$(QTI_CPU_PATH)/ncc/src/qcom_ncc_psci.c
 
 #
 # SCMI driver sources: ARM CSS SCMI stack.
@@ -205,7 +217,8 @@ $(eval $(call add_define,SCMI_SKIP_SYS_PWR_PROTO_CHECK))
 
 SCMI_SOURCES		:=	drivers/arm/css/scmi/scmi_common.c		\
 				drivers/arm/css/scmi/scmi_pwr_dmn_proto.c	\
-				drivers/arm/css/scmi/scmi_reset_domain_proto.c
+				drivers/arm/css/scmi/scmi_reset_domain_proto.c	\
+				$(QTI_CPU_PATH)/ncc/src/ncc_cpu_power.c
 
 BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${GIC_SOURCES}					\

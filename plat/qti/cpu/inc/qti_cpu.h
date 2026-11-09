@@ -26,5 +26,6 @@
  * Called once from bl31_early_platform_setup() on the boot core only.
  */
 
+unsigned int find_cluster_id(void);
 void plat_qti_cpu_boot_cluster_reset(void);
 #endif /* QTI_CPU_H */
