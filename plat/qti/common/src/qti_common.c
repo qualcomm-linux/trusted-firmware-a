@@ -102,11 +102,15 @@ unsigned int plat_qti_my_cluster_pos(void)
 	unsigned int mpidr, cluster_id;
 
 	mpidr = read_mpidr_el1();
+#ifndef QTI_NCC_CPU
 	if ((mpidr & MPIDR_MT_MASK) == 0) {	/* MT not supported */
 		cluster_id = (mpidr >> MPIDR_AFF1_SHIFT) & MPIDR_AFFLVL_MASK;
 	} else {		/* MT supported */
 		cluster_id = (mpidr >> MPIDR_AFF2_SHIFT) & MPIDR_AFFLVL_MASK;
 	}
+#else
+	cluster_id = (mpidr >> MPIDR_AFF2_SHIFT) & MPIDR_AFFLVL_MASK;
+#endif
 	assert(cluster_id < PLAT_CLUSTER_COUNT);
 	return cluster_id;
 }
