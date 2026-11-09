@@ -10,6 +10,7 @@
 /* Enable the dynamic translation tables library. */
 #define PLAT_XLAT_TABLES_DYNAMIC 1
 
+#include <cpucp_hwio.h>
 #include <common_def.h>
 
 #include <qti_board_def.h>
@@ -150,6 +151,37 @@
 #define QTI_SMEM_BASE ULL(0x89B00000)
 #define QTI_SMEM_SIZE ULL(0x00200000)
 
+/*----------------------------------------------------------------------------*/
+/* LC PON register offsets */
+/*----------------------------------------------------------------------------*/
+#define QTI_PS_HOLD_REG 0xC264000
+#define PON_PS_HOLD_RESET_CTL 0x852
+#define PON_PS_HOLD_RESET_CTL2 0x853
+
+/*----------------------------------------------------------------------------*/
+/* Nord MD to SAIL communication registers and values                          */
+/*----------------------------------------------------------------------------*/
+#define QTI_TCSR_MAIN2SAIL_GP_NONSEC_STATUS7_REG	U(0x01F7A028)
+#define QTI_TCSR_MAIN2SAIL_GP_NONSEC_STATUS8_REG	U(0x01F7A02C)
+#define QTI_TCSR_SAIL2MAIN_GP_NONSEC_SHADOW_STATUS4_REG	U(0x01F7B014)
+
+#define QTI_APSS_INTU_TZ_IPC_INTERRUPT			U(0x17824004)
+#define QTI_APSS_INTU_TZ_IPC_INTERRUPT_SMSS_TZ_IPC_BMSK	U(0x0080000)
+
+#define QTI_MD_SD_MSG_TYPE_SHIFT	U(16)
+#define QTI_MD_SD_MSG_TYPE_MASK		(U(0xFF) << QTI_MD_SD_MSG_TYPE_SHIFT)
+#define QTI_MD_SD_SUBSYS_TYPE_SHIFT	U(24)
+#define QTI_MD_SD_SUBSYS_TYPE_MASK	(U(0xFF) << QTI_MD_SD_SUBSYS_TYPE_SHIFT)
+
+#define QTI_SAIL_RESET_READY		U(0xA0300100)
+#define QTI_PSCI_GRACEFUL_SHUTDOWN_CMD	U(0x5AF00004)
+#define QTI_PSCI_HARD_RESET_CMD		U(0x5AF00005)
+#define QTI_MD_GRACEFUL_SHUTDOWN	U(0xB2200430)
+#define QTI_MD_SOC_HR			U(0xB2200510)
+#define QTI_MD_SD_TZ_SRC		U(0xB2)
+#define QTI_MD_SD_NO_ACK		U(0x10)
+#define QTI_MD_SD_WAIT_FOR_ACK		U(0x20)
+
 /*
  * The Qualcomm QGIC2 implementation seems to have PIDR0-4 and PIDR4-7
  * erroneously swapped for some reason. PIDR2 is actually at 0xFD8.
@@ -167,6 +199,16 @@
 /* Number of boot image entries supported for the platform */
 #define BOOT_IMAGES_NUM_ENTRIES 25
 
+/*
+ * TZ AC config and HYP AC config SW ids, base addresses and sizes.
+ */
+#define TZ_AC_CONFIG_SW_TYPE		0x96
+#define HYP_AC_CONFIG_SW_TYPE		0x97
+#define TZ_TZ_AC_CONFIG_BASE_ADDR	UL(0xBC000000)
+#define TZ_TZ_AC_CONFIG_SIZE		0x10000		/* 64 KB */
+#define TZ_HYP_AC_CONFIG_BASE_ADDR	UL(0x83DE7000)
+#define TZ_HYP_AC_CONFIG_SIZE		0x10000		/* 64 KB */
+
 /*----------------------------------------------------------------------------*/
 /* TME shared mailbox RAM                                                     */
 /*----------------------------------------------------------------------------*/
@@ -178,5 +220,55 @@
 /*----------------------------------------------------------------------------*/
 #define QTI_TFA_TME_MBOX_INTERRUPT	0x17824010
 #define QTI_TFA_TME_MBOX_INTERRUPT_MSK	0x1
+
+/* SCMI channel parameters for CPUCP communication.                          */
+/*                                                                            */
+/* Mailbox:  CPUCP DTIM0 + 0x3000 = 0x18b33000 (AP Secure to CPUCP buffer)  */
+/* Doorbell: APSS_INTU TZ_IPC_INTERRUPT (0x17824004), OSM_IPC bit 28         */
+/*----------------------------------------------------------------------------*/
+
+/* SCMI shared-memory mailbox: AP Secure to CPUCP IPC buffer in CPUCP DTIM0. */
+#define QTI_SCMI_MBX_MEM_BASE		APSEC_CPUCP_SCMI_IPC_BASE
+#define QTI_SCMI_MBX_MEM_SIZE		APSEC_CPUCP_SCMI_IPC_SIZE
+
+/* AP to CPUCP doorbell: write OSM_IPC bit to APSS_INTU TZ_IPC_INTERRUPT. */
+#define QTI_SCMI_DB_REG_ADDR		APSS_SHARED_TZ_IPC_INTERRUPT_ADDR
+#define QTI_SCMI_DB_MODIFY_MASK		APSS_SHARED_TZ_IPC_INTERRUPT_BIT
+#define QTI_SCMI_DB_PRESERVE_MASK	(0xFFFFFFFeU)
+
+/* Poll delay (us) and timeout (us) for SCMI command completion. */
+#define QTI_SCMI_POLL_DELAY_US		(0U)
+#define QTI_SCMI_TIMEOUT_US		(500000U)
+
+#if SPMC_AT_EL3
+
+/*
+ * Number of Secure Partitions supported.
+ * SPMC at EL3, uses this count to configure the maximum number of supported
+ * secure partitions.
+ */
+#define SECURE_PARTITION_COUNT		1
+
+/*
+ * Number of Normal World Partitions supported.
+ * SPMC at EL3, uses this count to configure the maximum number of supported
+ * NWd partitions.
+ */
+#define NS_PARTITION_COUNT		1
+
+/*
+ * Number of Logical Partitions supported.
+ * SPMC at EL3, uses this count to configure the maximum number of supported
+ * logical partitions.
+ */
+#define MAX_EL3_LP_DESCS_COUNT		1
+
+/*
+ * Secure memory region reserved for the SPMC to store transaction
+ * descriptors while memory is shared/lent between OP-TEE and TF-A.
+ */
+#define PLAT_SPMC_SHMEM_DATASTORE_SIZE	(16 * 1024)
+
+#endif /* SPMC_AT_EL3 */
 
 #endif /* PLATFORM_DEF_H */
