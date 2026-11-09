@@ -26,6 +26,16 @@
 					  (PLAT_MAX_PWR_LVL + 1)))
 #endif
 
+
+#pragma weak plat_qti_set_cpupwrctlr_val
+
+/* Stub function by default */
+void plat_qti_set_cpupwrctlr_val(void)
+{
+
+}
+
+
 /*******************************************************************************
  * QTI standard platform handler called to check the validity of the power
  * state parameter. The power state parameter has to be a composite power
@@ -147,6 +157,7 @@ static void qti_node_power_off(const psci_power_state_t *target_state)
 	plat_qti_pwr_domain_off((const uint8_t *)target_state->pwr_domain_state);
 	if (is_cpu_off(target_state)) {
 		plat_qti_gic_cpuif_disable();
+		plat_qti_set_cpupwrctlr_val();
 	}
 }
 
@@ -155,6 +166,7 @@ static void qti_node_suspend(const psci_power_state_t *target_state)
 	plat_qti_pwr_domain_suspend((const uint8_t *)target_state->pwr_domain_state);
 	if (is_cpu_off(target_state)) {
 		plat_qti_gic_cpuif_disable();
+		plat_qti_set_cpupwrctlr_val();
 	}
 }
 

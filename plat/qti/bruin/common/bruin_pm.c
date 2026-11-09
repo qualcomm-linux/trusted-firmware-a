@@ -23,6 +23,12 @@
 #define CPU_SEQ_FORCE_PWR_CTL_VAL(core)	(APSS_CPU_IPM_REG(core) + 0x20U)
 #define CPU_PCHANNEL_FSM_CTL(core)	(APSS_CPU_IPM_REG(core) + 0x44U)
 
+/* QTI_CORE_PWRDN_EN_MASK happens to be same across all CPUs */
+#define QTI_CORE_PWRDN_EN_MASK		1
+
+/* cpu power control happens to be same across all CPUs */
+DEFINE_RENAME_SYSREG_RW_FUNCS(cpu_pwrctrl_val, S3_0_C15_C2_7)
+
 /*
  * plat_qti_pwr_psci_init - PSCI backend init hook.
  *
@@ -100,6 +106,17 @@ void plat_qti_pwr_domain_on_finish(int core_pos, const uint8_t *states)
 	(void)states;
 
 	plat_qti_gic_pcpu_init();
+}
+
+void plat_qti_set_cpupwrctlr_val(void)
+{
+	unsigned long val;
+
+	val = read_cpu_pwrctrl_val();
+	val |= QTI_CORE_PWRDN_EN_MASK;
+	write_cpu_pwrctrl_val(val);
+
+	isb();
 }
 
 /*
