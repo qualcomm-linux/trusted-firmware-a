@@ -96,6 +96,12 @@
  */
 #define GOLD_CLUSTER_SETTLE_US			500U
 
+/* QTI_CORE_PWRDN_EN_MASK happens to be same across all CPUs */
+#define QTI_CORE_PWRDN_EN_MASK		1
+
+/* cpu power control happens to be same across all CPUs */
+DEFINE_RENAME_SYSREG_RW_FUNCS(cpu_pwrctrl_val, S3_0_C15_C2_7)
+
 /*
  * Repair the L3 memories of the gold cluster. Performed once, before the first
  * gold core is powered on.
@@ -362,6 +368,17 @@ void plat_qti_pwr_domain_on_finish(int core_pos, const uint8_t *states)
 
 	plat_qti_gic_pcpu_init();
 	cpucp_clkdom_init();
+}
+
+void plat_qti_set_cpupwrctlr_val(void)
+{
+	unsigned long val;
+
+	val = read_cpu_pwrctrl_val();
+	val |= QTI_CORE_PWRDN_EN_MASK;
+	write_cpu_pwrctrl_val(val);
+
+	isb();
 }
 
 /*
