@@ -34,6 +34,7 @@
 #include <drivers/qti/clock/clock_cfg.h>
 #include <drivers/qti/clock/clock_driver.h>
 #include <lib/mmio.h>
+#include <lib/utils_def.h>
 
 #include "clock_hwio.h"
 
@@ -435,6 +436,102 @@ static void clock_disable_qdss_debug_en(void)
 			   0U << GCC_DEBUG_EN_CDBGPWRUPREQ_SHFT);
 }
 
+/*
+ * TZ votes for each SMMU's TCU / GPU SMMU clock and its power domain, held
+ * so the secure SMMU registers can be programmed while TF-A's init-only
+ * clocks are on. TZ_VOTE_*_GDS registers have no CFG_GDSCR at +4, so PWR_ON
+ * is polled in place instead of going through the generic .pwr_domains path.
+ */
+struct clock_smmu_vote {
+	uintptr_t		gds_addr;
+	bool			gds_tfa_enabled;
+	struct clock_desc	clk;
+};
+
+static struct clock_smmu_vote smmu_votes[] = {
+	{ .gds_addr = GCC_TZ_VOTE_MMU_0_TCU_GDS,
+	  .clk = { GCC_TZ_VOTE_MMU_0_TCU_CLK } },
+	{ .gds_addr = NW_GCC_TZ_VOTE_MMU_1_TCU_GDS,
+	  .clk = { NW_GCC_TZ_VOTE_MMU_1_TCU_CLK } },
+	{ .gds_addr = SE_GCC_TZ_VOTE_MMU_2_TCU_GDS,
+	  .clk = { SE_GCC_TZ_VOTE_MMU_2_TCU_CLK } },
+	{ .gds_addr = GPU_0_GPUCC_GPU_CC_TZ_VOTE_GPU_SMMU_GDS,
+	  .clk = { GPU_0_GPUCC_GPU_CC_TZ_VOTE_GPU_SMMU_CLK,
+		   .part = CHIPINFO_PART_GPU, .part_idx = 0 } },
+	{ .gds_addr = GPU_1_GPUCC_GPU_2_CC_TZ_VOTE_GPU_SMMU_GDS,
+	  .clk = { GPU_1_GPUCC_GPU_2_CC_TZ_VOTE_GPU_SMMU_CLK,
+		   .part = CHIPINFO_PART_GPU, .part_idx = 1 } },
+	{ .clk = { GCC_TZ_VOTE_SMMU_PCIE_QTC_CLK } },
+};
+
+static int clock_enable_smmu_vote_gds(struct clock_smmu_vote *vote)
+{
+	uint32_t retry = CLOCK_GDSC_POLL_RETRIES;
+
+	vote->gds_tfa_enabled = (mmio_read_32(vote->gds_addr) &
+				 TZ_VOTE_GDS_SW_COLLAPSE_BMSK) != 0U;
+	mmio_clrbits_32(vote->gds_addr, TZ_VOTE_GDS_SW_COLLAPSE_BMSK);
+
+	/* Status is unreliable until ~8 XO cycles after power-on. */
+	udelay(1U);
+	while (((mmio_read_32(vote->gds_addr) & TZ_VOTE_GDS_PWR_ON_BMSK) == 0U) &&
+	       (--retry > 0U)) {
+		udelay(1U);
+	}
+
+	if (retry == 0U) {
+		ERROR("Clock: SMMU vote GDS 0x%lx power-up timed out\n",
+		      (unsigned long)vote->gds_addr);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int clock_enable_smmu_votes(void)
+{
+	struct clock_smmu_vote *vote;
+
+	for (vote = smmu_votes; vote < &smmu_votes[ARRAY_SIZE(smmu_votes)];
+	     vote++) {
+		if (chipinfo_is_part_disabled(vote->clk.part,
+					      vote->clk.part_idx)) {
+			continue;
+		}
+
+		if ((vote->gds_addr != 0U) &&
+		    (clock_enable_smmu_vote_gds(vote) != 0)) {
+			return -1;
+		}
+
+		clock_hal_set_clock(&vote->clk, true);
+		if (clock_hal_wait_for_clock_on(&vote->clk) != 0) {
+			ERROR("Clock: SMMU vote clock 0x%lx enable timed out\n",
+			      (unsigned long)vote->clk.cbcr_addr);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static void clock_disable_smmu_votes(void)
+{
+	struct clock_smmu_vote *vote;
+
+	for (vote = &smmu_votes[ARRAY_SIZE(smmu_votes)]; vote-- > smmu_votes;) {
+		if (vote->clk.tfa_enabled) {
+			clock_hal_set_clock(&vote->clk, false);
+		}
+
+		if (vote->gds_tfa_enabled) {
+			mmio_setbits_32(vote->gds_addr,
+					TZ_VOTE_GDS_SW_COLLAPSE_BMSK);
+			vote->gds_tfa_enabled = false;
+		}
+	}
+}
+
 int clock_init_image(struct clock_drv_ctxt *drv_ctxt)
 {
 	struct clock_source *gpll0 = &drv_ctxt->cfg->sources[CLOCK_SOURCE_GPLL0];
@@ -545,6 +642,11 @@ int clock_init_image(struct clock_drv_ctxt *drv_ctxt)
 				   1U << GPU_1_GPUCC_GPU_2_CC_CX_GMU_CBCR_FORCE_MEM_PERIPH_ON_SHFT);
 	}
 
+	/* GPU SMMU access needs the GPU CX/GX GDSCs above to be on first. */
+	if (clock_enable_smmu_votes() != 0) {
+		return -1;
+	}
+
 	/*
 	 * Crashes were observed during CX power collapse without this. Since
 	 * DPM (always sourcing from GPLL0) handshakes with the CX ARC during
@@ -577,6 +679,7 @@ int clock_post_init_image(struct clock_drv_ctxt *drv_ctxt)
 	(void)drv_ctxt;
 
 	/* Restore clocks enabled during init to their original state. */
+	clock_disable_smmu_votes();
 	if (gpu0_present) {
 		clock_disable_gpu0_gx_gdsc();
 	}
