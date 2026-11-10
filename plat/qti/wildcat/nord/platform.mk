@@ -140,6 +140,7 @@ PLAT_INCLUDES		+=	-I${QTI_COMMON_PATH}/inc/$(ARCH)
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
+include drivers/qti/smmu/smmu.mk
 PLAT_INCLUDES += -Iinclude/drivers/qti/qtimer/${CHIPSET}
 
 QTI_USE_NCC_QTIMER	:=	1
