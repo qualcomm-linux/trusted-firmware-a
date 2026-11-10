@@ -7,6 +7,11 @@
 # QTI TME (Trust Management Engine) driver. Provides the tmecom transport
 # layer and the tmeintf message/interface APIs. Include this from a
 # platform.mk guarded by QTI_TME_DRIVER_SUPPORT.
+#
+# QTI_LSP=1 (set by the platform before it includes this file) also builds the
+# TME service of the EL3 logical partition, tme_ffa_handler/ffa_tme_handler.c.
+# The platform must then put el3_spmc_logical_sp.h, the header of its logical
+# partition (plat/qti/wildcat/common/inc), on the include path.
 
 TME_DRIVER_PATH := drivers/qti/tme
 
@@ -30,6 +35,13 @@ BL31_SOURCES	+=	${TME_DRIVER_PATH}/tmecom/src/tmecom.c			\
 			${TME_DRIVER_PATH}/tmeintf/tme_update_rollback_version.c	\
 			${TME_DRIVER_PATH}/tmeintf/tme_write_config_register.c	\
 			${QCBOR_SOURCES}
+
+# The header of the handler, ffa_tme_handler.h, is also included by the logical
+# partition of the platform.
+ifeq (${QTI_LSP},1)
+BL31_SOURCES	+=	${TME_DRIVER_PATH}/tme_ffa_handler/ffa_tme_handler.c
+PLAT_INCLUDES	+=	-I${TME_DRIVER_PATH}/tme_ffa_handler
+endif
 
 # bl31qtilib_cb_interface.h is picked up from plat/qti/v2/bl31qtilib/inc.
 # include/drivers/qti provides qti_mbox.h and the new tmecom public header.

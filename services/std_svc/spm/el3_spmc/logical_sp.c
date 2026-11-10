@@ -78,13 +78,22 @@ int el3_sp_desc_validate(void)
 			return -EINVAL;
 		}
 
-		/* Ensure that LP only supports receiving direct requests. */
-		if (lp_desc->properties &
-		    ~(FFA_PARTITION_DIRECT_REQ_RECV)) {
+		/*
+		 * Ensure that LP only supports receiving direct requests
+		 * (REQ and/or REQ2) and advertises at least one of them.
+		 */
+		if (((lp_desc->properties &
+					~(FFA_PARTITION_DIRECT_REQ_RECV |
+						FFA_PARTITION_DIRECT_REQ2_RECV)) != 0U) ||
+				((lp_desc->properties &
+					(FFA_PARTITION_DIRECT_REQ_RECV |
+					FFA_PARTITION_DIRECT_REQ2_RECV)) == 0U)) {
 			ERROR("Invalid partition properties (0x%x)\n",
 			      lp_desc->properties);
 			return -EINVAL;
 		}
+
+
 
 		/* Ensure direct request function callback is registered. */
 		if (lp_desc->direct_req == NULL) {

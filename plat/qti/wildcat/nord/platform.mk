@@ -183,7 +183,7 @@ include lib/libfdt/libfdt.mk
 include common/fdt_wrappers.mk
 BL31_SOURCES					+=	${FDT_WRAPPERS_SOURCES}		\
 				common/uuid.c						\
-				$(QTI_PLAT_PATH)/nord/nord_el3_spmc.c
+				$(QTI_PLAT_PATH)/common/src/el3_spmc.c
 
 TOS_FW_CONFIG_DTS			:=	$(QTI_PLAT_PATH)/nord/fdts/nord_tos_fw_manifest.dts
 FDT_SOURCES					+=	${TOS_FW_CONFIG_DTS}
@@ -308,6 +308,19 @@ BL31_SOURCES +=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_stub.c \
 # TmeCom
 QTI_TMECOM	:=	1
 $(eval $(call add_define,QTI_USE_TMECOM))
+
+# Logical partition (EL3 LSP) used by OP-TEE to
+# reach services in EL3 over FF-A.
+QTI_LSP		?=	$(if $(filter 1,${SPMC_AT_EL3}),1,0)
+$(eval $(call assert_boolean,QTI_LSP))
+$(eval $(call add_define,QTI_LSP))
+ifeq (${QTI_LSP},1)
+ifneq (${SPMC_AT_EL3},1)
+$(error QTI_LSP=1 requires SPMC_AT_EL3=1)
+endif
+BL31_SOURCES	+=	${QTI_PLAT_PATH}/common/src/el3_spmc_logical_sp.c
+endif
+
 include drivers/qti/tme/tme.mk
 
 # Mailbox
