@@ -31,6 +31,12 @@ BL31_SOURCES	+=	${TME_DRIVER_PATH}/tmecom/src/tmecom.c			\
 			${TME_DRIVER_PATH}/tmeintf/tme_write_config_register.c	\
 			${QCBOR_SOURCES}
 
+# TME FF-A handler for requests from the Secure OS LSP
+ifeq (${QTI_TEE_LSP},1)
+BL31_SOURCES	+=	${TME_DRIVER_PATH}/tme_ffa_handler/tme_ffa_handler.c
+PLAT_INCLUDES	+=	-I${TME_DRIVER_PATH}/tme_ffa_handler
+endif
+
 # bl31qtilib_cb_interface.h is picked up from plat/qti/v2/bl31qtilib/inc.
 # include/drivers/qti provides qti_mbox.h and the new tmecom public header.
 PLAT_INCLUDES	+=	-I${TME_DRIVER_PATH}/tmecom/inc				\
