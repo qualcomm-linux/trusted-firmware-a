@@ -18,6 +18,20 @@
 #include <qti_cpu.h>
 #include <qti_plat.h>
 
+/*
+ * Weak no-op defaults so platforms without a companion SAIL die link cleanly.
+ * qti_nord_pm.c provides the strong definitions for wildcat/nord, which
+ * notify SAIL of the pending shutdown/reset and wait for its ack before we
+ * pull PS_HOLD.
+ */
+void __attribute__((weak)) qti_platform_psci_system_off(void)
+{
+}
+
+void __attribute__((weak)) qti_platform_psci_system_reset(void)
+{
+}
+
 #define QTI_LOCAL_PSTATE_MASK		((1 << QTI_LOCAL_PSTATE_WIDTH) - 1)
 
 #if PSCI_OS_INIT_MODE
@@ -187,12 +201,14 @@ static __dead2 void assert_ps_hold(void)
 __dead2 void qti_system_off(void)
 {
 	qti_pmic_prepare_shutdown();
+	qti_platform_psci_system_off();
 	assert_ps_hold();
 }
 
 __dead2 void qti_system_reset(void)
 {
 	qti_pmic_prepare_reset();
+	qti_platform_psci_system_reset();
 	assert_ps_hold();
 }
 
