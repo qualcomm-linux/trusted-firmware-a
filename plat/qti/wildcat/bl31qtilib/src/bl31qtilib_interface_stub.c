@@ -235,15 +235,6 @@ int bl31qtilib_get_subsystem_debug_options(uint32_t subsys_id, smc_rsp_t *rsp)
 	return -1;
 }
 
-int sysdbg_reset_check(void)
-{
-	return 0;
-}
-
-void sysdbg_entry_handler(void)
-{
-}
-
 /*
  * Stub: invasive and non-invasive debug are both disabled by default.
  */

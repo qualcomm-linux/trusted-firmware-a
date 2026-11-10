@@ -305,6 +305,30 @@ endif
 BL31_SOURCES +=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_stub.c \
 			${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_panic_stub.S
 
+# SDI (System Debug Image) reset-path driver.
+PLAT_INCLUDES		+=	-Iinclude/drivers/qti/sysdbg		\
+				-Iinclude/drivers/qti/sysdbg/${CHIPSET}
+
+QTI_USE_SYSDBG		?=	1
+ifeq ($(QTI_USE_SYSDBG),1)
+BL31_SOURCES		+=	drivers/qti/sysdbg/sysdbg_err.c			\
+				drivers/qti/sysdbg/sysdbg_lock.c			\
+				drivers/qti/sysdbg/sysdbg_log.c			\
+				drivers/qti/sysdbg/sysdbg_main.c			\
+				drivers/qti/sysdbg/sysdbg_mem_dump.c			\
+				drivers/qti/sysdbg/sysdbg_reset.c			\
+				drivers/qti/sysdbg/sysdbg_system.c			\
+				drivers/qti/sysdbg/asm/sysdbg_entry.S			\
+				drivers/qti/sysdbg/asm/sysdbg_cache_armv8.S		\
+				drivers/qti/sysdbg/${CHIPSET}/sysdbg_reset_${CHIPSET}.c	\
+				drivers/qti/sysdbg/${CHIPSET}/sysdbg_target.c		\
+				drivers/qti/sysdbg/${CHIPSET}/sysdbg_target_clk.c	\
+				drivers/qti/sysdbg/${CHIPSET}/sysdbg_target_data.c	\
+				drivers/qti/sysdbg/${CHIPSET}/sysdbg_timer.c
+else
+BL31_SOURCES		+=	drivers/qti/sysdbg/sysdbg_stub.c
+endif
+
 # Mailbox
 QTI_MBOX		:=	1
 QTI_MBOX_QMP		:=	1
