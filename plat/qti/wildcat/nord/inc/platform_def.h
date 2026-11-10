@@ -158,6 +158,15 @@
 #define PON_PS_HOLD_RESET_CTL 0x852
 #define PON_PS_HOLD_RESET_CTL2 0x853
 
+#define SPMI_ARB_APID_MAP_BASE	0x0C402000U
+#define SPMI_ARB_CHNL_BASE	0x0C500000U
+#define SPMI_ARB_CHNL_STRIDE	0x1000U
+#define SPMI_ARB_NUM_APID	1024U
+
+#define SPMI_ARB_OWNER_MAP_BASE	0x0C42D000U
+#define SPMI_ARB_OWNER_STRIDE	0x4U
+#define SPMI_ARB_OWNER_EE	0U
+
 /*----------------------------------------------------------------------------*/
 /* Nord MD to SAIL communication registers and values                          */
 /*----------------------------------------------------------------------------*/
