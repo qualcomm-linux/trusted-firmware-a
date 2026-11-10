@@ -163,6 +163,39 @@
 #define PON_PS_HOLD_RESET_CTL 0x852
 #define PON_PS_HOLD_RESET_CTL2 0x853
 
+#define SPMI_ARB_APID_MAP_BASE	0x0C402000U
+#define SPMI_ARB_CHNL_BASE	0x0C500000U
+#define SPMI_ARB_CHNL_STRIDE	0x1000U
+#define SPMI_ARB_NUM_APID	1024U
+
+#define SPMI_ARB_OWNER_MAP_BASE	0x0C42D000U
+#define SPMI_ARB_OWNER_STRIDE	0x4U
+#define SPMI_ARB_OWNER_EE	0U
+
+/*----------------------------------------------------------------------------*/
+/* Nord MD to SAIL communication registers and values                          */
+/*----------------------------------------------------------------------------*/
+#define QTI_TCSR_MAIN2SAIL_GP_NONSEC_STATUS7_REG	U(0x01F7A028)
+#define QTI_TCSR_MAIN2SAIL_GP_NONSEC_STATUS8_REG	U(0x01F7A02C)
+#define QTI_TCSR_SAIL2MAIN_GP_NONSEC_SHADOW_STATUS4_REG	U(0x01F7B014)
+
+#define QTI_APSS_INTU_TZ_IPC_INTERRUPT			U(0x17824004)
+#define QTI_APSS_INTU_TZ_IPC_INTERRUPT_SMSS_TZ_IPC_BMSK	U(0x0080000)
+
+#define QTI_MD_SD_MSG_TYPE_SHIFT	U(16)
+#define QTI_MD_SD_MSG_TYPE_MASK		(U(0xFF) << QTI_MD_SD_MSG_TYPE_SHIFT)
+#define QTI_MD_SD_SUBSYS_TYPE_SHIFT	U(24)
+#define QTI_MD_SD_SUBSYS_TYPE_MASK	(U(0xFF) << QTI_MD_SD_SUBSYS_TYPE_SHIFT)
+
+#define QTI_SAIL_RESET_READY		U(0xA0300100)
+#define QTI_PSCI_GRACEFUL_SHUTDOWN_CMD	U(0x5AF00004)
+#define QTI_PSCI_HARD_RESET_CMD		U(0x5AF00005)
+#define QTI_MD_GRACEFUL_SHUTDOWN	U(0xB2200430)
+#define QTI_MD_SOC_HR			U(0xB2200510)
+#define QTI_MD_SD_TZ_SRC		U(0xB2)
+#define QTI_MD_SD_NO_ACK		U(0x10)
+#define QTI_MD_SD_WAIT_FOR_ACK		U(0x20)
+
 /*
  * The Qualcomm QGIC2 implementation seems to have PIDR0-4 and PIDR4-7
  * erroneously swapped for some reason. PIDR2 is actually at 0xFD8.
