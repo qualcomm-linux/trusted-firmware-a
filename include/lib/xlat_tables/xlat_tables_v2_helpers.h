@@ -24,6 +24,7 @@
 #include <platform_def.h>
 
 #include <lib/cassert.h>
+#include <lib/spinlock.h>
 #include <lib/utils_def.h>
 #include <lib/xlat_tables/xlat_tables_arch.h>
 #include <lib/xlat_tables/xlat_tables_defs.h>
@@ -63,6 +64,11 @@ struct xlat_ctx {
 	 */
 	struct mmap_region *mmap;
 	int mmap_num;
+
+#if defined(PLAT_XLAT_TABLES_DYNAMIC) && PLAT_XLAT_TABLES_DYNAMIC
+	/* Serializes complete post-initialization dynamic mmap mutations. */
+	spinlock_t mmap_lock;
+#endif
 
 	/*
 	 * Array of finer-grain translation tables.
@@ -118,12 +124,17 @@ struct xlat_ctx {
 
 #define XLAT_REGISTER_DYNMAP_STRUCT(_ctx_name)				\
 	.tables_mapped_regions = _ctx_name##_mapped_regions,
+
+#define XLAT_CTX_INIT_DYNMAP_LOCK()					\
+	.mmap_lock = { 0U },
 #else
 #define XLAT_ALLOC_DYNMAP_STRUCT(_ctx_name, _xlat_tables_count)		\
 	/* do nothing */
 
 #define XLAT_REGISTER_DYNMAP_STRUCT(_ctx_name)				\
 	/* do nothing */
+
+#define XLAT_CTX_INIT_DYNMAP_LOCK()
 #endif /* PLAT_XLAT_TABLES_DYNAMIC */
 
 #ifdef PLAT_RO_XLAT_TABLES
@@ -160,6 +171,7 @@ struct xlat_ctx {
 		.va_max_address = (_virt_addr_space_size) - 1UL,	\
 		.mmap = _ctx_name##_mmap,				\
 		.mmap_num = (_mmap_count),				\
+		XLAT_CTX_INIT_DYNMAP_LOCK()				\
 		.tables = _ctx_name##_xlat_tables,			\
 		.tables_num = ARRAY_SIZE(_ctx_name##_xlat_tables),	\
 		 XLAT_CTX_INIT_TABLE_ATTR()				\
