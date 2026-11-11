@@ -94,6 +94,10 @@ static bool is_valid_mode(int mode)
  ******************************************************************************/
 static const char *next(const char *path, char *token)
 {
+	if (path == NULL) {
+		return NULL;
+	}
+
 	int index;
 	const char *cursor;
 
@@ -297,7 +301,8 @@ chan_t *path_to_channel(const char *path, int mode)
 		return NULL;
 	}
 
-	for (path_next = next(path_next, elem); *elem;
+	for (path_next = next(path_next, elem);
+			path_next != NULL && *elem;
 			path_next = next(path_next, elem)) {
 		if ((channel->qid & CHDIR) == 0) {
 			goto notfound;
