@@ -25,6 +25,8 @@ ifeq ($(filter ${XPU_VERSION},3 4),)
     $(error XPU_VERSION must be 3 or 4, got '${XPU_VERSION}')
 endif
 
+$(eval $(call add_define,XPU_VERSION))
+
 PLAT_INCLUDES +=	-I$(ACCESSCONTROL_PATH) \
 			-I$(PLAT_DRIVERS_INCLUDE_PATH)/accesscontrol \
 			-I$(ACCESSCONTROL_PATH)/src

@@ -196,30 +196,6 @@ enum xpu_level {
 };
 
 /*
- * Virtual machine identifiers. Only the ids the driver names are listed; the
- * values are an ABI shared with the image producer.
- */
-enum ac_virtual_machine_id {
-	AC_VM_NONE = 0,
-	AC_VM_TZ = 1,
-	AC_VM_HLOS = 3,
-	AC_VM_SSC_Q6_ELF = 5,
-	AC_VM_ADSP_Q6_ELF = 6,
-	AC_VM_MSS_MSA = 15,
-	AC_VM_SPSS_SP = 26,
-	AC_VM_HLOS_GSI = 32,
-	AC_VM_TRUSTED_UI = 45,
-	AC_VM_OEM = 49,
-	AC_VM_HOST = 51,
-	AC_VM_GVM1 = 52,
-	AC_VM_GVM2 = 53,
-	AC_VM_GVM3 = 54,
-	AC_VM_GVM4 = 55,
-	AC_VM_LAST = 127,
-	AC_VM_MAX = 0x7FFFFFFF
-};
-
-/*
  * Resource group configuration for MPUs, as stored in the config image.
  *
  * The structures below through struct ac_xpu_info are wire formats shared with

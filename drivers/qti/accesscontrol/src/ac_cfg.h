@@ -143,8 +143,8 @@ struct ac_global_data {
 
 /* Shadow virtual machine mapping. */
 struct ac_shadow_vm {
-	enum ac_virtual_machine_id shadow_vm;
-	enum ac_virtual_machine_id mapping_vm;
+	enum virtual_machine_id shadow_vm;
+	enum virtual_machine_id mapping_vm;
 };
 
 /* One device memory region described by the image. */

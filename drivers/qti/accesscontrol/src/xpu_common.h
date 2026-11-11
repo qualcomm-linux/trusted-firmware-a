@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include <drivers/qti/accesscontrol/accesscontrol.h>
 #include <lib/utils_def.h>
 
 /*
@@ -110,5 +111,49 @@ void xpu_print_log(void *ctx);
 int xpu_mem_assign(enum device_type device, enum domain_type domain,
 		   uintptr_t start, uintptr_t end,
 		   uint32_t perm_r, uint32_t perm_w);
+
+/*
+ * Unified VMID/domain permission bitmask constants. These match the
+ * TZBSP_DOMAIN_* / TZBSP_VMID_* values used by the QTI access control
+ * subsystem. XPU3 writes perm_r/perm_w verbatim to CR1/CR3; XPU4 converts
+ * them via xpu4_domain_mask_to_qad_vector() to QAD vectors before
+ * programming hardware.
+ */
+#define AC_VMID_VMID_0_BIT    (1U << 0)   /* default NS VMID               */
+#define AC_VMID_RPM_BIT       (1U << 1)   /* RPM VMID number   (XPU3 only) */
+#define AC_VMID_AP_BIT        (1U << 3)   /* AP/HLOS VMID number(XPU3 only)*/
+#define AC_DOMAIN_AOP_BIT     (1U << 27)  /* AOP/RPM domain    (XPU4 only) */
+#define AC_DOMAIN_TZ_BIT      (1U << 28)  /* TZ/EL3 domain     (both)      */
+#define AC_DOMAIN_MSA_BIT     (1U << 31)  /* MSA/modem domain  (both)      */
+
+/*
+ * Maps AC_VM_* to the perm_r/perm_w bitmask passed to xpu_mem_assign().
+ * Returns 0 for unrecognised VMs callers skip those entries.
+ *
+ * Version-specific:
+ *   XPU3: AC_VM_HLOS/RPM/TZ return 0 no XPU programming needed; slave-side
+ *         DDR protection on XPU3 targets is handled via UMR Perms.
+ *   XPU4: AC_VM_HLOS/RPM/TZ return their domain/VMID bits which
+ *         xpu4_domain_mask_to_qad_vector() converts to QAD_VECTOR_AP_NS,
+ *         QAD_VECTOR_AOP and QAD_VECTOR_AP_SEC respectively.
+ */
+static inline uint32_t vm_to_perm_mask(uint32_t vm_id)
+{
+	switch (vm_id) {
+	case AC_VM_MSS_MSA:
+	case AC_VM_MSS_NAV:
+		return AC_DOMAIN_MSA_BIT;
+#if XPU_VERSION == 4
+	case AC_VM_TZ:
+		return AC_DOMAIN_TZ_BIT;
+	case AC_VM_RPM:
+		return AC_DOMAIN_AOP_BIT;
+	case AC_VM_HLOS:
+		return AC_VMID_VMID_0_BIT;
+#endif
+	default:
+		return 0U;
+	}
+}
 
 #endif /* XPU_COMMON_H */

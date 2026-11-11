@@ -13,21 +13,8 @@
 #include <lib/spinlock.h>
 #include <vmidmt.h>
 #include <xpu_common.h>
-
-#define AC_PERM_X 0x1
-#define AC_PERM_W 0x2
-#define AC_PERM_R 0x4
-
+int qti_assign_dump_table_region(uintptr_t is_assign, uintptr_t addr, size_t size);
 static spinlock_t mem_assign_lock;
-
-enum virtual_machine_id {
-	AC_VM_NONE = 0,
-	AC_VM_HLOS = 3,
-	AC_VM_MSS_MSA = 15,
-	AC_VM_MSS_NAV = 43,
-	AC_VM_LAST = 44,
-	AC_VM_MAX = 0x7FFFFFFF,
-};
 
 enum ac_error {
 	AC_SUCCESS = 0,
@@ -151,8 +138,10 @@ process_sources(const uint32_t *src_vm_list, uint32_t src_vm_count,
 	for (src_index = 0U; src_index < src_vm_count; src_index++, src_vm++) {
 		uint32_t src_vm_id = *src_vm;
 
-		if (src_vm_id != AC_VM_MSS_MSA && src_vm_id != AC_VM_MSS_NAV)
+		/* Skip VMs with no perm mapping for this XPU revision */
+		if (vm_to_perm_mask(src_vm_id) == 0U) {
 			continue;
+		}
 
 		/* Check if same VM appears as destination */
 		dst_vm = dst_vm_list;
@@ -175,12 +164,11 @@ process_sources(const uint32_t *src_vm_list, uint32_t src_vm_count,
 			continue;
 		}
 
-		if (src_vm_id == AC_VM_MSS_MSA)
+		if (src_vm_id == AC_VM_MSS_MSA) {
 			*device = DEVICE_MODEM;
-		else if (src_vm_id == AC_VM_MSS_NAV)
+		} else if (src_vm_id == AC_VM_MSS_NAV) {
 			*device = DEVICE_MSS_NAV;
-		else
-			return AC_ERR_XPU_TYPE_NOT_SUPPORTED;
+		}
 
 		*domain = APPS_NS_DOMAIN;
 	}
@@ -204,11 +192,15 @@ process_destinations(const uint32_t *src_vm_list, uint32_t src_vm_count,
 	dst_vm = dst_vm_list;
 
 	for (dst_index = 0U; dst_index < dst_vm_count; dst_index++, dst_vm++) {
-		uint32_t dst_vm_id = dst_vm->dst_vm;
+		uint32_t dst_vm_id  = dst_vm->dst_vm;
 		uint32_t dst_vm_perm = dst_vm->dst_vm_perm;
+		uint32_t perm_mask;
 
-		if (dst_vm_id != AC_VM_MSS_MSA && dst_vm_id != AC_VM_MSS_NAV)
+		/* Skip VMs with no perm mapping for this XPU revision */
+		perm_mask = vm_to_perm_mask(dst_vm_id);
+		if (perm_mask == 0U) {
 			continue;
+		}
 
 		/* Check if same VM exists in source list */
 		src_check = src_vm_list;
@@ -226,22 +218,28 @@ process_destinations(const uint32_t *src_vm_list, uint32_t src_vm_count,
 			continue;
 		}
 
-		if (dst_vm_id == AC_VM_MSS_MSA)
+		if (dst_vm_id == AC_VM_MSS_MSA) {
 			*device = DEVICE_MODEM;
-		else if (dst_vm_id == AC_VM_MSS_NAV)
+		} else if (dst_vm_id == AC_VM_MSS_NAV) {
 			*device = DEVICE_MSS_NAV;
-		else
-			return AC_ERR_XPU_TYPE_NOT_SUPPORTED;
+		}
 
-		/* Permissions */
-		if ((dst_vm_perm & AC_PERM_W) != 0U)
-			*write_perm_domain = MSA_DOMAIN;
-
-		if ((dst_vm_perm & AC_PERM_R) != 0U)
-			*read_perm_domain = MSA_DOMAIN;
+		/*
+		 * Accumulate with |= so multiple destinations are ORed into the
+		 * same mask, allowing all granted permissions to be programmed
+		 * in one operation.
+		 */
+		if ((dst_vm_perm & AC_PERM_W) != 0U) {
+			*write_perm_domain |= perm_mask;
+		}
+		if ((dst_vm_perm & AC_PERM_R) != 0U) {
+			*read_perm_domain  |= perm_mask;
+		}
 
 		/* Modem keeps secure RG ownership permanently */
-		*domain = APPS_S_DOMAIN;
+		if (dst_vm_id == AC_VM_MSS_MSA || dst_vm_id == AC_VM_MSS_NAV) {
+			*domain = APPS_S_DOMAIN;
+		}
 	}
 
 	return AC_SUCCESS;

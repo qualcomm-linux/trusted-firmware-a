@@ -9,6 +9,21 @@
 
 #include <stdint.h>
 
+#define AC_PERM_X 0x1
+#define AC_PERM_W 0x2
+#define AC_PERM_R 0x4
+
+enum virtual_machine_id {
+	AC_VM_NONE    = 0,
+	AC_VM_TZ      = 1,
+	AC_VM_RPM     = 2,
+	AC_VM_HLOS    = 3,
+	AC_VM_MSS_MSA = 15,
+	AC_VM_MSS_NAV = 43,
+	AC_VM_LAST    = 127,
+	AC_VM_MAX     = 0x7FFFFFFF,
+};
+
 typedef struct qti_accesscontrol_mem {
 	uint64_t mem_addr;
 	uint64_t mem_size;
