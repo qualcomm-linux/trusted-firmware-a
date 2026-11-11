@@ -261,7 +261,7 @@ chan_t *path_to_channel(const char *path, int mode)
 	int i, n;
 	const char *path_next;
 	chan_t *mnt, *channel;
-	char elem[NAMELEN];
+	char elem[NAMELEN + 1U]; /* NAMELEN chars plus NUL */
 
 	if (path == NULL) {
 		return NULL;
