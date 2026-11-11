@@ -101,6 +101,7 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
+include drivers/qti/smmu/smmu.mk
 
 PLAT_INCLUDES   +=	-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 			-Iinclude/drivers/qti/accesscontrol			\
