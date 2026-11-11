@@ -89,6 +89,7 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				$(PLAT_PATH)/common/src/qti_interrupt_svc.c		\
 				$(PLAT_PATH)/common/src/qti_interrupt_svc_el3.c	\
 				$(PLAT_PATH)/common/src/qti_syscall.c			\
+				$(PLAT_PATH)/common/src/qti_sip_platform.c		\
 				$(PLAT_PATH)/common/src/qti_topology.c			\
 				$(PLAT_PATH)/common/src/qti_pm.c			\
 				$(PLAT_PATH)/common/src/spmi_arb.c			\
@@ -116,8 +117,11 @@ PLAT_INCLUDES	+=	-Iinclude/drivers/qti/sec_core/${CHIPSET} \
 BL31_SOURCES	+=	plat/qti/hoya/qtiseclib/src/qtiseclib_interface_stub.c	\
 			drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
+			$(PLAT_PATH)/common/src/qti_qtimer_platform.c	\
 			drivers/qti/qtimer/qtimer.c				\
-			drivers/qti/watchdog/watchdog.c
+			drivers/qti/watchdog/watchdog.c\
+			drivers/qti/watchdog/apsslegacywdog/watchdog_ver.c\
+			plat/qti/hoya/common/src/qti_watchdog_platform.c
 else
 $(eval $(call add_define,QTISECLIB_PATH))
 $(eval $(call add_define,QTI_XPU_BYPASS))

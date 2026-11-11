@@ -19,14 +19,11 @@
 int qti_mmap_add_dynamic_region(uintptr_t base_pa, size_t size,
 				unsigned int attr);
 int qti_mmap_remove_dynamic_region(uintptr_t base_va, size_t size);
-void qti_setup_page_tables(
-			   uintptr_t total_base,
-			   size_t total_size,
-			   uintptr_t code_start,
-			   uintptr_t code_limit,
-			   uintptr_t rodata_start,
-			   uintptr_t rodata_limit
-			  );
+void qti_setup_page_tables(uintptr_t total_base, size_t total_size,
+			   uintptr_t code_start, uintptr_t code_limit,
+			   uintptr_t rodata_start, uintptr_t rodata_limit,
+			   uintptr_t coherent_ram_start,
+			   uintptr_t coherent_ram_limit);
 int qti_io_setup(void);
 struct image_info *qti_get_image_info(unsigned int image_id);
 
@@ -36,6 +33,12 @@ void plat_qti_gic_cpuif_enable(void);
 void plat_qti_gic_cpuif_disable(void);
 void plat_qti_gic_pcpu_init(void);
 const interrupt_prop_t *plat_qti_get_interrupt_props(unsigned int *num_props);
+
+void plat_cpuss_config(void);
+void configure_irq_type(uintptr_t clr_edge_base, uintptr_t set_level_base,
+			const uint32_t *cfg_arr, unsigned int num_words);
+void configure_irq_array(uintptr_t base, const uint32_t *cfg_arr,
+			 unsigned int num_words);
 
 unsigned int plat_qti_core_pos_by_mpidr(u_register_t mpidr);
 unsigned int plat_qti_my_cluster_pos(void);

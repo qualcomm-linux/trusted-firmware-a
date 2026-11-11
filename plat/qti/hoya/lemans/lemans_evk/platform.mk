@@ -92,6 +92,7 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				$(PLAT_PATH)/common/src/qti_pm.c			\
 				$(PLAT_PATH)/common/src/qti_ringbuf_console_helper.c	\
 				$(PLAT_PATH)/common/src/qti_syscall.c			\
+				$(PLAT_PATH)/common/src/qti_sip_platform.c		\
 				$(PLAT_PATH)/common/src/qti_topology.c			\
 				$(PLAT_PATH)/common/src/spmi_arb.c			\
 				$(PLAT_PATH)/hoya/common/$(ARCH)/hoya_helpers.S		\
@@ -119,6 +120,9 @@ include drivers/qti/cpucp/cpucp.mk
 include drivers/qti/icb/icb.mk
 include drivers/qti/coreinit/coreinit.mk
 
+QTI_USE_NCC_QTIMER	:=	0
+$(eval $(call add_define,QTI_USE_NCC_QTIMER))
+
 PLAT_INCLUDES   +=      -Iinclude/drivers/qti/sec_core/${CHIPSET} \
 			-Iinclude/drivers/qti/qtimer/hoya \
 			-Iinclude/drivers/qti/watchdog/hoya
@@ -127,8 +131,12 @@ BL31_SOURCES	+=	$(PLAT_PATH)/hoya/common/hoya_pm.c \
 			$(PLAT_PATH)/hoya/qtiseclib/src/qtiseclib_interface_stub.c \
 			drivers/qti/sec_core/sec_core.c \
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c \
+			$(PLAT_PATH)/common/src/qti_qtimer_platform.c	\
 			drivers/qti/qtimer/qtimer.c \
-			drivers/qti/watchdog/watchdog.c
+			drivers/qti/watchdog/watchdog.c \
+			drivers/qti/watchdog/apsslegacywdog/watchdog_ver.c \
+			$(PLAT_PATH)/hoya/common/src/qti_watchdog_platform.c
+
 else
 $(eval $(call add_define,QTISECLIB_PATH))
 # use library provided by QTISECLIB_PATH
