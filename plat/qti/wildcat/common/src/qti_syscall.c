@@ -30,6 +30,9 @@
 #include <bl31qtilib_spd_agnostic.h>
 #include <qti_secure_io.h>
 
+/* Dump-table SMC handler (qti_dump_table.c) */
+int qti_assign_dump_table_region(uintptr_t is_assign, uintptr_t addr, size_t size);
+
 /*
  * SIP service - SMC function IDs for SiP Service queries
  */
@@ -77,7 +80,15 @@
 
 /* UPDATE QTI_SIP_SVC_CALL_COUNT when adding a new call */
 /* QTI_SIP_SVC_HWTRACE_CALL_COUNT is added in qti_sip_handler */
-#define QTI_SIP_SVC_CALL_COUNT				U(0x11)
+#define QTI_SIP_SVC_CALL_COUNT				U(0x12)
+
+/*
+ * TZ_OWNER_SIP / TZ_SVC_DUMP (0x13) / func 0x13
+ * Matches TZ_DUMP_ASSIGN_DUMP_TABLE_REGION in tz_syscall_pub.h (SMC ID 0x02000313).
+ * x1 = param_id (must be 0x3), x2 = is_assign, x3 = addr, x4 = size.
+ */
+#define QTI_SIP_SVC_ASSIGN_DUMP_TABLE_REGION_ID          U(0x02000313)
+#define QTI_SIP_SVC_ASSIGN_DUMP_TABLE_REGION_PARAM_ID    U(0x3)
 
 #define QTI_SIP_SVC_FATAL_ERR_DUMP_ID			U(0x02000316)
 #define QTI_SIP_SVC_FATAL_ERR_DUMP_PARAM_ID		U(0x3)
@@ -153,6 +164,7 @@ static bool qti_check_syscall_availability(u_register_t smc_fid,
 	case QTI_SIP_SVC_CONFIG_HW_FOR_OFFLINE_RAM_DUMP:
 	case QTI_SIP_SVC_SECURE_IO_READ_ID:
 	case QTI_SIP_SVC_SECURE_IO_WRITE_ID:
+	case QTI_SIP_SVC_ASSIGN_DUMP_TABLE_REGION_ID:
 		if (is_caller_secure(flags)) {
 			return false;
 		}
@@ -403,6 +415,17 @@ static uintptr_t qti_sip_handler(uint32_t smc_fid, u_register_t x1,
 		SMC_RET2(handle, QTI_SIP_SUCCESS, features);
 	}
 #endif
+	case QTI_SIP_SVC_ASSIGN_DUMP_TABLE_REGION_ID: {
+		if (x1 != QTI_SIP_SVC_ASSIGN_DUMP_TABLE_REGION_PARAM_ID) {
+			SMC_RET1(handle, QTI_SIP_INVALID_PARAM);
+		}
+		if (!is_caller_non_secure(flags)) {
+			SMC_RET1(handle, QTI_SIP_NOT_SUPPORTED);
+		}
+		int ret = qti_assign_dump_table_region(
+				(uintptr_t)x2, (uintptr_t)x3, (size_t)x4);
+		SMC_RET1(handle, ret == 0 ? QTI_SIP_SUCCESS : QTI_SIP_CALL_FAILED);
+	}
 	case QTI_SIP_SVC_FATAL_ERR_DUMP_ID: {
 		size_t out_bytes = 0;
 		int ret;

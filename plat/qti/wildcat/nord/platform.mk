@@ -139,6 +139,8 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 				$(QTI_PLAT_PATH)/common/src/qti_tlb.c			\
 				$(QTI_PLAT_PATH)/common/src/qti_topology.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_rng.c			\
+				$(QTI_PLAT_PATH)/common/src/qti_dump_table.c	\
+				$(PLAT_QTI_ROOT)/common/src/spmi_arb.c			\
 				$(QTI_PLAT_PATH)/bl31qtilib/src/bl31qtilib_cb_interface.c	\
 				$(QTI_PLAT_PATH)/common/src/qti_plat_helpers.c \
 				drivers/qti/crypto/rng.c \
