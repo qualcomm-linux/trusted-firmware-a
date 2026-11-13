@@ -170,6 +170,7 @@ include drivers/qti/chipinfo/chipinfo.mk
 include drivers/qti/cpucp/cpucp.mk
 include drivers/qti/qgic/qgic.mk
 include drivers/qti/hwmutex/hwmutex.mk
+include drivers/qti/smmu/smmu.mk
 
 PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
 				plat/common/aarch64/crash_console_helpers.S    \
@@ -281,6 +282,16 @@ endif
 BL31_SOURCES	+=	drivers/qti/watchdog/watchdog.c \
 			$(QTI_WDOG_VER_SRC) \
 			$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
+
+include drivers/qti/pwr_utils/pwr_utils.mk
+
+include drivers/qti/cmd_db/cmd_db.mk
+include drivers/qti/rpmh/rpmh.mk
+
+QTI_CLOCK_RAIL_VOTE := 1
+include drivers/qti/clock/clock.mk
+
+BL31_SOURCES += drivers/qti/accesscontrol/access_control_stub.c
 
 LIB_QTI_PATH	:=	${QTI_PLAT_PATH}/bl31qtilib/lib/${CHIPSET}
 
