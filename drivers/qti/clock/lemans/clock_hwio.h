@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2026 Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * Copyright (c) 2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Curated clock register definitions for lemans (qcs9075).
  *
  * Only the registers and fields actually referenced by the qcs9075 clock
- * back-end (clock_tfa.c) and BSP data (clock_bsp.c) are defined here. They were
+ * back-end (clock_tfa.c) and config data (clock_cfg.c) are defined here. They were
  * mechanically extracted from the vendor HALclkHWIO.h / msmhwiobase.h; absolute
  * addresses are (SoC base + register offset), and the SoC bases match
  * plat/qti/hoya/lemans/inc/lemans_def.h.
