@@ -23,6 +23,7 @@
 #include <drivers/qti/pwr_utils/pwr_utils.h>
 #include <drivers/qti/qtimer/qtimer.h>
 #include <drivers/qti/smem/smem.h>
+#include <drivers/qti/smmu/smmu.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <export/plat/qti/common/plat_params_exp.h>
 #include <lib/bakery_lock.h>
@@ -332,6 +333,13 @@ void bl31_platform_setup(void)
 	}
 
 	qti_pwr_utils_init();
+
+	/*
+	 * Program the always-on SMMU registers (APPS TCU + PCIE). The GPU
+	 * SMMU rows are programmed from clocked_boot_init() via
+	 * qti_smmu_clocked_init(), inside the clock-powered window.
+	 */
+	qti_smmu_init();
 
 	/* xPU static config needs clocks held; bracket its init. */
 	qti_clock_init(clocked_boot_init);
