@@ -126,8 +126,9 @@ static struct clock_group clock_groups[CLOCK_GROUP_TOTAL] = {
 			 * there is real bus traffic, which coreinit's minimal
 			 * mmnoc bandwidth vote (routes[0], .master =
 			 * ICBID_MASTER_MDP0 / .slave = ICBID_SLAVE_EBI1 in
-			 * drivers/qti/coreinit/nord/coreinit_data.c) now
-			 * supplies.
+			 * drivers/qti/coreinit/nord/coreinit_data.c) supplies.
+			 * Commented out until the ICB/coreinit driver is in
+			 * place; without that vote they time out at boot.
 			 */
 			{ CAM_CC_CSID_CBCR,               .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
 			{ CAM_CC_CSID_CSIPHY_RX_CBCR,     .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
@@ -138,13 +139,13 @@ static struct clock_group clock_groups[CLOCK_GROUP_TOTAL] = {
 			{ CAM_CC_TOP_AHB_CBCR,             .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
 			{ CAM_CC_TOP_FAST_AHB_CBCR,        .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
 			{ CAM_CC_TOP_IFE_LITE_CBCR,        .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
-			{ NW_GCC_CAMERA_HF_AXI_CBCR,       .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
-			{ NW_GCC_CAMERA_SF_AXI_CBCR,       .part = CHIPINFO_PART_CAMERA, .part_idx = 0 },
+			/* { NW_GCC_CAMERA_HF_AXI_CBCR,       .part = CHIPINFO_PART_CAMERA, .part_idx = 0 }, */
+			/* { NW_GCC_CAMERA_SF_AXI_CBCR,       .part = CHIPINFO_PART_CAMERA, .part_idx = 0 }, */
 			{ MDSS_0_DISP_CC_MDSS_AHB_CBCR,    .part = CHIPINFO_PART_DISPLAY, .part_idx = 0 },
-			{ NW_GCC_DISP_0_HF_AXI_CBCR,       .part = CHIPINFO_PART_DISPLAY, .part_idx = 0 },
+			/* { NW_GCC_DISP_0_HF_AXI_CBCR,       .part = CHIPINFO_PART_DISPLAY, .part_idx = 0 }, */
 			{ MDSS_1_DISP_CC_MDSS_AHB_CBCR,    .part = CHIPINFO_PART_DISPLAY, .part_idx = 1 },
 			{ MDSS_1_DISP_CC_MDSS_NON_GDSC_AHB_CBCR, .part = CHIPINFO_PART_DISPLAY, .part_idx = 1 },
-			{ NW_GCC_DISP_1_HF_AXI_CBCR,       .part = CHIPINFO_PART_DISPLAY, .part_idx = 1 },
+			/* { NW_GCC_DISP_1_HF_AXI_CBCR,       .part = CHIPINFO_PART_DISPLAY, .part_idx = 1 }, */
 			{ 0 }
 		},
 		.pwr_domains = (struct clock_power_domain_desc[]) {
