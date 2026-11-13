@@ -272,6 +272,7 @@ void plat_cpuss_config(void)
  */
 static void clocked_boot_init(void)
 {
+	qti_smmu_clocked_init();
 	qti_accesscontrol_init();
 }
 

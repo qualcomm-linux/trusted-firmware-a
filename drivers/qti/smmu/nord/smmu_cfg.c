@@ -95,6 +95,14 @@ struct smmu_cfg_s qti_smmu_cfg[] = {
 	{SYS_TCU2_APPS_SMMU_CGC_UPDATE_QTB_7_SEC_ADDR, SYS_TCU0_APPS_SMMU_CGC_UPDATE_QTB_SEC},
 	{SYS_TCU2_APPS_SMMU_FUSA_SEC_OVERRIDE_TCU_ADDR, SYS_TCU2_APPS_SMMU_FUSA_SEC_OVERRIDE_TCU},
 
+	/* PCIE SMMU-S */
+	{SMMU_PCIE_SMMU_S_FUSA_SEC_OVR_ADDR, SMMU_PCIE_SMMU_S_FUSA_SEC_OVR},
+};
+
+const size_t qti_smmu_cfg_count = ARRAY_SIZE(qti_smmu_cfg);
+
+/* Registers in GPU CX, written by qti_smmu_clocked_init(). */
+const struct smmu_cfg_s qti_smmu_gpu_cfg[] = {
 	/* GPU_0 */
 	{GPU_0_GFX_SMMU_CUSTOM_CFG_SEC_ADDR, GPU_0_GFX_SMMU_CUSTOM_CFG_SEC},
 	{GPU_0_GFX_SMMU_CUSTOM_CFG_SEC_2_ADDR, GPU_0_GFX_SMMU_CUSTOM_CFG_SEC_2},
@@ -109,9 +117,6 @@ struct smmu_cfg_s qti_smmu_cfg[] = {
 	{GPU_1_GFX_SMMU_CLOCK_GATING_SEC_ADDR, GPU_1_GFX_SMMU_CLOCK_GATING_SEC},
 	{GPU_1_GFX_SMMU_LOW_PWR_CTRL_SEC_ADDR, GPU_1_GFX_SMMU_LOW_PWR_CTRL_SEC},
 	{GPU_1_GFX_SMMU_CGC_COUNTER_SEC_ADDR, GPU_1_GFX_SMMU_CGC_COUNTER_SEC},
-
-	/* PCIE SMMU-S */
-	{SMMU_PCIE_SMMU_S_FUSA_SEC_OVR_ADDR, SMMU_PCIE_SMMU_S_FUSA_SEC_OVR},
 };
 
-const size_t qti_smmu_cfg_count = ARRAY_SIZE(qti_smmu_cfg);
+const size_t qti_smmu_gpu_cfg_count = ARRAY_SIZE(qti_smmu_gpu_cfg);
