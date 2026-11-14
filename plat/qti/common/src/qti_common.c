@@ -27,8 +27,16 @@
  */
 
 const mmap_region_t plat_qti_mmap[] = {
+#ifdef PLAT_IMEM_BASE
+	MAP_REGION_FLAT(QTI_DEVICE_BASE, (PLAT_IMEM_BASE-QTI_DEVICE_BASE),
+                        MT_DEVICE | MT_RW | EL3_PAS),
+	MAP_REGION_FLAT((PLAT_IMEM_BASE+PLAT_IMEM_SIZE),
+			(QTI_DEVICE_SIZE-(PLAT_IMEM_BASE+PLAT_IMEM_SIZE)),
+                        MT_DEVICE | MT_RW | EL3_PAS),
+#else
 	MAP_REGION_FLAT(QTI_DEVICE_BASE, QTI_DEVICE_SIZE,
 			MT_DEVICE | MT_RW | EL3_PAS),
+#endif
 #ifdef QTI_TME_FUSE_CONTROLLER_BASE
 	MAP_REGION_FLAT(QTI_TME_FUSE_CONTROLLER_BASE,
 			QTI_TME_FUSE_CONTROLLER_LENGTH,
@@ -155,6 +163,12 @@ void qti_setup_page_tables(uintptr_t total_base, size_t total_size,
 
 	/* Now (re-)map the platform-specific memory regions */
 	mmap_add(plat_qti_mmap);
+
+#ifdef PLAT_IMEM_BASE
+	/* Map IMEM as executable code region for split-architecture platforms */
+	mmap_add_region(PLAT_IMEM_BASE, PLAT_IMEM_BASE,
+			PLAT_IMEM_SIZE, MT_CODE | MT_SECURE);
+#endif
 
 	/* Create the page tables to reflect the above mappings */
 	init_xlat_tables();
