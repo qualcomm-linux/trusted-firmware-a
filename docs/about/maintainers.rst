@@ -771,6 +771,13 @@ QTI platform port and SoC drivers
 :|F|: include/drivers/qti/
 :|F|: tools/qti/
 
+QTI XPU (access control) driver
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:|M|: Ved Swarup <vswarup@qti.qualcomm.com>
+:|M|: Somesh Velupally <somegupt@qti.qualcomm.com>
+:|F|: drivers/qti/accesscontrol/
+:|F|: include/drivers/qti/accesscontrol/
+
 QTI chipinfo, clock and platform info drivers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 :|M|: Naresh Nunna <nnunna@qti.qualcomm.com>

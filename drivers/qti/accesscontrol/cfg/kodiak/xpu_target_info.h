@@ -12,11 +12,9 @@
 #include <kodiak_def.h>
 
 #define ACC_XPU_ERR_INT_REG_NUM 2
-#define ACC_XPU_ERR_NUM_PER_REG 32
-
-#define XPU_ADDR_TYPE(hwiosym) HWIO_##hwiosym##_ADDR
 
 #define HWIO_OCIMEM_MPU_XPU3_GCR0_ADDR 0x061c000
+#define HWIO_RAMBLUR_PIMEM_MPU_XPU3_GCR0_ADDR 0x00616000
 #define HWIO_BOOT_ROM_XPU3_GCR0_ADDR 0x03fe000
 #define HWIO_IPA_0_GSI_TOP_XPU3_GCR0_ADDR 0x01e00000
 #define HWIO_SNOC_AGGRE1_MS_MPU_XPU3_GCR0_ADDR 0x016b0000
@@ -37,8 +35,6 @@
 #define HWIO_CNOC_GEMNOC_MPU_XPU3_GCR0_ADDR 0x0152c000
 #define HWIO_CNOC2_SS_MPU_XPU3_GCR0_ADDR 0x01530000
 #define HWIO_WPSS_MPU_XPU3_GCR0_ADDR 0x08b14000
-
-#define TCSR_TCSR_REGS_REG_BASE (QTI_CORE_TOP_CSR_BASE + 0x000c0000)
 
 #define HWIO_TCSR_XPU3_NON_SEC_IRQ_STATUS_REG_0_ADDR \
 	(TCSR_TCSR_REGS_REG_BASE + 0x00002000)
@@ -98,6 +94,9 @@ extern const uint32_t msm_mpu_ranges_count;
 
 extern struct xpu_base_addr_info g_xpu_base_addr_array[];
 extern uint32_t g_xpu_base_addr_array_count;
+
+extern const struct xpu_addr_mask xpu_addr_mask_table[];
+extern const uint32_t             xpu_addr_mask_count;
 
 void xpu_configure_tz(void);
 
