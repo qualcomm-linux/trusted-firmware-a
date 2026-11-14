@@ -40,6 +40,8 @@ void configure_irq_type(uintptr_t clr_edge_base, uintptr_t set_level_base,
 void configure_irq_array(uintptr_t base, const uint32_t *cfg_arr,
 			 unsigned int num_words);
 
+int qti_ncc_cpu_reset_sync(uint64_t mpidr);
+void plat_qti_set_cpupwrctlr_val(void);
 unsigned int plat_qti_core_pos_by_mpidr(u_register_t mpidr);
 unsigned int plat_qti_my_cluster_pos(void);
 
@@ -91,6 +93,7 @@ void plat_qti_invoke_unhandled_isr(uint32_t id, void *handle);
  * standby only, while qtiseclib_pm.c advertises the firmware power-down ladder.
  */
 const unsigned int *plat_qti_pm_idle_states(void);
+
 
 typedef struct chip_id_info {
 	uint16_t jtag_id;
