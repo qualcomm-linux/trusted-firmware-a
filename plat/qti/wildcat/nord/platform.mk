@@ -12,6 +12,7 @@ PLATFORM		:=	nord
 ARM_ARCH_MAJOR := 9
 
 QTI_NCC_CPU		:= 1
+$(eval $(call add_define,QTI_SAIL_COMM))
 
 # Turn On Separate code & data.
 SEPARATE_CODE_AND_RODATA	:=	1
@@ -242,3 +243,5 @@ include $(QTI_PLAT_PATH)/common/wildcat_common.mk
 
 include drivers/qti/watchdog/watchdog.mk
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/cpucp/${CHIPSET}
+
+include drivers/qti/sail_comm/sail_comm.mk
