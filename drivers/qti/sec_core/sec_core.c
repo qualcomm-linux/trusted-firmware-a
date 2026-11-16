@@ -12,8 +12,10 @@
 
 void qti_sec_core_remap(uintptr_t entrypoint)
 {
-	mmio_write_32(qti_sec_core_rvbaraddr_lo, (uint32_t)(entrypoint >> 2));
-	mmio_write_32(qti_sec_core_rvbaraddr_hi, (uint32_t)(entrypoint >> 34));
+	mmio_write_32(qti_sec_core_rvbaraddr_lo,
+		      (uint32_t)(entrypoint >> qti_sec_core_rvbaraddr_lo_shift));
+	mmio_write_32(qti_sec_core_rvbaraddr_hi,
+		      (uint32_t)(entrypoint >> qti_sec_core_rvbaraddr_hi_shift));
 }
 
 /*

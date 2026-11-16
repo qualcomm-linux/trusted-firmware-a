@@ -17,7 +17,6 @@
 #include <drivers/arm/dcc.h>
 #include <drivers/console.h>
 #include <drivers/generic_delay_timer.h>
-#include <drivers/qti/accesscontrol/accesscontrol.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
 #include <drivers/qti/clock/clock.h>
 #include <drivers/qti/pwr_utils/pwr_utils.h>
@@ -37,12 +36,14 @@
 #include <platform.h>
 #include <platform_def.h>
 #include <qti_interrupt_svc.h>
+#include <qti_cpu.h>
 #include <qti_plat.h>
 #include <qti_ringbuf_console.h>
 #include <qti_sbl_shared_info.h>
 #include <qti_uart_console.h>
 #include <arch_helpers.h>
 #include <tfa_bl31_shared_imem.h>
+#include "accesscontrol.h"
 
 #ifdef QTI_MBOX
 #include <drivers/qti/mbox/qti_mbox.h>
@@ -129,34 +130,6 @@ static bool qti_aux_param_handler(struct bl_aux_param_header *param)
 		INFO("Unknown param type, skipping\n");
 		return false;
 	}
-}
-
-void qti_el3_sys_regs_init(void) /* NEEDSWORK */
-{
-	/* can be implemented in bl31qtilib */
-	/* Enable MPAM if it is supported */
-	/*
-	 * Enables the system register interface for interrupt management for
-	 * El3 and El1 (gic v3)
-	 */
-	/* EL3 SRE Setting */
-	write_icc_sre_el3(0x9U | read_icc_sre_el3());
-
-	/* Set PMHE & IDbits to 24 bits */
-	write_icc_ctlr_el3(0xCC40);
-
-	/* EL1 SRE Setting */
-	write_icc_sre_el1(0x1U | read_icc_sre_el1());
-
-	/* PC DEBUG:: Setting ICC_IGRPEN0_EL1 to 1 */
-	write_icc_igrpen0_el1(1);
-
-	/* Clear SCTLR_EL2 */
-}
-
-void plat_qti_cpu_boot_setup(void)
-{
-	qti_el3_sys_regs_init();
 }
 
 /*******************************************************************************
@@ -304,8 +277,6 @@ void bl31_platform_setup(void)
 {
 	int ret;
 
-	generic_delay_timer_init();
-
 	INFO("Starting %s - %s\n", qti_build_variant, bl31qtilib_build_variant);
 	INFO("QC Image Version %s\n", QC_IMAGE_VERSION_STRING_AUTO_UPDATED);
 	INFO("Image Variant %s\n", IMAGE_VARIANT_STRING_AUTO_UPDATED);
@@ -328,6 +299,12 @@ void bl31_platform_setup(void)
 	if (qti_chipinfo_init() != CHIPINFO_SUCCESS) {
 		WARN("ChipInfo initialization error\n");
 	}
+
+
+	/* Initialise the generic delay timer early; used by all subsystems. */
+	generic_delay_timer_init();
+
+	plat_qti_cpu_boot_cluster_reset();
 
 	/**
 	 * Initialize the EL3 interrupt service and

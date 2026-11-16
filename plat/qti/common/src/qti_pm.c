@@ -18,6 +18,20 @@
 #include <qti_cpu.h>
 #include <qti_plat.h>
 
+/*
+ * Weak no-op defaults so platforms without a companion SAIL die link cleanly.
+ * qti_nord_pm.c provides the strong definitions for wildcat/nord, which
+ * notify SAIL of the pending shutdown/reset and wait for its ack before we
+ * pull PS_HOLD.
+ */
+void __attribute__((weak)) qti_platform_psci_system_off(void)
+{
+}
+
+void __attribute__((weak)) qti_platform_psci_system_reset(void)
+{
+}
+
 #define QTI_LOCAL_PSTATE_MASK		((1 << QTI_LOCAL_PSTATE_WIDTH) - 1)
 
 #if PSCI_OS_INIT_MODE
@@ -25,13 +39,6 @@
 					 (QTI_LOCAL_PSTATE_WIDTH *	\
 					  (PLAT_MAX_PWR_LVL + 1)))
 #endif
-
-/* QTI_CORE_PWRDN_EN_MASK happens to be same across all CPUs */
-#define QTI_CORE_PWRDN_EN_MASK		1
-
-/* cpu power control happens to be same across all CPUs */
-DEFINE_RENAME_SYSREG_RW_FUNCS(cpu_pwrctrl_val, S3_0_C15_C2_7)
-
 
 /*******************************************************************************
  * QTI standard platform handler called to check the validity of the power
@@ -85,17 +92,6 @@ int qti_validate_power_state(unsigned int power_state,
 /*******************************************************************************
  * PLATFORM FUNCTIONS
  ******************************************************************************/
-
-static void qti_set_cpupwrctlr_val(void)
-{
-	unsigned long val;
-
-	val = read_cpu_pwrctrl_val();
-	val |= QTI_CORE_PWRDN_EN_MASK;
-	write_cpu_pwrctrl_val(val);
-
-	isb();
-}
 
 /**
  * CPU power on function - ideally we want a wrapper since this function is
@@ -165,7 +161,7 @@ static void qti_node_power_off(const psci_power_state_t *target_state)
 	plat_qti_pwr_domain_off((const uint8_t *)target_state->pwr_domain_state);
 	if (is_cpu_off(target_state)) {
 		plat_qti_gic_cpuif_disable();
-		qti_set_cpupwrctlr_val();
+		plat_qti_set_cpupwrctlr_val();
 	}
 }
 
@@ -174,7 +170,7 @@ static void qti_node_suspend(const psci_power_state_t *target_state)
 	plat_qti_pwr_domain_suspend((const uint8_t *)target_state->pwr_domain_state);
 	if (is_cpu_off(target_state)) {
 		plat_qti_gic_cpuif_disable();
-		qti_set_cpupwrctlr_val();
+		plat_qti_set_cpupwrctlr_val();
 	}
 }
 
@@ -188,9 +184,12 @@ static void qti_node_suspend_finish(const psci_power_state_t *target_state)
 	}
 }
 
+#define PS_HOLD_SETTLE_DELAY_MS		10U
+
 static __dead2 void assert_ps_hold(void)
 {
 #ifdef QTI_PS_HOLD_REG
+	mdelay(PS_HOLD_SETTLE_DELAY_MS);
 	mmio_write_32(QTI_PS_HOLD_REG, 0);
 	mdelay(1000);
 #endif
@@ -202,12 +201,14 @@ static __dead2 void assert_ps_hold(void)
 __dead2 void qti_system_off(void)
 {
 	qti_pmic_prepare_shutdown();
+	qti_platform_psci_system_off();
 	assert_ps_hold();
 }
 
 __dead2 void qti_system_reset(void)
 {
 	qti_pmic_prepare_reset();
+	qti_platform_psci_system_reset();
 	assert_ps_hold();
 }
 

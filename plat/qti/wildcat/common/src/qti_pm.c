@@ -31,8 +31,19 @@
 
 static __dead2 void assert_ps_hold(void)
 {
+	mmio_write_32(QTI_PS_HOLD_REG, 0);
+	mdelay(1000);
+
 	/* Should be dead before reaching this. */
 	panic();
+}
+
+void __attribute__((weak)) qti_platform_psci_system_off(void)
+{
+}
+
+void __attribute__((weak)) qti_platform_psci_system_reset(void)
+{
 }
 
 /*
@@ -201,6 +212,9 @@ static void qti_cpu_standby(plat_local_state_t cpu_state)
  */
 __dead2 void qti_system_off(void)
 {
+	qti_pmic_prepare_shutdown();
+	qti_platform_psci_system_off();
+
 	bl31qtilib_psci_system_off();
 
 	assert_ps_hold();
@@ -214,6 +228,9 @@ __dead2 void qti_system_off(void)
  */
 __dead2 void qti_system_reset(void)
 {
+	qti_pmic_prepare_reset();
+	qti_platform_psci_system_reset();
+
 	bl31qtilib_psci_system_reset();
 
 	assert_ps_hold();

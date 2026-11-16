@@ -16,4 +16,5 @@ PLAT_INCLUDES += \
 
 BL31_SOURCES += \
 	$(CPUCP_DRV_PATH)/cpucp.c			\
+	$(CPUCP_DRV_PATH)/cpucp_scmi.c			\
 	$(CPUCP_DRV_PATH)/$(CHIPSET)/cpu_config.c
