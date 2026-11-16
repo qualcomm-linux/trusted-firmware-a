@@ -13,21 +13,21 @@
  * (QTI_CLOCK_RAIL_VOTE unset).
  */
 
-#ifndef CLOCK_RAIL_H
-#define CLOCK_RAIL_H
+#ifndef QTI_CLOCK_RAIL_H
+#define QTI_CLOCK_RAIL_H
 
-#include <drivers/qti/clock/clock_bsp.h>
+#include <drivers/qti/clock/clock_cfg.h>
 
 #ifdef QTI_CLOCK_RAIL_VOTE
-void clock_rail_init(void);
-void clock_rail_deinit(void);
-void clock_rail_vote(struct clock_group *group);
-void clock_rail_clear(struct clock_group *group);
+void rail_vote_init(void);
+void rail_vote_deinit(void);
+void rail_vote_apply(struct clock_group *group);
+void rail_vote_clear(struct clock_group *group);
 #else
-static inline void clock_rail_init(void) { }
-static inline void clock_rail_deinit(void) { }
-static inline void clock_rail_vote(struct clock_group *group) { (void)group; }
-static inline void clock_rail_clear(struct clock_group *group) { (void)group; }
+static inline void rail_vote_init(void) { }
+static inline void rail_vote_deinit(void) { }
+static inline void rail_vote_apply(struct clock_group *group) { (void)group; }
+static inline void rail_vote_clear(struct clock_group *group) { (void)group; }
 #endif
 
-#endif /* CLOCK_RAIL_H */
+#endif /* QTI_CLOCK_RAIL_H */

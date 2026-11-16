@@ -40,10 +40,12 @@ struct pwr_utils_lvl_res {
 static struct pwr_utils_lvl_res resource_list[] = {
 	{"cx.lvl",   NULL, 0},
 	{"mx.lvl",   NULL, 0},
+	{"mxc.lvl",  NULL, 0},
 	{"ebi.lvl",  NULL, 0},
 	{"lcx.lvl",  NULL, 0},
 	{"lmx.lvl",  NULL, 0},
 	{"gfx.lvl",  NULL, 0},
+	{"gfx1.lvl", NULL, 0},
 	{"mss.lvl",  NULL, 0},
 	{"ddr.lvl",  NULL, 0},
 	{"xo.lvl",   NULL, 0},
