@@ -88,8 +88,8 @@ static struct pdc_seq_cfg apps_pdc_cfg = {
 };
 
 static struct pdc_seq_mode apps_pdc_modes[] = {
-	{ PDC_SEQ_ARRAY(apps_cx_col),      1, 0 }, /* mode_id 1: CXcol */
-	{ PDC_SEQ_ARRAY(apps_cx_col_aoss), 3, 0 }, /* mode_id 3: CXcol + AOSS */
+	{ PDC_SEQ_ARRAY(apps_cx_col),      1, 0, 0 }, /* mode_id 1: CXcol */
+	{ PDC_SEQ_ARRAY(apps_cx_col_aoss), 3, 0, 0 }, /* mode_id 3: CXcol + AOSS */
 };
 
 static struct pdc_seq pdc_seq_instance = {
