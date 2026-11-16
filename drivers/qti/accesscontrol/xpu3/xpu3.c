@@ -136,6 +136,15 @@ int xpu_can_write(uintptr_t addr, bool *can_write)
 	return 0;
 }
 
+int acc_cfg_init(void)
+{
+	/*
+	 * XPU3 configuration is compiled in under cfg/${CHIPSET}, so there is no
+	 * configuration source to bring up.
+	 */
+	return 0;
+}
+
 void xpu_do_static_config(void)
 {
 	xpu_master_mpu_init();

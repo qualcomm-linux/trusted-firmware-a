@@ -337,6 +337,17 @@ void qti_accesscontrol_init(void)
 {
 	int rc;
 
+	/*
+	 * Bring up the configuration source first: on XPU4 both the VMIDMT and
+	 * the XPU configuration are read out of the access-control config image,
+	 * so nothing below can run until it has been parsed and validated.
+	 */
+	rc = acc_cfg_init();
+	if (rc) {
+		ERROR("Error reading access control config, fatal (%d)\n", rc);
+		goto error;
+	}
+
 	rc = vmidmt_configure();
 	if (rc) {
 		ERROR("Error configuring the VMIDMT, fatal (%d)\n", rc);
@@ -351,6 +362,7 @@ void qti_accesscontrol_init(void)
 		goto error;
 	}
 
+	INFO("qti accesscontrol init completed successfully\n");
 	return;
 error:
 	for (;;)

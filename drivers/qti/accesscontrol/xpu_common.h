@@ -12,6 +12,18 @@
 #include <lib/utils_def.h>
 
 /*
+ * Interface shared by the XPU hardware revisions. Exactly one revision is
+ * linked into a build, selected by XPU_VERSION in access_control.mk, so the
+ * symbols below are defined by either xpu3/xpu3.c or xpu4/xpu4.c.
+ *
+ * The entry points deliberately take no configuration arguments. XPU3 reads
+ * compiled-in tables from cfg/${CHIPSET}, whereas XPU4 has no build-time
+ * configuration at all and fetches every structure from a config image
+ * supplied at runtime. Keeping the tables out of the interface lets
+ * access_control.c stay revision-agnostic.
+ */
+
+/*
  * Defines shared across every cfg/<soc> — hoist here so per-SoC headers only
  * carry what actually differs (ACC_XPU_ERR_INT_REG_NUM, GCR0 offsets, policy
  * tables). TCSR_TCSR_REGS_REG_BASE uses QTI_CORE_TOP_CSR_BASE which is
@@ -34,7 +46,8 @@
 
 /*
  * Bit position marking a region as secure. The permission values below match
- * the XPU3 RGn_CR1/CR3 register encoding directly.
+ * the XPU3 RGn_CR1/CR3 register encoding directly; the XPU4 driver translates
+ * them into QAD vectors internally.
  */
 #define XPU_DOMAIN_SEC_SHIFT	8
 
@@ -67,6 +80,16 @@ struct xpu_err_pos_to_hal_map {
 };
 
 /*
+ * Prepare the configuration source, before anything reads a configuration
+ * structure from it. Returns 0 on success.
+ *
+ * XPU3 has nothing to do: its tables are compiled in. XPU4 parses and validates
+ * the access-control config image here, which both the XPU and the VMIDMT
+ * driver then read from, so this must run before either is configured.
+ */
+int acc_cfg_init(void);
+
+/*
  * Report whether this execution environment may write the given address under
  * the XPU protection policy. Returns 0 on success, with *can_write set.
  *
@@ -85,7 +108,9 @@ int xpu_can_write(uintptr_t addr, bool *can_write);
 void xpu_do_static_config(void);
 
 /*
- * Register the XPU error interrupt handlers. Returns 0 on success.
+ * Register the XPU error interrupt handlers. Returns 0 on success. The
+ * interrupt numbers are revision-specific: XPU3 uses compile-time ids while
+ * XPU4 reads them from the config image.
  */
 int xpu_register_interrupts(void);
 
