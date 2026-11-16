@@ -5,26 +5,37 @@
 #
 
 PLAT_DRIVERS_PATH		:=	drivers/qti
-PLAT_DRIVERS_INCLUDE_PATH	:= 	include/drivers/qti
+PLAT_DRIVERS_INCLUDE_PATH	:=	include/drivers/qti
 
-PLAT_INCLUDES +=	-I$(PLAT_DRIVERS_PATH)/accesscontrol \
-			-I$(PLAT_DRIVERS_INCLUDE_PATH)/accesscontrol \
+ACCESSCONTROL_PATH		:=	$(PLAT_DRIVERS_PATH)/accesscontrol
 
-## Access control
-BL31_SOURCES +=	$(PLAT_DRIVERS_PATH)/accesscontrol/access_control.c \
 
-## VMIDMT
-PLAT_INCLUDES +=	-I$(PLAT_DRIVERS_PATH)/accesscontrol/vmidmt \
-			-I$(PLAT_DRIVERS_PATH)/accesscontrol/vmidmt/${CHIPSET} \
+PLAT_INCLUDES +=	-I$(ACCESSCONTROL_PATH) \
+			-I$(PLAT_DRIVERS_INCLUDE_PATH)/accesscontrol
 
-BL31_SOURCES += 	$(PLAT_DRIVERS_PATH)/accesscontrol/vmidmt/vmidmt.c \
-			$(PLAT_DRIVERS_PATH)/accesscontrol/vmidmt/vmidmt_hal.c \
-			$(PLAT_DRIVERS_PATH)/accesscontrol/vmidmt/${CHIPSET}/vmidmt_static_config.c
+## Access control. Revision-agnostic: talks to the selected XPU driver through
+## the interface in xpu_common.h.
+BL31_SOURCES +=		$(ACCESSCONTROL_PATH)/access_control.c
 
-## XPU
-PLAT_INCLUDES +=	-I$(PLAT_DRIVERS_PATH)/accesscontrol/xpu \
-			-I$(PLAT_DRIVERS_PATH)/accesscontrol/xpu/${CHIPSET}
+## VMIDMT generic sources. Configuration provider implementing vmidmt_cfg.h is
+## supplied by the cfg/${CHIPSET} directory.
+PLAT_INCLUDES +=	-I$(ACCESSCONTROL_PATH)/vmidmt
 
-BL31_SOURCES += 	$(PLAT_DRIVERS_PATH)/accesscontrol/xpu/xpu3.c \
-			$(PLAT_DRIVERS_PATH)/accesscontrol/xpu/${CHIPSET}/xpu_static_config.c \
-			$(PLAT_DRIVERS_PATH)/accesscontrol/xpu/${CHIPSET}/xpu_target_info.c
+BL31_SOURCES +=		$(ACCESSCONTROL_PATH)/vmidmt/vmidmt.c \
+			$(ACCESSCONTROL_PATH)/vmidmt/vmidmt_hal.c
+
+## XPU3: compile-time configuration tables under cfg/${CHIPSET}. That directory
+## also provides the VMIDMT configuration and its target register addresses.
+ifeq (${CHIPSET},)
+    $(error CHIPSET must be set for accesscontrol)
+endif
+
+PLAT_INCLUDES +=	-I$(ACCESSCONTROL_PATH)/xpu3 \
+			-I$(ACCESSCONTROL_PATH)/cfg/${CHIPSET}
+
+BL31_SOURCES +=		$(ACCESSCONTROL_PATH)/xpu3/xpu3.c \
+			$(ACCESSCONTROL_PATH)/xpu3/xpu3_hal.c \
+			$(ACCESSCONTROL_PATH)/xpu3/xpu3_isr.c \
+			$(ACCESSCONTROL_PATH)/cfg/${CHIPSET}/vmidmt_static_config.c \
+			$(ACCESSCONTROL_PATH)/cfg/${CHIPSET}/xpu_static_config.c \
+			$(ACCESSCONTROL_PATH)/cfg/${CHIPSET}/xpu_target_info.c

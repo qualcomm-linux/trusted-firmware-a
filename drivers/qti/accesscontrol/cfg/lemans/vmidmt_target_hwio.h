@@ -7,9 +7,10 @@
 #ifndef VMIDMT_TARGET_HWIO_H
 #define VMIDMT_TARGET_HWIO_H
 
-#include <kodiak_def.h>
+#include <xpu_common.h>
 
-#define TCSR_TCSR_REGS_REG_BASE (QTI_CORE_TOP_CSR_BASE + 0x000c0000)
+#include <lemans_def.h>
+
 #define TCSR_TCSR_REGS_REG_BASE_SIZE 0x30000
 #define TCSR_TCSR_REGS_REG_BASE_USED 0x2f010
 
