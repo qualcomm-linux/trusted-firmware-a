@@ -133,7 +133,6 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/wildcat_helpers.S	\
 				$(QTI_PLAT_PATH)/common/src/wildcat_plat_helpers.c \
 				$(QTI_PLAT_PATH)/common/src/wildcat_bl31_setup.c \
 				$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c \
-				drivers/qti/accesscontrol/access_control_stub.c \
 				drivers/qti/sec_core/sec_core.c 			\
 				drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c 		\
 				drivers/qti/crypto/rng.c
@@ -226,6 +225,9 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${BL31_CPU_SETUP_SRC}				\
 				${SCMI_SOURCES}
 
+XPU_VERSION		:= 4
+include drivers/qti/accesscontrol/access_control.mk
+BL31_SOURCES		+=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_ac_cfg.c
 BL31_SOURCES += drivers/qti/qtimer/qtimer.c \
 			drivers/qti/qtimer/qtimer_ncc.c \
 			$(PLAT_QTI_ROOT)/common/src/qti_qtimer_platform.c
