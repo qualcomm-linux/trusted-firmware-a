@@ -105,8 +105,8 @@ static const qti_rimps_clkdom_t qti_rimps_clkdoms[] = {
 		.clk_ctl_base = QTI_ACD_GOLD_CLK_CTL_BASE,
 		.domain_id = QTIPMLIB_OSM_GOLD,
 		.cpu_count = 1U,
-		/* Keep Gold's ACD block idle while the existing OSM config disables Gold. */
-		.acd_init = 0U,
+		/* ACD is enabled even though Gold OSM boot enable remains disabled. */
+		.acd_init = 1U,
 		.rail_name = "APC",
 		.clk_name = "Gold",
 	},
