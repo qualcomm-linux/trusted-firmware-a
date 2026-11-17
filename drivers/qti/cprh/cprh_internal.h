@@ -29,6 +29,11 @@ typedef struct {
 	uint32_t misc_register;
 	uint32_t margin_adj_ctl;
 	uint32_t margin_temp_core_timers;
+	uint16_t kv_margin_adj_single_step_quot;
+	uint16_t bist_chain_check;
+	uint32_t misc_register2;
+	uint8_t avg_abort_autoconttmr;
+	uint32_t acd_dcvs_disable_config;
 	uint8_t sensor_count;
 	uint32_t sensor_thread_mask;
 	uint32_t sensor_thread_mask_thread2;

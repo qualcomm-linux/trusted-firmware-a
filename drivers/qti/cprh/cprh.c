@@ -22,15 +22,21 @@
 #define CPR_SENSOR_BYPASS_WRITE0		0x00E0U
 #define CPR_SENSOR_MASK_WRITE0			0x0120U
 #define CPR_SENSOR_THREAD(n)			(0x0200U + (0x4U * (n)))
+#define CPR_BIST_CHAIN_CHECK0			0x0020U
 #define CPR_MISC_REGISTER			0x0700U
 #define CPR_SAW_ERROR_STEP_LIMIT		0x07A4U
 #define CPR_MARGIN_TEMP_CORE_TIMERS		0x07A8U
 #define CPR_MARGIN_ADJ_CTL			0x07F8U
+#define CPR_MARGIN_ADJ_CTL_KV_SINGLE_STEP_MASK	0xFC000000U
+#define CPR_MARGIN_ADJ_CTL_KV_SINGLE_STEP_SHIFT	26U
 #define CPR_THRESHOLD(t)			(0x0808U + (0x440U * (t)))
 #define CPR_TARGET0(t, ro)			(0x0840U + (0x440U * (t)) + \
 						 (0x4U * (ro)))
 #define CPRH_VIRTUAL_CORNER(t, vc)		(0x3500U + (0xA0U * (t)) + \
 						 (0x4U * (vc)))
+#define CPRH_MISC_REGISTER2			0x3AACU
+#define CPRH_DCVS_SETTLE_TIMER_CONFIG		0x3C24U
+#define CPRH_ACD_DCVS_DISABLE_CONFIG		0x3C60U
 #define CPRH_CTL				0x3A80U
 
 #define BITFIELD(mask, shift, val)		(((uint32_t)(val) << (shift)) & (mask))
@@ -43,6 +49,8 @@
 #define CPR_MISC_REGISTER_INIT_MASK		0xFF00000CU
 #define CPR_MARGIN_ADJ_CTL_INIT_MASK		0x03FFF116U
 #define CPR_MARGIN_TEMP_CORE_TIMERS_MASK	0x1FFFFFFFU
+#define CPR_BIST_CHAIN_CHECK0_MASK		0x00000FFFU
+#define CPRH_DCVS_SETTLE_AVG_ABORT_AUTOCONT_MASK	0x00000020U
 
 static bool cprh_initialized;
 
@@ -93,9 +101,21 @@ static void cprh_config_controller(const cprh_controller_cfg_t *cfg)
 		    cfg->misc_register);
 	cprh_update(base, CPR_MARGIN_ADJ_CTL, CPR_MARGIN_ADJ_CTL_INIT_MASK,
 		    cfg->margin_adj_ctl);
+	cprh_update(base, CPR_MARGIN_ADJ_CTL,
+		    CPR_MARGIN_ADJ_CTL_KV_SINGLE_STEP_MASK,
+		    (uint32_t)cfg->kv_margin_adj_single_step_quot <<
+		    CPR_MARGIN_ADJ_CTL_KV_SINGLE_STEP_SHIFT);
 	cprh_update(base, CPR_MARGIN_TEMP_CORE_TIMERS,
 		    CPR_MARGIN_TEMP_CORE_TIMERS_MASK,
 		    cfg->margin_temp_core_timers);
+	cprh_update(base, CPR_BIST_CHAIN_CHECK0, CPR_BIST_CHAIN_CHECK0_MASK,
+		    cfg->bist_chain_check);
+	cprh_write(base, CPRH_MISC_REGISTER2, cfg->misc_register2);
+	cprh_update(base, CPRH_DCVS_SETTLE_TIMER_CONFIG,
+		    CPRH_DCVS_SETTLE_AVG_ABORT_AUTOCONT_MASK,
+		    (uint32_t)cfg->avg_abort_autoconttmr << 5);
+	cprh_write(base, CPRH_ACD_DCVS_DISABLE_CONFIG,
+		   cfg->acd_dcvs_disable_config);
 	cprh_write(base, CPR_SENSOR_MASK_WRITE0, cfg->sensor_mask);
 	cprh_write(base, CPR_SENSOR_BYPASS_WRITE0, cfg->sensor_bypass_mask);
 

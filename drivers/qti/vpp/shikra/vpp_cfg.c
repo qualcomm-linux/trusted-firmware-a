@@ -12,6 +12,7 @@
 #include <lib/mmio.h>
 #include <lib/utils_def.h>
 
+#define QFPROM_CORR_CALIB_ROW3_MSB	0x01B44274U
 #define QFPROM_CORR_CALIB_ROW4_LSB	0x01B44278U
 #define QFPROM_CORR_CALIB_ROW4_MSB	0x01B4427CU
 #define QFPROM_CORR_CALIB_ROW5_LSB	0x01B44280U
@@ -46,6 +47,16 @@ typedef struct {
 	fuse_cb_t fused_quot_offset;
 	vpp_cprh_t cprh;
 } vpp_voltage_setting_t;
+
+typedef struct {
+	uint32_t acd_acdcr;
+	uint32_t acd_acdsscr;
+} vpp_acd_setting_t;
+
+#define SHIKRA_ACD_CONFIG(acdcr, acdsscr) \
+	{ .acd_acdcr = (acdcr), .acd_acdsscr = (acdsscr) }
+#define SHIKRA_ACD_CONFIG_DEFAULT \
+	SHIKRA_ACD_CONFIG(0x882F5FFDU, 0x000009F1U)
 
 static uint32_t vpp_field(uintptr_t addr, uint32_t mask, uint32_t shift)
 {
@@ -247,10 +258,31 @@ static vpp_voltage_setting_t gold_settings[] = {
 	{ 2208000, 1, 4, 115, 988, 192, 7, cpr11_targ_volt_boost, cpr11_quot_min_boost, cpr11_quot_offset },
 };
 
+/* Keep voltage margins at 0 mV while providing the per-corner ACD registers. */
+static const vpp_acd_setting_t silver_gold_acd_rev1[] = {
+	SHIKRA_ACD_CONFIG_DEFAULT,
+	SHIKRA_ACD_CONFIG(0x802D5FFDU, 0x00000961U),
+	SHIKRA_ACD_CONFIG(0x802C5FFDU, 0x00000961U),
+	SHIKRA_ACD_CONFIG(0xA02B5FFDU, 0x00000961U),
+	SHIKRA_ACD_CONFIG(0x802B5FFDU, 0x00000961U),
+	SHIKRA_ACD_CONFIG(0x802B5FFDU, 0x00000961U),
+	/* The local plan adds a boost point; retain the downstream turbo ACD setup. */
+	SHIKRA_ACD_CONFIG(0x802B5FFDU, 0x00000961U),
+};
+
+static const vpp_acd_setting_t l3_acd_rev1[] = {
+	SHIKRA_ACD_CONFIG_DEFAULT,
+	SHIKRA_ACD_CONFIG(0xA02D5FFDU, 0x00000961U),
+	SHIKRA_ACD_CONFIG(0xA02C5FFDU, 0x00000961U),
+	SHIKRA_ACD_CONFIG(0x802C5FFDU, 0x00000961U),
+	SHIKRA_ACD_CONFIG(0xA02B5FFDU, 0x00000961U),
+	SHIKRA_ACD_CONFIG(0xA02B5FFDU, 0x00000961U),
+};
+
 vpp_t qti_vpp_table[] = {
-	{ .rail_name = "APC", .clk_name = "Silver" },
-	{ .rail_name = "APC", .clk_name = "L3" },
-	{ .rail_name = "APC", .clk_name = "Gold" },
+	{ .rail_name = "APC", .clk_name = "Silver", .acd_enabled = 1U },
+	{ .rail_name = "APC", .clk_name = "L3", .acd_enabled = 1U },
+	{ .rail_name = "APC", .clk_name = "Gold", .acd_enabled = 1U },
 };
 
 const uint32_t qti_vpp_table_size = ARRAY_SIZE(qti_vpp_table);
@@ -373,8 +405,12 @@ static void interpolate_quot(vpp_voltage_setting_t *settings, uint32_t count)
 }
 
 static void publish_plan(uint32_t table_idx, vpp_voltage_setting_t *settings,
-			 uint32_t setting_count)
+			 const vpp_acd_setting_t *acd_settings,
+			 uint32_t cpr_local_rev, uint32_t setting_count)
 {
+	const vpp_acd_setting_t default_acd = SHIKRA_ACD_CONFIG_DEFAULT;
+	const vpp_acd_setting_t *acd;
+
 	init_base_values(settings, setting_count);
 	interpolate_olv(settings, setting_count);
 	interpolate_quot(settings, setting_count);
@@ -385,6 +421,10 @@ static void publish_plan(uint32_t table_idx, vpp_voltage_setting_t *settings,
 		qti_vpp_table[table_idx].osm[i].max_core_count = settings[i].max_core_count;
 		qti_vpp_table[table_idx].osm[i].lval = settings[i].lval;
 		qti_vpp_table[table_idx].osm[i].vc = settings[i].cprh.vc;
+		acd = (cpr_local_rev == 1U) ? &acd_settings[i] : &default_acd;
+		qti_vpp_table[table_idx].osm[i].acd_acdcr = acd->acd_acdcr;
+		qti_vpp_table[table_idx].osm[i].acd_acdsscr = acd->acd_acdsscr;
+		qti_vpp_table[table_idx].osm[i].acd_avg_cfg_2 = 0U;
 		qti_vpp_table[table_idx].cprh[i] = settings[i].cprh;
 	}
 }
@@ -392,14 +432,19 @@ static void publish_plan(uint32_t table_idx, vpp_voltage_setting_t *settings,
 void qti_vpp_init(void)
 {
 	static bool initialized;
+	uint32_t cpr_local_rev;
 
 	if (initialized) {
 		return;
 	}
 
-	publish_plan(0, silver_settings, ARRAY_SIZE(silver_settings));
-	publish_plan(1, l3_settings, ARRAY_SIZE(l3_settings));
-	publish_plan(2, gold_settings, ARRAY_SIZE(gold_settings));
+	cpr_local_rev = vpp_field(QFPROM_CORR_CALIB_ROW3_MSB, 0x000000F0U, 4U);
+	publish_plan(0, silver_settings, silver_gold_acd_rev1, cpr_local_rev,
+		     ARRAY_SIZE(silver_settings));
+	publish_plan(1, l3_settings, l3_acd_rev1, cpr_local_rev,
+		     ARRAY_SIZE(l3_settings));
+	publish_plan(2, gold_settings, silver_gold_acd_rev1, cpr_local_rev,
+		     ARRAY_SIZE(gold_settings));
 
 	initialized = true;
 }

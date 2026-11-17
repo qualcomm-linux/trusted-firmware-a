@@ -39,6 +39,12 @@ const cprh_controller_cfg_t qti_cprh_controller = {
 	.misc_register = 0x61000004,
 	.margin_adj_ctl = 0x01024000,
 	.margin_temp_core_timers = 0x005CCB00,
+	/* Shikra-specific ACD/DCVS handshake configuration. */
+	.kv_margin_adj_single_step_quot = 5,
+	.bist_chain_check = 0x42,
+	.misc_register2 = 0xFFF52AF0,
+	.avg_abort_autoconttmr = 1,
+	.acd_dcvs_disable_config = 0x0001E000,
 	.sensor_count = 10,
 	.sensor_thread_mask = 0x0F,
 	.sensor_thread_mask_thread2 = 0x380,

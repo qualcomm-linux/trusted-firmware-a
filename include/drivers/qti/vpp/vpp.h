@@ -24,11 +24,17 @@ typedef struct {
 	uint8_t max_core_count;
 	uint8_t lval;
 	uint8_t vc;
+	/* ACD register values associated with this OSM virtual corner. */
+	uint32_t acd_acdcr;
+	uint32_t acd_acdsscr;
+	uint32_t acd_avg_cfg_2;
 } vpp_osm_t;
 
 typedef struct {
 	const char *rail_name;
 	const char *clk_name;
+	/* Nonzero when the plan carries enabled per-corner ACD configuration. */
+	uint8_t acd_enabled;
 	uint16_t cnt;
 	vpp_osm_t osm[VPP_MAX_LUT_SIZE];
 	vpp_cprh_t cprh[VPP_MAX_LUT_SIZE];
