@@ -11,6 +11,7 @@
 
 	.globl	plat_my_core_pos
 	.globl	plat_qti_core_pos_by_mpidr
+	.globl	plat_reset_handler
 
 	/* -----------------------------------------------------
 	 *  unsigned int plat_qti_core_pos_by_mpidr(uint64_t mpidr)
@@ -50,3 +51,16 @@ func plat_my_core_pos
 	mrs	x0, mpidr_el1
 	b	plat_qti_core_pos_by_mpidr
 endfunc plat_my_core_pos
+
+	/* -----------------------------------------------------
+	 * Platform reset handler invoked from the common EL3
+	 * reset path.
+	 *
+	 * Platforms may extend this handler with reset-time
+	 * processing that must execute before normal BL31 runtime
+	 * initialization is resumed.
+	 * -----------------------------------------------------
+	 */
+func plat_reset_handler
+	ret
+endfunc plat_reset_handler
