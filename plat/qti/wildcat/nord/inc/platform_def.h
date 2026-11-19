@@ -158,7 +158,7 @@
 /* SMEM base address                                                          */
 /*----------------------------------------------------------------------------*/
 #define QTI_SMEM_BASE ULL(0x89B00000)
-#define QTI_SMEM_SIZE ULL(0x00200000)
+#define QTI_SMEM_SIZE ULL(0x00400000)
 
 /*----------------------------------------------------------------------------*/
 /* LC PON register offsets */
@@ -244,5 +244,36 @@
 /* Poll delay (us) and timeout (us) for SCMI command completion. */
 #define QTI_SCMI_POLL_DELAY_US		(0U)
 #define QTI_SCMI_TIMEOUT_US		(500000U)
+
+#if SPMC_AT_EL3
+
+/*
+ * Number of Secure Partitions supported.
+ * SPMC at EL3, uses this count to configure the maximum number of supported
+ * secure partitions.
+ */
+#define SECURE_PARTITION_COUNT		1
+
+/*
+ * Number of Normal World Partitions supported.
+ * SPMC at EL3, uses this count to configure the maximum number of supported
+ * NWd partitions.
+ */
+#define NS_PARTITION_COUNT		1
+
+/*
+ * Number of Logical Partitions supported.
+ * SPMC at EL3, uses this count to configure the maximum number of supported
+ * logical partitions.
+ */
+#define MAX_EL3_LP_DESCS_COUNT		1
+
+/*
+ * Secure memory region reserved for the SPMC to store transaction
+ * descriptors while memory is shared/lent between OP-TEE and TF-A.
+ */
+#define PLAT_SPMC_SHMEM_DATASTORE_SIZE	(4 * 1024)
+
+#endif /* SPMC_AT_EL3 */
 
 #endif /* PLATFORM_DEF_H */
