@@ -22,8 +22,6 @@
 #include <drivers/qti/rpmh/rpmh_client.h>
 #include <lib/mmio_poll.h>
 
-#include "rsc_regs.h"
-
 /*
  * TZ DRV TCS configuration (matches the RPMh DRV config):
  *   - 4 TCSs total, the first two are AMC TCSs.
