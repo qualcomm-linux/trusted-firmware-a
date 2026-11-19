@@ -24,7 +24,7 @@
 #define MAX_MMAP_REGIONS (PLAT_QTI_MMAP_ENTRIES)
 
 /*
- * Platform specific page table and MMU setup constants
+ * Platform specific page table and MMU setup constants.
  */
 #define MAX_XLAT_TABLES 16
 

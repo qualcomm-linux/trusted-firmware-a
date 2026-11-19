@@ -45,6 +45,7 @@ BL31_SOURCES +=							\
 	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_panic_stub.S
 endif
 
+BL31_SOURCES += ${QTI_PLAT_PATH}/common/src/stringl.c
 
 # Print all compiler -D defines (used by tfa_qti CMake build to sync defines)
 .PHONY: print-defines
