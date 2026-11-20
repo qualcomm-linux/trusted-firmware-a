@@ -10,6 +10,7 @@
 #include <bl31/bl31.h>
 #include <common/debug.h>
 #include <drivers/delay_timer.h>
+#include <drivers/qti/sail_comm/sail_comm.h>
 #include <drivers/qti/sec_core/sec_core.h>
 #include <lib/mmio.h>
 #include <lib/psci/psci.h>
@@ -180,9 +181,12 @@ static void qti_node_suspend_finish(const psci_power_state_t *target_state)
 	}
 }
 
+#define PS_HOLD_SETTLE_DELAY_MS		10U
+
 static __dead2 void assert_ps_hold(void)
 {
 #ifdef QTI_PS_HOLD_REG
+	mdelay(PS_HOLD_SETTLE_DELAY_MS);
 	mmio_write_32(QTI_PS_HOLD_REG, 0);
 	mdelay(1000);
 #endif
@@ -194,12 +198,14 @@ static __dead2 void assert_ps_hold(void)
 __dead2 void qti_system_off(void)
 {
 	qti_pmic_prepare_shutdown();
+	qti_sail_comm_system_off();
 	assert_ps_hold();
 }
 
 __dead2 void qti_system_reset(void)
 {
 	qti_pmic_prepare_reset();
+	qti_sail_comm_system_reset();
 	assert_ps_hold();
 }
 
