@@ -154,6 +154,7 @@ PLAT_INCLUDES		+=	-I${QTI_COMMON_PATH}/inc/$(ARCH)
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
+include drivers/qti/smmu/smmu.mk
 PLAT_INCLUDES += -Iinclude/drivers/qti/qtimer/${CHIPSET}
 
 QTI_USE_NCC_QTIMER	:=	1
@@ -242,3 +243,10 @@ include $(QTI_PLAT_PATH)/common/wildcat_common.mk
 
 include drivers/qti/watchdog/watchdog.mk
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/cpucp/${CHIPSET}
+
+include drivers/qti/cmd_db/cmd_db.mk
+include drivers/qti/pwr_utils/pwr_utils.mk
+include drivers/qti/rpmh/rpmh.mk
+
+QTI_CLOCK_RAIL_VOTE := 1
+include drivers/qti/clock/clock.mk
