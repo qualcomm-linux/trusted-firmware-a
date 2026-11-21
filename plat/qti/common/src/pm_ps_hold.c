@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <common/debug.h>
 #include <drivers/delay_timer.h>
 #include <lib/mmio.h>
 #include <lib/psci/psci.h>
@@ -60,6 +61,9 @@ void qti_pmic_prepare_shutdown(void)
 int qti_pmic_prepare_reset2(uint32_t reset_type, uint64_t cookie)
 {
 	uint32_t vendor_type = reset_type & QTI_RESET2_TYPE_MASK;
+
+	INFO("qti_pmic_prepare_reset2: reset_type=0x%x cookie=0x%llx\n",
+	     reset_type, (unsigned long long)cookie);
 
 #if defined(PON_SOFT_RB_SPARE) && defined(TCSR_BOOT_MISC_DETECT)
 	/*
