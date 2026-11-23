@@ -12,7 +12,8 @@ RPMH_DRV_PATH := drivers/qti/rpmh
 
 PLAT_INCLUDES += \
 	-I$(RPMH_DRV_PATH) \
-	-I$(RPMH_DRV_PATH)/$(CHIPSET)
+	-I$(RPMH_DRV_PATH)/$(CHIPSET) \
+	-I$(RPMH_DRV_PATH)/common
 
 BL31_SOURCES += \
 	$(RPMH_DRV_PATH)/rpmh_client.c
