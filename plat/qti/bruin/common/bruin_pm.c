@@ -7,6 +7,10 @@
 #include <stdint.h>
 
 #include <drivers/delay_timer.h>
+#include <drivers/qti/rimps/rimps.h>
+#include <drivers/qti/cprh/cprh.h>
+#include <drivers/qti/pcu/pcu.h>
+#include <drivers/qti/vpp/vpp.h>
 #include <lib/mmio.h>
 #include <lib/psci/psci.h>
 
@@ -32,13 +36,33 @@ DEFINE_RENAME_SYSREG_RW_FUNCS(cpu_pwrctrl_val, S3_0_C15_C2_7)
 /*
  * plat_qti_pwr_psci_init - PSCI backend init hook.
  *
+ * vpp_init() reads the device's fused calibration data and computes the
+ * ceil/floor voltage, target quotient and OSM LUT plan for every rail/clock
+ * domain; it must run before anything that consumes that plan (the CPRH
+ * closed-loop AVS controller).
+ *
  * The secondary-core reset vector (RVBAR) is programmed by
- * qti_sec_core_remap(), invoked from plat_setup_psci_ops() ahead of this hook,
- * so there is nothing to do here.
+ * qti_sec_core_remap(), invoked from plat_setup_psci_ops() ahead of this hook.
+ * The Silver/Gold/L3 CPU PLLs must be locked and outputting before the
+ * PCU/RIMPS hardware sequencers that drive CPU/L3 power-collapse have their
+ * opcode programs loaded, since those opcode sequences assume a running PLL
+ * to power back down and up.
+ *
+ * rimps_dcvs_init() loads the CPUCP firmware and enables the L3/Silver/
+ * Gold OSM domains, issuing each one's initial perf-state request; it runs
+ * after the PLLs are up and before cprh_init(), since cprh_init() starts the
+ * CPR closed-loop AVS controller, which assumes the clock domains it
+ * monitors are already enabled and being voted on.
  */
 int plat_qti_pwr_psci_init(uintptr_t warmboot_entry)
 {
 	(void)warmboot_entry;
+
+	vpp_init();
+	rimps_cpu_pll_init();
+	rimps_dcvs_init();
+	pcu_sequencer_init();
+	cprh_init();
 
 	return PSCI_E_SUCCESS;
 }
@@ -120,22 +144,46 @@ void plat_qti_set_cpupwrctlr_val(void)
 }
 
 /*
- * The native port only supports CPU-level standby (WFI retention). The
- * firmware power-collapse / LPM node handling (PCU/RSC/PDC/RPM) is not ported.
+ * pcu_apply_pwr_state - select the PCU hardware sequence for the requested
+ * OFF-level power state, ahead of the WFI that hands control to the PCU/
+ * RIMPS sequencers. Only QTI_LOCAL_STATE_OFF is wired to a PCU mode; deeper
+ * CPU standby (QTI_LOCAL_STATE_STB) stays a plain WFI retention, same as
+ * before this driver existed.
+ */
+static void pcu_apply_pwr_state(const uint8_t *states)
+{
+	if (states[QTI_PWR_LVL0] == QTI_LOCAL_STATE_OFF) {
+		pcu_cpu_select_mode(plat_my_core_pos(), PCU_PWR_IDX_PWR_COLLAPSE);
+	}
+
+	if (states[QTI_PWR_LVL1] == QTI_LOCAL_STATE_OFF) {
+		pcu_l3_select_mode(PCU_PWR_IDX_PWR_COLLAPSE);
+	}
+}
+
+/*
+ * The native port only supports CPU-level standby (WFI retention) and PCU
+ * power-collapse. Firmware LPM node handling (RSC/PDC/RPM) is not ported.
  */
 void plat_qti_pwr_domain_off(const uint8_t *states)
 {
-	(void)states;
+	pcu_apply_pwr_state(states);
 }
 
 void plat_qti_pwr_domain_suspend(const uint8_t *states)
 {
-	(void)states;
+	pcu_apply_pwr_state(states);
 }
 
 void plat_qti_pwr_domain_suspend_finish(const uint8_t *states)
 {
-	(void)states;
+	if (states[QTI_PWR_LVL0] == QTI_LOCAL_STATE_OFF) {
+		pcu_cpu_select_mode(plat_my_core_pos(), PCU_PWR_IDX_RUN);
+	}
+
+	if (states[QTI_PWR_LVL1] == QTI_LOCAL_STATE_OFF) {
+		pcu_l3_select_mode(PCU_PWR_IDX_RUN);
+	}
 }
 
 void plat_qti_invoke_unhandled_isr(uint32_t id, void *handle)
@@ -149,6 +197,8 @@ const unsigned int *plat_qti_pm_idle_states(void)
 	static const unsigned int idle_states[] = {
 		qti_make_pwrstate_lvl0(QTI_LOCAL_STATE_STB,
 				       PSTATE_TYPE_STANDBY),
+		qti_make_pwrstate_lvl1(QTI_LOCAL_STATE_OFF, QTI_LOCAL_STATE_OFF,
+				       PSTATE_TYPE_POWERDOWN),
 		0,
 	};
 
