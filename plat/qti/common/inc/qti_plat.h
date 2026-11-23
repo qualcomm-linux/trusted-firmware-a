@@ -49,6 +49,7 @@ void gic_set_spi_routing(unsigned int id, unsigned int irm, u_register_t mpidr);
 
 void qti_pmic_prepare_reset(void);
 void qti_pmic_prepare_shutdown(void);
+int qti_pmic_prepare_reset2(uint32_t reset_type, uint64_t cookie);
 
 int plat_qti_pwr_domain_on(u_register_t mpidr, int core_pos);
 void plat_qti_pwr_domain_on_finish(int core_pos, const uint8_t *states);

@@ -209,6 +209,30 @@ __dead2 void qti_system_reset(void)
 	assert_ps_hold();
 }
 
+/*
+ * qti_system_reset2
+ *
+ * Only vendor-specific reset types are supported, matching downstream TZ's
+ * behavior: the architectural warm reset (is_vendor == 0) is rejected.
+ * On a supported vendor type this does not return - PS_HOLD is deasserted
+ * and the SoC resets.
+ */
+static int qti_system_reset2(int is_vendor, int reset_type, u_register_t cookie)
+{
+	int ret;
+
+	if (!is_vendor) {
+		return PSCI_E_NOT_SUPPORTED;
+	}
+
+	ret = qti_pmic_prepare_reset2((uint32_t)reset_type, (uint64_t)cookie);
+	if (ret != PSCI_E_SUCCESS) {
+		return ret;
+	}
+
+	assert_ps_hold();
+}
+
 void qti_get_sys_suspend_power_state(psci_power_state_t *req_state)
 {
 	int i;
@@ -261,6 +285,7 @@ const plat_psci_ops_t plat_qti_psci_pm_ops = {
 	.pwr_domain_suspend_finish = qti_node_suspend_finish,
 	.system_off = qti_system_off,
 	.system_reset = qti_system_reset,
+	.system_reset2 = qti_system_reset2,
 	.get_node_hw_state = NULL,
 	.translate_power_state_by_mpidr = NULL,
 	.get_sys_suspend_power_state = qti_get_sys_suspend_power_state,
