@@ -152,6 +152,10 @@
 /* PMIC SPMI arbiter base address                                             */
 /*----------------------------------------------------------------------------*/
 #define QTI_PMIC_ARB_BASE               0x0C400000
+#define SPMI_ARB_APID_MAP_BASE          (QTI_PMIC_ARB_BASE + 0x40900U)
+#define SPMI_ARB_CHNL_BASE              (QTI_PMIC_ARB_BASE + 0x200000U)
+#define SPMI_ARB_CHNL_STRIDE            0x10000U
+#define SPMI_ARB_NUM_APID               512U
 
 /*
  * The Qualcomm QGIC2 implementation seems to have PIDR0-4 and PIDR4-7
