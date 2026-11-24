@@ -14,6 +14,26 @@
  */
 uint32_t g_qti_bl31_cold_booted;
 
+void plat_cpuss_early_config(void)
+{
+	/* Empty - placeholder for future use */
+}
+
+void plat_cpuss_late_config(void)
+{
+	/* Empty - placeholder for future use */
+}
+
+void plat_cluster_init_wrapper(void)
+{
+	/* Empty - placeholder for future use */
+}
+
+void plat_qti_bl31_setup_pre(void)
+{
+	/* Empty - placeholder for future use */
+}
+
 void plat_qti_bl31_setup_post(void)
 {
 	qtiseclib_bl31_platform_setup();
