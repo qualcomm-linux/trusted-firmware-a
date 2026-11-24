@@ -59,10 +59,11 @@ int plat_qti_pwr_psci_init(uintptr_t warmboot_entry)
 	(void)warmboot_entry;
 
 	vpp_init();
+	cprh_init();
+
 	rimps_cpu_pll_init();
 	rimps_dcvs_init();
 	pcu_sequencer_init();
-	cprh_init();
 
 	return PSCI_E_SUCCESS;
 }

@@ -71,7 +71,7 @@
 /* Gold's branch slot for the C4 BEQR opcode (PLL-off -> rail-off handoff). */
 #define RIMPSSLOW_CLKDOM2_SEQ_BR_CTRL_n(n)	(RIMPSSLOW_CLKDOM2_BASE + \
 						 0x350U + (0x4U * (n)))
-#define RIMPSSLOW_SEQ_BR_CTRL_BRANCH_IDX	0U
+#define RIMPSSLOW_SEQ_BR_CTRL_BRANCH_IDX	1U
 
 /* RIMPS top-level enable, shared by the opcode sequencer and the CPUCP MUC. */
 #define RIMPSTOP_BASE			(QTI_APSS_HM_BASE + 0x00d98000U)
