@@ -28,6 +28,8 @@
 
 #include "pcu_hwio.h"
 
+#define PCU_CMDS_PER_REG	4U
+
 /* CPU power-collapse (C3) sequence; contains a BEQ to the short-wake path. */
 static const uint8_t cpu_c3_sequence[] = {
 	0xb4, 0xb1, 0xeb, 0xa7, 0x2, 0xe4, 0x54, 0xa1, 0xa2, 0x2,
@@ -35,14 +37,14 @@ static const uint8_t cpu_c3_sequence[] = {
 	0x2, 0xe3, 0x87, 0xb7, 0xe0, 0x97, 0x5, 0xe2, 0xae, 0x2,
 	0xe8, 0x8a, 0x2, 0xe3, 0x81, 0x89, 0x86, 0x90, 0x83, 0x2,
 	0xe5, 0x82, 0x2, 0xe5, 0xa8, 0x2, 0x88, 0xe6, 0xa0, 0x3,
-	0x85, 0x3, 0x84, 0x80, 0x8e, 0x91, 0x94, 0x20,
+	0x85, 0x3, 0x84, 0x80, 0x8e, 0x91, 0x94, 0x20, 0x0, 0x0
 };
 
 /* CPU early-wake branch target of the C3 sequence's BEQ. */
 static const uint8_t cpu_c3_short_sequence[] = {
 	0xad, 0xa4, 0xa5, 0x87, 0x2, 0xb7, 0x3, 0x97, 0x5, 0xae,
 	0x2, 0xe8, 0xa8, 0x2, 0x88, 0xe6, 0x84, 0x85, 0x8e, 0x91,
-	0x8d, 0x20,
+	0x8d, 0x20, 0x0, 0x0
 };
 
 /* L3 power-collapse (D4) sequence, including PLL shutdown. */
@@ -66,7 +68,7 @@ static const uint8_t l3_d4_sequence[] = {
 	0x3, 0x70, 0x0, 0x50, 0x3, 0x0, 0x7, 0x40, 0x10, 0x40,
 	0x6, 0x40, 0x2, 0x0, 0x20, 0x40, 0x2, 0x0, 0x1, 0x40,
 	0xa, 0x40, 0x1b, 0x40, 0x2, 0x0, 0xe, 0x70, 0x1e, 0x40,
-	0x5, 0x0, 0x0, 0x40, 0x2, 0x0, 0x0, 0x10,
+	0x5, 0x0, 0x0, 0x40, 0x2, 0x0, 0x0, 0x10, 0x0, 0x0
 };
 
 /* RIMPS Silver-PLL off sequence. */
@@ -99,25 +101,46 @@ static uint32_t cpu_c3_start_addr;
 static uint32_t cpu_c3_short_start_addr;
 static uint32_t l3_d4_start_addr;
 
-static void pcu_write_seq(void (*write_word)(uint32_t idx, uint8_t val),
-			   uint32_t *word_idx, const uint8_t *seq, size_t len)
-{
-	size_t i;
-
-	for (i = 0U; i < len; i++) {
-		write_word(*word_idx, seq[i]);
-		(*word_idx)++;
-	}
-}
-
-static void apss_seq_mem_write(uint32_t idx, uint8_t val)
+static void apss_seq_mem_write(uint32_t idx, uint32_t val)
 {
 	mmio_write_32(APSS_SEQ_COMMON_INSTR_n(idx), val);
+}
+
+/* Pack four 8-bit PCU opcodes into each 32-bit APSS sequence-memory word. */
+static void pcu_write_seq(uint32_t *cmd_idx, const uint8_t *seq, size_t len)
+{
+	size_t i;
+	unsigned int byte_idx;
+
+	for (i = 0U; i < len; i += PCU_CMDS_PER_REG) {
+		uint32_t packed = 0U;
+
+		for (byte_idx = 0U; byte_idx < PCU_CMDS_PER_REG; byte_idx++) {
+			if ((i + byte_idx) < len) {
+				packed |= (uint32_t)seq[i + byte_idx] << (8U * byte_idx);
+			}
+		}
+
+		apss_seq_mem_write(*cmd_idx / PCU_CMDS_PER_REG, packed);
+		/* Sequence and branch addresses count opcode byte slots. */
+		*cmd_idx += PCU_CMDS_PER_REG;
+	}
 }
 
 static void rimpsfast_seq_mem_write(uint32_t idx, uint8_t val)
 {
 	mmio_write_32(RIMPSFAST_SEQ_MEM_n(idx), val);
+}
+
+/* RIMPS expects one 8-bit opcode in each 32-bit sequence-memory word. */
+static void rimps_write_seq(uint32_t *word_idx, const uint8_t *seq, size_t len)
+{
+	size_t i;
+
+	for (i = 0U; i < len; i++) {
+		rimpsfast_seq_mem_write(*word_idx, seq[i]);
+		(*word_idx)++;
+	}
 }
 
 /*
@@ -128,19 +151,17 @@ static void rimpsfast_seq_mem_write(uint32_t idx, uint8_t val)
  */
 static void pcu_load_cpu_l3_sequences(void)
 {
-	uint32_t word_idx = 0U;
+	uint32_t cmd_idx = 0U;
 
-	cpu_c3_start_addr = word_idx;
-	pcu_write_seq(apss_seq_mem_write, &word_idx, cpu_c3_sequence,
-		      sizeof(cpu_c3_sequence));
+	cpu_c3_start_addr = cmd_idx;
+	pcu_write_seq(&cmd_idx, cpu_c3_sequence, sizeof(cpu_c3_sequence));
 
-	cpu_c3_short_start_addr = word_idx;
-	pcu_write_seq(apss_seq_mem_write, &word_idx, cpu_c3_short_sequence,
-		      sizeof(cpu_c3_short_sequence));
+	cpu_c3_short_start_addr = cmd_idx;
+	pcu_write_seq(&cmd_idx, cpu_c3_short_sequence,
+		       sizeof(cpu_c3_short_sequence));
 
-	l3_d4_start_addr = word_idx;
-	pcu_write_seq(apss_seq_mem_write, &word_idx, l3_d4_sequence,
-		      sizeof(l3_d4_sequence));
+	l3_d4_start_addr = cmd_idx;
+	pcu_write_seq(&cmd_idx, l3_d4_sequence, sizeof(l3_d4_sequence));
 }
 
 /*
@@ -157,20 +178,20 @@ static void pcu_load_rimps_sequences(void)
 	uint32_t l3_start_addr;
 
 	silver_start_addr = word_idx;
-	pcu_write_seq(rimpsfast_seq_mem_write, &word_idx, rimps_silver_sequence,
-		      sizeof(rimps_silver_sequence));
+	rimps_write_seq(&word_idx, rimps_silver_sequence,
+			 sizeof(rimps_silver_sequence));
 
 	gold_pll_start_addr = word_idx;
-	pcu_write_seq(rimpsfast_seq_mem_write, &word_idx, rimps_gold_pll_sequence,
-		      sizeof(rimps_gold_pll_sequence));
+	rimps_write_seq(&word_idx, rimps_gold_pll_sequence,
+			 sizeof(rimps_gold_pll_sequence));
 
 	gold_rail_start_addr = word_idx;
-	pcu_write_seq(rimpsfast_seq_mem_write, &word_idx, rimps_gold_rail_sequence,
-		      sizeof(rimps_gold_rail_sequence));
+	rimps_write_seq(&word_idx, rimps_gold_rail_sequence,
+			 sizeof(rimps_gold_rail_sequence));
 
 	l3_start_addr = word_idx;
-	pcu_write_seq(rimpsfast_seq_mem_write, &word_idx, rimps_l3_sequence,
-		      sizeof(rimps_l3_sequence));
+	rimps_write_seq(&word_idx, rimps_l3_sequence,
+			 sizeof(rimps_l3_sequence));
 
 	mmio_clrsetbits_32(RIMPSSLOW_SEQ_CTRL1(RIMPSSLOW_CLKDOM0_BASE),
 			   RIMPSSLOW_SEQ_CTRL1_PLL_SEQ_START_ADDR_BMSK,

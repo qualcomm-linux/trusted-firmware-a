@@ -5,6 +5,7 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <drivers/delay_timer.h>
 #include <drivers/qti/rimps/rimps.h>
@@ -76,6 +77,9 @@ int plat_qti_pwr_domain_on(u_register_t mpidr, int core_pos)
 {
 	(void)mpidr;
 
+	/* Disable PCU collapse mode before the software power-up sequence. */
+	pcu_cpu_select_mode((unsigned int)core_pos, PCU_PWR_IDX_RUN);
+
 	/* Program skew between en_few and en_rest. */
 	mmio_write_32(CPU_HEAD_SWITCH_CTL(core_pos), 0x28U);
 
@@ -122,15 +126,28 @@ int plat_qti_pwr_domain_on(u_register_t mpidr, int core_pos)
 	return PSCI_E_SUCCESS;
 }
 
+static void pcu_apply_pwr_state(const uint8_t *states, int pwr_idx,
+				unsigned int core_pos);
+
+static bool pcu_state_is_powered_off(uint8_t state)
+{
+	return (state == QTI_LOCAL_STATE_OFF) ||
+	       (state == QTI_LOCAL_STATE_DEEPOFF);
+}
+
 /*
  * plat_qti_pwr_domain_on_finish - per-core setup once it has come online.
+ * Return any PCU sequencers left in a collapse mode to RUN after hotplug.
  * plat_cluster_init_wrapper() is called here so that the first CPU in each
  * cluster to come online initializes the DSU cluster registers.
  */
 void plat_qti_pwr_domain_on_finish(int core_pos, const uint8_t *states)
 {
 	(void)core_pos;
-	(void)states;
+
+	if (pcu_state_is_powered_off(states[QTI_PWR_LVL1])) {
+		pcu_l3_select_mode(PCU_PWR_IDX_RUN);
+	}
 
 	plat_qti_gic_pcpu_init();
 	plat_cluster_init_wrapper();
@@ -148,20 +165,19 @@ void plat_qti_set_cpupwrctlr_val(void)
 }
 
 /*
- * pcu_apply_pwr_state - select the PCU hardware sequence for the requested
- * OFF-level power state, ahead of the WFI that hands control to the PCU/
- * RIMPS sequencers. Only QTI_LOCAL_STATE_OFF is wired to a PCU mode; deeper
- * CPU standby (QTI_LOCAL_STATE_STB) stays a plain WFI retention, same as
- * before this driver existed.
+ * pcu_apply_pwr_state - configure PCU mode for domains leaving or returning
+ * from OFF or DEEPOFF. Select collapse ahead of WFI and disable it on resume
+ * or hotplug power-on. Deeper CPU standby remains a plain WFI.
  */
-static void pcu_apply_pwr_state(const uint8_t *states)
+static void pcu_apply_pwr_state(const uint8_t *states, int pwr_idx,
+				unsigned int core_pos)
 {
-	if (states[QTI_PWR_LVL0] == QTI_LOCAL_STATE_OFF) {
-		pcu_cpu_select_mode(plat_my_core_pos(), PCU_PWR_IDX_PWR_COLLAPSE);
+	if (pcu_state_is_powered_off(states[QTI_PWR_LVL0])) {
+		pcu_cpu_select_mode(core_pos, pwr_idx);
 	}
 
-	if (states[QTI_PWR_LVL1] == QTI_LOCAL_STATE_OFF) {
-		pcu_l3_select_mode(PCU_PWR_IDX_PWR_COLLAPSE);
+	if (pcu_state_is_powered_off(states[QTI_PWR_LVL1])) {
+		pcu_l3_select_mode(pwr_idx);
 	}
 }
 
@@ -171,23 +187,19 @@ static void pcu_apply_pwr_state(const uint8_t *states)
  */
 void plat_qti_pwr_domain_off(const uint8_t *states)
 {
-	pcu_apply_pwr_state(states);
+	pcu_apply_pwr_state(states, PCU_PWR_IDX_PWR_COLLAPSE,
+			    plat_my_core_pos());
 }
 
 void plat_qti_pwr_domain_suspend(const uint8_t *states)
 {
-	pcu_apply_pwr_state(states);
+	pcu_apply_pwr_state(states, PCU_PWR_IDX_PWR_COLLAPSE,
+			    plat_my_core_pos());
 }
 
 void plat_qti_pwr_domain_suspend_finish(const uint8_t *states)
 {
-	if (states[QTI_PWR_LVL0] == QTI_LOCAL_STATE_OFF) {
-		pcu_cpu_select_mode(plat_my_core_pos(), PCU_PWR_IDX_RUN);
-	}
-
-	if (states[QTI_PWR_LVL1] == QTI_LOCAL_STATE_OFF) {
-		pcu_l3_select_mode(PCU_PWR_IDX_RUN);
-	}
+	pcu_apply_pwr_state(states, PCU_PWR_IDX_RUN, plat_my_core_pos());
 }
 
 void plat_qti_invoke_unhandled_isr(uint32_t id, void *handle)
