@@ -163,8 +163,8 @@ static enum hal_vmidmt_status
 set_default_config(const struct hal_vmidmt_info *p,
 		   const struct hal_vmidmt_default_vmid_config *cfg, bool sec)
 {
-	struct hal_vmidmt_bus_attrib *bypass_bus = cfg->p_bypass_bus_attrib;
-	struct hal_vmidmt_aux_config *bypass_aux = cfg->p_bypass_aux_config;
+	struct hal_vmidmt_bus_attrib *bypass_bus;
+	struct hal_vmidmt_aux_config *bypass_aux;
 	uint32_t attrib = 0;
 	uint32_t config = 0;
 	uint32_t val = 0;
@@ -172,6 +172,9 @@ set_default_config(const struct hal_vmidmt_info *p,
 
 	if (!cfg)
 		return HAL_VMIDMT_INVALID_PARAM;
+
+	bypass_bus = cfg->p_bypass_bus_attrib;
+	bypass_aux = cfg->p_bypass_aux_config;
 
 	if (bypass_bus &&
 	    bypass_bus->mem_attr > (1 << VMIDMT_MEMATTR_MAX_BITS) - 1)
