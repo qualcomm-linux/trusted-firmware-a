@@ -2592,10 +2592,10 @@ struct rg_mpu_cfg snoc_a2noc_mpu_cfg[] = {
 {
 	.index         = 0,
 	.flags         = APPS_S_DOMAIN,
-	.read_vmid     = MSA_DOMAIN,
-	.write_vmid    = MSA_DOMAIN,
-	.start         = 0x05800000,
-	.end           = 0x05880000,
+	.read_vmid     = NO_DOMAIN,
+	.write_vmid    = NO_DOMAIN,
+	.start         = 0xffffffff,
+	.end           = 0xffffffff,
 },
 {
 	.index         = 1,
