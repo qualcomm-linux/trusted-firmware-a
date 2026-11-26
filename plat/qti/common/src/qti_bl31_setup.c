@@ -44,7 +44,15 @@
 #endif
 #include <qti_uart_console.h>
 #ifdef TFA_BL31_RING_LOG_BASE
-struct console_ringbuf g_qti_bl31_ringbuf;
+#ifdef TFA_BL31_RING_BUFFER_IN_TZ_IMEM_BASE
+static struct console_ringbuf *g_qti_bl31_ringbuf =
+	(struct console_ringbuf *)TFA_BL31_RING_BUFFER_IN_TZ_IMEM_BASE;
+#else
+static struct console_ringbuf g_qti_bl31_ringbuf_storage;
+static struct console_ringbuf *g_qti_bl31_ringbuf =
+	&g_qti_bl31_ringbuf_storage;
+#endif
+
 static console_t g_qti_console_ringbuf;
 #endif
 
@@ -76,14 +84,14 @@ void bl31_early_platform_setup(u_register_t from_bl2,
 			  CONSOLE_FLAG_BOOT | CONSOLE_FLAG_CRASH);
 
 #ifdef TFA_BL31_RING_LOG_BASE
-	qti_console_ringbuf_init(&g_qti_bl31_ringbuf);
+	qti_console_ringbuf_init(g_qti_bl31_ringbuf);
 	qti_console_ringbuf_register(&g_qti_console_ringbuf,
-				     &g_qti_bl31_ringbuf);
+				     g_qti_bl31_ringbuf);
 	console_set_scope(&g_qti_console_ringbuf, CONSOLE_FLAG_RUNTIME |
 			  CONSOLE_FLAG_BOOT | CONSOLE_FLAG_CRASH);
 
 	/* Publish the ring buffer location in the platform pointer slot. */
-	*(uint64_t *)TFA_BL31_RING_LOG_BASE = (uint64_t)(&g_qti_bl31_ringbuf);
+	*(uint64_t *)TFA_BL31_RING_LOG_BASE = (uint64_t)g_qti_bl31_ringbuf;
 #endif
 
 	/*

@@ -115,37 +115,39 @@
 /*----------------------------------------------------------------------------*/
 /* SHARED_IMEM address space for mapping */
 /*----------------------------------------------------------------------------*/
-#define SHARED_IMEM_BASE ULL(0x146AA000)
+#define SHARED_IMEM_BASE ULL(0x14680000)
 #define SHARED_IMEM_SIZE 0x00001000
+
+/* Shared-IMEM pointer slot for the BL31 ring-buffer console. */
+#define TFA_BL31_RING_LOG_BASE (SHARED_IMEM_BASE + ULL(0xCF0))
 
 /*----------------------------------------------------------------------------*/
 /* TFA address space for mapping */
 /*----------------------------------------------------------------------------*/
-#define TFA_IMEM_BASE ULL(0x1468D000)
-/* Ring buffer + TFA Reserved */
+#define TFA_IMEM_BASE ULL(0x146A1000)
+/* TF-A IMEM allocation. */
 #define TFA_IMEM_SIZE 0x00002000
 
+/* BL31 ring buffer resides in the NORD IMEM allocation. */
+#define TFA_BL31_RING_BUFFER_IN_TZ_IMEM_BASE (TFA_IMEM_BASE)
+
 /*----------------------------------------------------------------------------*/
-/* Shared IMEM space for QSEE/TZ */
+/* Shared IMEM space */
 /*----------------------------------------------------------------------------*/
 /*
  * ==========================
- * 100K starting 0x14680000
+ * 100K starting 0x14694000
  * ==========================
- * The address layout below appears in TF-A, TZ and SECLIB, and
- * the three should be kept in sync.
- * Currently the TF-A logs are set placed at the start of the
- * QSEE_TZ_IMEM region
+ * Keep the address layout in sync across the relevant firmware images.
+ * The first two pages after the reserved area are allocated to TF-A.
  *
  * Start Address    Page Size       Region
  * =======================================
- * 14680000         52K             Reserved
- * 1468D000         4K              TFA ringbuffer
- * 1468E000         4K              TFA Reserved
+ * 14694000         52K             Reserved
+ * 146A1000         4K              TFA ringbuffer
+ * 146A2000         4K              TFA Reserved
  * ... other shared data
  */
-#define TFA_BL31_RING_BUFFER_IN_TZ_IMEM_BASE            (TFA_IMEM_BASE)
-
 /*----------------------------------------------------------------------------*/
 /* AOP CMD DB  address space for mapping */
 /*----------------------------------------------------------------------------*/

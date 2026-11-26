@@ -91,6 +91,7 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				plat/common/plat_psci_common.c				\
 				$(PLAT_PATH)/common/src/pm_ps_hold.c			\
 				$(PLAT_PATH)/common/src/qti_bl31_setup.c		\
+				$(PLAT_PATH)/common/src/$(ARCH)/qti_ringbuf_console.S	\
 				$(PLAT_PATH)/common/src/qti_gic_v3.c			\
 				$(PLAT_PATH)/common/src/qti_gicv3_platform.c		\
 				$(PLAT_PATH)/common/src/qti_interrupt_svc.c		\
@@ -98,6 +99,7 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				$(PLAT_PATH)/common/src/qti_syscall.c			\
 				$(PLAT_PATH)/common/src/qti_sip_platform.c		\
 				$(PLAT_PATH)/common/src/qti_pm.c			\
+				$(PLAT_PATH)/common/src/qti_ringbuf_console_helper.c	\
 				$(PLAT_PATH)/common/src/spmi_arb.c			\
 				$(PLAT_PATH)/bruin/common/$(ARCH)/bruin_helpers.S	\
 				$(PLAT_PATH)/bruin/common/bruin_bl31_setup.c		\

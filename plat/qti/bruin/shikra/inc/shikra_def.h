@@ -214,6 +214,42 @@
 /*----------------------------------------------------------------------------*/
 #define QTI_SMEM_BASE				0x86000000
 #define QTI_SMEM_SIZE				0x00200000
+
+/*----------------------------------------------------------------------------*/
+/* SHARED_IMEM address space for the BL31 ring-buffer pointer                 */
+/*----------------------------------------------------------------------------*/
+#define SHARED_IMEM_BASE			ULL(0x0C11E000)
+#define SHARED_IMEM_SIZE			0x00001000
+
+#define TFA_BL31_RING_LOG_BASE			(SHARED_IMEM_BASE + ULL(0xCF0))
+
+/*----------------------------------------------------------------------------*/
+/* TFA address space for mapping */
+/*----------------------------------------------------------------------------*/
+#define TFA_IMEM_BASE				ULL(0x0C10D000)
+/* TF-A IMEM allocation. */
+#define TFA_IMEM_SIZE				0x00002000
+
+/* BL31 ring buffer resides in the Shikra IMEM allocation. */
+#define TFA_BL31_RING_BUFFER_IN_TZ_IMEM_BASE	(TFA_IMEM_BASE)
+
+/*----------------------------------------------------------------------------*/
+/* Shared IMEM space */
+/*----------------------------------------------------------------------------*/
+/*
+ * ==========================
+ * 80K starting 0x0C100000
+ * ==========================
+ * Keep the address layout in sync across the relevant firmware images.
+ * The first two pages after the reserved area are allocated to TF-A.
+ *
+ * Start Address    Page Size       Region
+ * =======================================
+ * 0C100000         52K             Reserved
+ * 0C10D000         4K              TFA ringbuffer
+ * 0C10E000         4K              TFA Reserved
+ * ... other shared data
+ */
 /*----------------------------------------------------------------------------*/
 /* Interrupt IDs */
 /*----------------------------------------------------------------------------*/
