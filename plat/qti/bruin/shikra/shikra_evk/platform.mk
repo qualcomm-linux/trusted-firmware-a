@@ -123,3 +123,5 @@ BL31_SOURCES	+=	drivers/qti/sec_core/sec_core.c				\
 
 include drivers/qti/watchdog/watchdog.mk
 
+# System Debug Image (SDI), see drivers/qti/sysdbg/sysdbg.mk
+include drivers/qti/sysdbg/sysdbg.mk

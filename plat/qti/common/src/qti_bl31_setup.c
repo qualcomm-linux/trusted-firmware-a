@@ -29,6 +29,9 @@
 #include <drivers/qti/smem/smem.h>
 #include <drivers/qti/smmu/smmu.h>
 #include <drivers/qti/watchdog/watchdog.h>
+#ifdef QTI_USE_SYSDBG
+#include <drivers/qti/sysdbg/sysdbg.h>
+#endif
 #include <lib/bl_aux_params/bl_aux_params.h>
 #include <lib/coreboot.h>
 #include <lib/spinlock.h>
@@ -185,6 +188,13 @@ void bl31_platform_setup(void)
 	if (qti_watchdog_init()) {
 		ERROR("Watchdog initialization error\n");
 	}
+
+#ifdef QTI_USE_SYSDBG
+	/* System Debug Interface (SDI) Cold Boot Initialization */
+	if (system_debug_main() != SYSDBG_SUCCESS) {
+		ERROR("SDI: Cold boot initialization failed\n");
+	}
+#endif
 
 	qti_clock_init(clocked_boot_init);
 	qti_rpmh_deinit();
