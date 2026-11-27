@@ -12,6 +12,11 @@ PLATFORM		:=	nord
 ARM_ARCH_MAJOR := 9
 
 QTI_NCC_CPU		:= 1
+
+# Build the PSCI CPU topology from the per-SKU disabled-core fuse info that
+# XBL publishes in socinfo SMEM (e.g. IQ10 SKUs with 17 of 18 cores).
+QTI_CPU_TOPOLOGY_FROM_FUSES	:= 1
+$(eval $(call add_define,QTI_CPU_TOPOLOGY_FROM_FUSES))
 $(eval $(call add_define,QTI_SAIL_COMM))
 
 # Turn On Separate code & data.
