@@ -63,6 +63,7 @@ ENABLE_STACK_PROTECTOR := strong
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 				-I${PLAT_PATH}/bruin/${CHIPSET}/inc			\
 				-I${PLAT_PATH}/bruin/${CHIPSET}/${PLAT}/inc		\
+				-I${PLAT_PATH}/bruin/${CHIPSET}/include			\
 				-I${PLAT_PATH}/common/inc				\
 				-I${PLAT_PATH}/common/inc/$(ARCH)
 
@@ -110,6 +111,9 @@ include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
 include drivers/qti/clock/clock.mk
 include drivers/qti/accesscontrol/access_control.mk
+
+# Enable platform linker script for IMEM code placement
+PLAT_EXTRA_LD_SCRIPT	:=	1
 
 PLAT_INCLUDES   +=	-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 			-Iinclude/drivers/qti/accesscontrol			\
