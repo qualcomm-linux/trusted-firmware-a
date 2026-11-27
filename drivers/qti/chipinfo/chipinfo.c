@@ -84,6 +84,30 @@ bool chipinfo_is_part_disabled(enum chipinfo_part part, uint32_t part_idx)
 	return false;
 }
 
+enum chipinfo_result chipinfo_get_disabled_cpus(uint32_t cluster,
+						uint32_t *mask)
+{
+	if (mask == NULL) {
+		return CHIPINFO_ERROR_INVALID_PARAMETER;
+	}
+
+	if (!chipinfo_ctxt.initialized) {
+		return CHIPINFO_ERROR_NOT_INITIALIZED;
+	}
+
+	if (chipinfo_ctxt.num_cpu_clusters == 0U) {
+		return CHIPINFO_ERROR_NOT_SUPPORTED;
+	}
+
+	if (cluster >= chipinfo_ctxt.num_cpu_clusters) {
+		return CHIPINFO_ERROR_OUT_OF_RANGE_PARAMETER;
+	}
+
+	*mask = chipinfo_ctxt.cpu_disabled_mask[cluster];
+
+	return CHIPINFO_SUCCESS;
+}
+
 enum chipinfo_result qti_chipinfo_init(void)
 {
 	struct platforminfo_smem *smem;
@@ -157,6 +181,34 @@ enum chipinfo_result qti_chipinfo_init(void)
 			for (i = 0U; i < num; i++) {
 				chipinfo_ctxt.part_state[i] = features[i];
 			}
+		}
+	}
+
+	/*
+	 * Disabled-CPU cluster array (format >= 14): offset from the SMEM base,
+	 * one uint32_t bitmask per CPU cluster, bit n set means core n of that
+	 * cluster is fused off.
+	 */
+	if ((fmt >= PLATFORMINFO_FORMAT_VER_14) &&
+	    (size >= PLATFORMINFO_SMEM_SIZE_V14)) {
+		uint32_t offset = smem->cluster_array_offset;
+		uint32_t num = smem->num_clusters;
+		const uint32_t *clusters;
+
+		if (num > CHIPINFO_MAX_CPU_CLUSTERS) {
+			WARN("chipinfo: %u CPU clusters, tracking first %u\n",
+			     num, CHIPINFO_MAX_CPU_CLUSTERS);
+			num = CHIPINFO_MAX_CPU_CLUSTERS;
+		}
+
+		if (smem_region_fits(size, offset, num, sizeof(uint32_t))) {
+			clusters = (const uint32_t *)
+				   ((uintptr_t)smem + offset);
+			for (i = 0U; i < num; i++) {
+				chipinfo_ctxt.cpu_disabled_mask[i] =
+					clusters[i];
+			}
+			chipinfo_ctxt.num_cpu_clusters = num;
 		}
 	}
 

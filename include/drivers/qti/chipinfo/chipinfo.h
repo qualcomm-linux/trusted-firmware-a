@@ -74,6 +74,9 @@ enum chipinfo_part {
 /* Cap on entries in the per-instance table (format >= 23). */
 #define CHIPINFO_MAX_PART_INSTANCES	32U
 
+/* Maximum number of CPU clusters tracked from the socinfo cluster array. */
+#define CHIPINFO_MAX_CPU_CLUSTERS	8U
+
 /*
  * Chip identification type.  Any new ids must be added to the end.
  */
@@ -1149,5 +1152,18 @@ enum chipinfo_result qti_chipinfo_init(void);
  * uninitialized, out of range, or no matching entry exists.
  */
 bool chipinfo_is_part_disabled(enum chipinfo_part part, uint32_t part_idx);
+
+/*
+ * Returns in *mask the bitmask of CPU cores fused off in CPU cluster 'cluster'
+ * (bit n set means core n of that cluster is disabled), as reported by the
+ * boot firmware in the socinfo cluster array (SMEM format >= 14).
+ *
+ * Returns CHIPINFO_ERROR_NOT_INITIALIZED if the driver is not initialized,
+ * CHIPINFO_ERROR_NOT_SUPPORTED if the boot firmware did not provide the
+ * cluster array, CHIPINFO_ERROR_OUT_OF_RANGE_PARAMETER if 'cluster' is beyond
+ * the reported cluster count, or CHIPINFO_SUCCESS.
+ */
+enum chipinfo_result chipinfo_get_disabled_cpus(uint32_t cluster,
+						uint32_t *mask);
 
 #endif /* CHIPINFO_H */
