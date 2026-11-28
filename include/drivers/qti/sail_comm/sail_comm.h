@@ -12,11 +12,13 @@
 /* Notify a companion SAIL die before the platform powers off or resets. */
 void qti_sail_comm_system_off(void);
 void qti_sail_comm_system_reset(void);
+void qti_sail_comm_system_warm_reset(void);
 
 #else
 
 static inline void qti_sail_comm_system_off(void) {}
 static inline void qti_sail_comm_system_reset(void) {}
+static inline void qti_sail_comm_system_warm_reset(void) {}
 
 #endif /* QTI_SAIL_COMM */
 

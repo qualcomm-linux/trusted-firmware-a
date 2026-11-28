@@ -230,6 +230,18 @@ static int qti_system_reset2(int is_vendor, int reset_type, u_register_t cookie)
 		return ret;
 	}
 
+	/*
+	 * Both vendor reset sub-types need a companion SAIL die heads-up
+	 * before PS_HOLD is deasserted, same as the architectural
+	 * SYSTEM_RESET: hard reset mirrors qti_system_reset()'s notification,
+	 * while warm reset uses its own distinct SAIL message.
+	 */
+	if (((uint32_t)reset_type & QTI_RESET2_TYPE_MASK) == QTI_PON_CFG_HARD_RESET) {
+		qti_sail_comm_system_reset();
+	} else if (((uint32_t)reset_type & QTI_RESET2_TYPE_MASK) == QTI_PON_CFG_WARM_RESET) {
+		qti_sail_comm_system_warm_reset();
+	}
+
 	assert_ps_hold();
 }
 

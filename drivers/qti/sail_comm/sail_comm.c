@@ -29,6 +29,7 @@
 
 #define QTI_SAIL_RESET_READY		U(0xA0300100)
 #define QTI_MD_GRACEFUL_SHUTDOWN	U(0xB2200430)
+#define QTI_MD_SOC_WR			U(0xB2200320)
 #define QTI_MD_SOC_HR			U(0xB2200510)
 #define QTI_MD_SD_TZ_SRC		U(0xB2)
 #define QTI_MD_SD_NO_ACK		U(0x10)
@@ -86,6 +87,11 @@ static void qti_md_sd_psci_status_com(uint32_t status_to_sd)
 void qti_sail_comm_system_reset(void)
 {
 	qti_md_sd_psci_status_com(QTI_MD_SOC_HR);
+}
+
+void qti_sail_comm_system_warm_reset(void)
+{
+	qti_md_sd_psci_status_com(QTI_MD_SOC_WR);
 }
 
 void qti_sail_comm_system_off(void)

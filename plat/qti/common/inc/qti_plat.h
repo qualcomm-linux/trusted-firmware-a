@@ -51,6 +51,16 @@ void qti_pmic_prepare_reset(void);
 void qti_pmic_prepare_shutdown(void);
 int qti_pmic_prepare_reset2(uint32_t reset_type, uint64_t cookie);
 
+/*
+ * Vendor SYSTEM_RESET2 sub-types, selected by the low bits of the PSCI
+ * reset_type argument. Mirrors the sub-types of downstream TZ's
+ * pm_app_pon_reset_cfg_type enum that the PMIC PON config actually
+ * distinguishes; any other value is rejected as unsupported.
+ */
+#define QTI_RESET2_TYPE_MASK		0x7fU
+#define QTI_PON_CFG_WARM_RESET		0
+#define QTI_PON_CFG_HARD_RESET		1
+
 int plat_qti_pwr_domain_on(u_register_t mpidr, int core_pos);
 void plat_qti_pwr_domain_on_finish(int core_pos, const uint8_t *states);
 void plat_qti_pwr_domain_off(const uint8_t *states);

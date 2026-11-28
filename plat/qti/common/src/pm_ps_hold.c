@@ -23,17 +23,6 @@
 
 #define S2_RESET_EN			BIT(7)
 
-/*
- * Vendor SYSTEM_RESET2 sub-types, selected by the low bits of the PSCI
- * reset_type argument. Mirrors the sub-types of downstream TZ's
- * pm_app_pon_reset_cfg_type enum that shikra's PMIC PON config actually
- * distinguishes; any other value is rejected as unsupported.
- */
-#define QTI_PON_CFG_WARM_RESET		0
-#define QTI_PON_CFG_HARD_RESET		1
-
-#define QTI_RESET2_TYPE_MASK		0x7fU
-
 /* Set when the vendor payload carries a reboot-reason cookie update. */
 #define QTI_RESET2_COOKIE		BIT(16)
 
