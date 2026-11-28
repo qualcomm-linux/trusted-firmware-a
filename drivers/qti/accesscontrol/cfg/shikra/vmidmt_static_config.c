@@ -154,6 +154,150 @@ static struct vmidmt_map g_vmid_map_crypto0_crypto[] = {
 };
 
 /*
+ * VMID mappings for HAL_VMIDMT_QUPV3_0.
+ *
+ * SIDs 0-6 and 16-25 are owned by the HLOS
+ *
+ */
+static struct vmidmt_map g_vmid_map_qupv3_0[] = {
+	{
+		.sid_list = { 0 },
+		.num_sids = 1,
+		.index = 0,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 1 },
+		.num_sids = 1,
+		.index = 1,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 2 },
+		.num_sids = 1,
+		.index = 2,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 3 },
+		.num_sids = 1,
+		.index = 3,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 4 },
+		.num_sids = 1,
+		.index = 4,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 5 },
+		.num_sids = 1,
+		.index = 5,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 6 },
+		.num_sids = 1,
+		.index = 6,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 16 },
+		.num_sids = 1,
+		.index = 7,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 17 },
+		.num_sids = 1,
+		.index = 8,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 18 },
+		.num_sids = 1,
+		.index = 9,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 19 },
+		.num_sids = 1,
+		.index = 10,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 20 },
+		.num_sids = 1,
+		.index = 11,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 21 },
+		.num_sids = 1,
+		.index = 12,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 22 },
+		.num_sids = 1,
+		.index = 13,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 23 },
+		.num_sids = 1,
+		.index = 14,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 24 },
+		.num_sids = 1,
+		.index = 15,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+	{
+		.sid_list = { 25 },
+		.num_sids = 1,
+		.index = 16,
+		.vmid = ACC_VMID_AP,
+		.flags = ACC_VMIDMT_FLAG_STATIC_CONFIG,
+		.memattr = ACC_VMIDMT_MEMTYPE_DEFAULT,
+	},
+};
+/*
  * VMID mappings for HAL_VMIDMT_QPIC.
  *
  * SIDs 0-3 are owned by the HLOS; SIDs 4-7 are denied outright rather than
@@ -270,8 +414,8 @@ const struct vmidmt_cfg g_vmidmt_cfg[] = {
 		.err_opt = VMIDMT_ERR_OPT,
 		.static_cfg = ACC_VMIDMT_STATIC_CONFIG_TZ,
 		.secure_bypass_vmid = ACC_VMID_NOACCESS,
-		.vmid_map = NULL,
-		.vmid_map_count = 0,
+		.vmid_map = g_vmid_map_qupv3_0,
+		.vmid_map_count = ARRAY_SIZE(g_vmid_map_qupv3_0),
 	},
 	{
 		.ssd_table = NULL,
