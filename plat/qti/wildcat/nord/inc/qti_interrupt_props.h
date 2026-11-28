@@ -61,6 +61,35 @@ static const interrupt_prop_t qti_interrupt_props[] = {
         /* Secure Wdog bark */
         INTR_PROP_DESC(4946, GIC_HIGHEST_SEC_PRIORITY, INTR_TYPE_EL3,
                 GIC_INTR_CFG_EDGE),
+        /*
+         * NoC error interrupts (drivers/qti/icb/nord/noc_error_data.c).
+         * Most NoC instances share the main system NoC error line (728);
+         * the remaining ones below have their own dedicated SPI.
+         */
+        /* CNOC_MAIN / CNOC_CFG / SYSTEM_NOC / DC_NOC / A1/A2/MMSS NOC (shared) */
+        INTR_PROP_DESC(728, GIC_HIGHEST_SEC_PRIORITY, INTR_TYPE_EL3,
+                GIC_INTR_CFG_EDGE),
+        /* NSINOC */
+        INTR_PROP_DESC(54, GIC_HIGHEST_SEC_PRIORITY, INTR_TYPE_EL3,
+                GIC_INTR_CFG_EDGE),
+        /* APSS_NOC */
+        INTR_PROP_DESC(55, GIC_HIGHEST_SEC_PRIORITY, INTR_TYPE_EL3,
+                GIC_INTR_CFG_EDGE),
+        /* CPUSS_NOC */
+        INTR_PROP_DESC(105, GIC_HIGHEST_SEC_PRIORITY, INTR_TYPE_EL3,
+                GIC_INTR_CFG_EDGE),
+        /* NSP_CFG_NOC / NSP_DATA_NOC (shared) */
+        INTR_PROP_DESC(171, GIC_HIGHEST_SEC_PRIORITY, INTR_TYPE_EL3,
+                GIC_INTR_CFG_EDGE),
+        /* HPASS_AG_NOC */
+        INTR_PROP_DESC(196, GIC_HIGHEST_SEC_PRIORITY, INTR_TYPE_EL3,
+                GIC_INTR_CFG_EDGE),
+        /* AG_TRACE_NOC */
+        INTR_PROP_DESC(375, GIC_HIGHEST_SEC_PRIORITY, INTR_TYPE_EL3,
+                GIC_INTR_CFG_EDGE),
+        /* SOCCP_TRACE */
+        INTR_PROP_DESC(407, GIC_HIGHEST_SEC_PRIORITY, INTR_TYPE_EL3,
+                GIC_INTR_CFG_EDGE),
 };
 
 #endif /* QTI_INTERRUPT_PROPS_H */

@@ -161,6 +161,14 @@
 #define QTI_SMEM_SIZE ULL(0x00400000)
 
 /*----------------------------------------------------------------------------*/
+/* ICB/NoC error register window (QTB500 override regs, NoC error logger,    */
+/* fault manager, and timeout refgen registers used by drivers/qti/icb).     */
+/* Covers all addresses in icbcfg_hwio.h and noc_error_hwio.h (nord).        */
+/*----------------------------------------------------------------------------*/
+#define QTI_NOC_ERR_BASE ULL(0x200100000)
+#define QTI_NOC_ERR_SIZE ULL(0x24000000)
+
+/*----------------------------------------------------------------------------*/
 /* LC PON register offsets */
 /*----------------------------------------------------------------------------*/
 #define QTI_PS_HOLD_REG 0xC264000
