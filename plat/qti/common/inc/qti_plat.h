@@ -57,8 +57,14 @@ void plat_qti_pwr_domain_suspend(const uint8_t *states);
 void plat_qti_pwr_domain_suspend_finish(const uint8_t *states);
 int  plat_qti_pwr_psci_init(uintptr_t warmboot_entry);
 
+void plat_qti_bl31_setup_pre(void);
 void plat_qti_bl31_setup_post(void);
 void plat_qti_invoke_unhandled_isr(uint32_t id, void *handle);
+
+/* CPUSS platform functions */
+void plat_cpuss_early_config(void);
+void plat_cpuss_late_config(void);
+void plat_cluster_init_wrapper(void);
 
 /*
  * Composite PSCI power-state encoding helpers, shared by the common PSCI layer

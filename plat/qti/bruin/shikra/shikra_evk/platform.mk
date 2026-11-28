@@ -74,6 +74,8 @@ PLAT_BL_COMMON_SOURCES	+=	common/desc_image_load.c				\
 				lib/bl_aux_params/bl_aux_params.c			\
 				plat/common/aarch64/crash_console_helpers.S		\
 				$(PLAT_PATH)/common/src/$(ARCH)/qti_uart_console.S	\
+				$(PLAT_PATH)/bruin/common/aarch64/bruin11_cluster_init.S	\
+				$(PLAT_PATH)/common/src/qti_cpuss_wrapper.c		\
 				$(PLAT_PATH)/common/src/qti_stack_protector.c		\
 				$(PLAT_PATH)/common/src/qti_common.c			\
 				${XLAT_TABLES_LIB_SRCS}
@@ -104,11 +106,17 @@ BL31_SOURCES		+=	drivers/delay_timer/generic_delay_timer.c		\
 				$(PLAT_PATH)/bruin/common/$(ARCH)/bruin_helpers.S	\
 				$(PLAT_PATH)/bruin/common/bruin_bl31_setup.c		\
 				$(PLAT_PATH)/bruin/common/bruin_topology.c		\
+				$(PLAT_PATH)/bruin/common/bruin_common.c		\
 				$(PLAT_PATH)/bruin/common/bruin_pm.c
 
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
 include drivers/qti/clock/clock.mk
+include drivers/qti/rimps/rimps.mk
+include drivers/qti/vpp/vpp.mk
+include drivers/qti/saw/saw.mk
+include drivers/qti/cprh/cprh.mk
+include drivers/qti/pcu/pcu.mk
 include drivers/qti/accesscontrol/access_control.mk
 
 PLAT_INCLUDES   +=	-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
@@ -119,7 +127,9 @@ PLAT_INCLUDES   +=	-Iinclude/drivers/qti/sec_core/${CHIPSET}		\
 BL31_SOURCES	+=	drivers/qti/sec_core/sec_core.c				\
 			drivers/qti/sec_core/${CHIPSET}/sec_core_cfg.c		\
 			$(PLAT_PATH)/common/src/qti_qtimer_platform.c	\
-			drivers/qti/qtimer/qtimer.c
+			drivers/qti/qtimer/qtimer.c				\
+			$(PLAT_PATH)/bruin/${CHIPSET}/${PLAT}/src/plat_cpuss_config.c		\
+			$(PLAT_PATH)/bruin/common/bruin11_cpuss_init.c
 
 include drivers/qti/watchdog/watchdog.mk
 
