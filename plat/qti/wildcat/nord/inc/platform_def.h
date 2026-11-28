@@ -166,6 +166,14 @@
 #define QTI_PS_HOLD_REG 0xC264000
 #define PON_PS_HOLD_RESET_CTL 0x852
 #define PON_PS_HOLD_RESET_CTL2 0x853
+#define PON_SOFT_RB_SPARE 0x7148
+
+/*
+ * TCSR reboot-reason scratch register (TCSR_TCSR_REGS_REG_BASE + 0x99000,
+ * where TCSR_TCSR_REGS_REG_BASE is CORE_TOP_CSR_BASE-family but at its own
+ * offset on Nord).
+ */
+#define TCSR_BOOT_MISC_DETECT 0x01FD9000
 
 #define SPMI_ARB_APID_MAP_BASE	0x0C402000U
 #define SPMI_ARB_CHNL_BASE	0x0C500000U

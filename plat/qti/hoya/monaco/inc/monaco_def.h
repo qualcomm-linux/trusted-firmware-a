@@ -43,6 +43,7 @@
 /*----------------------------------------------------------------------------*/
 #define PON_PS_HOLD_RESET_CTL			0x852
 #define PON_PS_HOLD_RESET_CTL2			0x853
+#define PON_SOFT_RB_SPARE			0x7148
 
 /*----------------------------------------------------------------------------*/
 /* APSS HM, AOSS and CORE_TOP_CSR registers */
@@ -50,6 +51,11 @@
 #define QTI_APSS_HM_BASE			0x17800000
 #define QTI_AOSS_BASE				0x0b000000
 #define QTI_CORE_TOP_CSR_BASE			0x01f00000
+
+/*----------------------------------------------------------------------------*/
+/* TCSR reboot-reason scratch register (CORE_TOP_CSR_BASE + 0xC0000 + 0x13000) */
+/*----------------------------------------------------------------------------*/
+#define TCSR_BOOT_MISC_DETECT			0x1FD3000
 
 /*----------------------------------------------------------------------------*/
 /* QTIMER registers                                                           */
