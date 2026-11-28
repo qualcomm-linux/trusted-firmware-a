@@ -67,11 +67,18 @@ int plat_core_pos_by_mpidr(u_register_t mpidr)
 {
 	unsigned int core_pos = plat_qti_core_pos_by_mpidr(mpidr);
 
-	if (core_pos < PLATFORM_CORE_COUNT) {
-		return (int)core_pos;
+	if (core_pos >= PLATFORM_CORE_COUNT) {
+		return -1;
 	}
 
-	return -1;
+#if QTI_CPU_TOPOLOGY_FROM_FUSES
+	/* Cores fused off on this SKU are not part of the PSCI topology. */
+	if (plat_qti_is_core_disabled(core_pos)) {
+		return -1;
+	}
+#endif
+
+	return (int)core_pos;
 }
 
 void plat_error_handler(int error)

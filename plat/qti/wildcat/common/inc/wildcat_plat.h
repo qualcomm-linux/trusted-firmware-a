@@ -7,6 +7,7 @@
 #ifndef WILDCAT_PLAT_H
 #define WILDCAT_PLAT_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <lib/coreboot.h>
@@ -43,5 +44,14 @@ int qti_ns_va_to_pa(uintptr_t va, unsigned int client_mode,
 uint32_t plat_qti_get_cluster_id_from_logical_cpu_num(uint32_t cpu_num);
 uint32_t plat_qti_get_core_id_from_logical_cpu_num(uint32_t cpu_num);
 uint32_t plat_qti_logical_cpu_num_to_mpidr(uint32_t cpu_num);
+
+#ifndef QTI_CPU_TOPOLOGY_FROM_FUSES
+#define QTI_CPU_TOPOLOGY_FROM_FUSES	0
+#endif
+
+#if QTI_CPU_TOPOLOGY_FROM_FUSES
+/* True if the core at linear index core_pos is fused off on this SKU. */
+bool plat_qti_is_core_disabled(unsigned int core_pos);
+#endif
 
 #endif /* WILDCAT_PLAT_H */
